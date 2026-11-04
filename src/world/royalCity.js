@@ -133,9 +133,12 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   const front=z+d/2;
   // Split the front wall around the entrance so the doorway is physically walkable.
   const sideWidth=(w-2.25)/2;
-  box(scene,name+"-facade-left",[x-(w+2.25)/4,h/2,z],[sideWidth,h,d],mats.wall).receiveShadows=true;
-  box(scene,name+"-facade-right",[x+(w+2.25)/4,h/2,z],[sideWidth,h,d],mats.wall).receiveShadows=true;
-  box(scene,name+"-facade-over-door",[x,h-0.52,z],[2.25,1.04,d],mats.wall).receiveShadows=true;
+  box(scene,name+"-facade-left",[x-(w+2.25)/4,h/2,front],[sideWidth,h,.38],mats.wall).receiveShadows=true;
+  box(scene,name+"-facade-right",[x+(w+2.25)/4,h/2,front],[sideWidth,h,.38],mats.wall).receiveShadows=true;
+  box(scene,name+"-facade-over-door",[x,h-0.52,front],[2.25,1.04,.38],mats.wall).receiveShadows=true;
+  box(scene,name+"-side-wall-left",[x-w/2+.16,h/2,z],[.32,h,d],mats.wall).receiveShadows=true;
+  box(scene,name+"-side-wall-right",[x+w/2-.16,h/2,z],[.32,h,d],mats.wall).receiveShadows=true;
+  box(scene,name+"-rear-wall",[x,h/2,z-d/2+.16],[w,h,.32],mats.wall).receiveShadows=true;
   // Timber framing and stone quoins make the facade read as a crafted medieval building.
   for (const side of [-1,1]) {
     box(scene,name+"-corner-post",[x+side*(w/2-.35),h/2,front-.13],[.32,h+.12,.28],mats.wood);
@@ -182,7 +185,6 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   for(let i=0;i<5;i++) box(scene,name+"-chimney-course",[x-w*.32,h+1.05+i*.35,z+d*.25],[.75,.08,.75],mats.dark);
   // Interior is deliberately furnished and open through the front doorway.
   if(interior) {
-    box(scene,name+"-inside-back-wall",[x,h/2,z-d/2+.12],[w-.5,h-.3,.24],mats.wall);
     box(scene,name+"-inside-floor",[x,.08,z],[w-.5,.12,d-.5],mats.floor);
     for(let i=0;i<3;i++) {
       box(scene,name+"-interior-table",[x-3+i*3,.95,z+1],[1.6,.18,1.2],mats.wood);
@@ -193,9 +195,6 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
     obstacles.push({x:x+3,z:z+1.6,r:1.55});
     for(let i=0;i<3;i++) obstacles.push({x:x-3+i*3,z:z+1,r:1.05});
     for(let i=0;i<4;i++) box(scene,name+"-shelf",[x+2.6+i*.18,3.2,z+d*.18],[.12,2.3,.55],mats.wood);
-    // Interior side walls leave a clear path through the doorway.
-    box(scene,name+"-interior-left",[x-w/2+.12,h/2,z],[.2,h-.3,d],mats.wall);
-    box(scene,name+"-interior-right",[x+w/2-.12,h/2,z],[.2,h-.3,d],mats.wall);
     for(let zz=z-d/2+.7;zz<=z+d/2-.7;zz+=1.35) {
       obstacles.push({x:x-w/2+.12,z:zz,r:.68});
       obstacles.push({x:x+w/2-.12,z:zz,r:.68});
