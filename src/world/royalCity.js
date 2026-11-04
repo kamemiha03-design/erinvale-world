@@ -937,7 +937,7 @@ export async function createRoyalCity(engine, canvas) {
   }
   box(scene,"royal-suite-back-wall",[0,17,suiteZ-10],[18,17,.8],castleStone);
   // Canopied royal bed, embroidered curtains and a carved headboard.
-  box(scene,"royal-suite-bed-frame",[0,9.45,suiteZ-5.8],[5.6,.55,4.0],wood);
+  box(scene,"royal-suite-bed-frame",[0,9.45,suiteZ-5.8],[5.6,.55,4.0],mats.wood);
   box(scene,"royal-suite-mattress",[0,9.85,suiteZ-5.7],[5.1,.42,3.6],cloth);
   box(scene,"royal-suite-headboard",[0,11.4,suiteZ-7.55],[5.5,3.0,.38],castleGold);
   for(const side of [-1,1]) {
@@ -945,7 +945,7 @@ export async function createRoyalCity(engine, canvas) {
     const finial=MeshBuilder.CreateSphere("royal-suite-bed-finial",{diameter:.55,segments:12},scene);
     finial.position.set(side*2.5,14.25,suiteZ-7.5);finial.material=castleGold;
     box(scene,"royal-suite-bed-curtain",[side*2.35,13.1,suiteZ-5.7],[.16,3.3,3.6],mats.banner);
-    box(scene,"royal-suite-dresser",[side*6.0,9.8,suiteZ+2.2],[2.1,1.6,1.0],wood);
+    box(scene,"royal-suite-dresser",[side*6.0,9.8,suiteZ+2.2],[2.1,1.6,1.0],mats.wood);
     box(scene,"royal-suite-dresser-top",[side*6.0,10.65,suiteZ+2.2],[2.3,.16,1.1],castleGold);
     const vase=MeshBuilder.CreateCylinder("royal-suite-vase",{diameterTop:.32,diameterBottom:.65,height:1.2,tessellation:14},scene);
     vase.position.set(side*6.0,11.3,suiteZ+2.2);vase.material=mats.trim;
@@ -953,10 +953,10 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"royal-suite-sofa-back",[side*4.8,10.0,suiteZ+6.55],[3.4,1.2,.24],cloth);
   }
   // Writing table, stools, a fireplace and a long runner make this a furnished chamber.
-  box(scene,"royal-suite-writing-table",[0,9.7,suiteZ+4.2],[4.4,.22,1.8],wood);
+  box(scene,"royal-suite-writing-table",[0,9.7,suiteZ+4.2],[4.4,.22,1.8],mats.wood);
   for(const side of [-1,1]) {
-    for(const dz of [-1,1]) box(scene,"royal-suite-table-leg",[side*1.9,9.0,suiteZ+4.2+dz*.65],[.16,1.25,.16],wood);
-    box(scene,"royal-suite-stool",[side*2.8,9.15,suiteZ+4.2],[.8,.3,.8],wood);
+    for(const dz of [-1,1]) box(scene,"royal-suite-table-leg",[side*1.9,9.0,suiteZ+4.2+dz*.65],[.16,1.25,.16],mats.wood);
+    box(scene,"royal-suite-stool",[side*2.8,9.15,suiteZ+4.2],[.8,.3,.8],mats.wood);
   }
   box(scene,"royal-suite-hearth-surround",[0,12.2,suiteZ-9.25],[4.4,4.6,.8],castleGold);
   box(scene,"royal-suite-hearth-opening",[0,11.0,suiteZ-8.8],[2.5,2.2,.08],castleShadow);
