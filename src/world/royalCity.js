@@ -390,19 +390,56 @@ export async function createRoyalCity(engine, canvas) {
   waterfall.position.set(27,7,-68);waterfall.material=new StandardMaterial("waterfall-material",scene);
   waterfall.material.diffuseColor=new Color3(.45,.75,.82);waterfall.material.alpha=.72;waterfall.material.emissiveColor=new Color3(.12,.2,.22);
 
-  // Yggdrasil-like world tree behind the castle, layered boughs and leaf masses.
-  cylinder(scene,"world-tree-trunk",[0,20,-93],5.8,40,mat(scene,"world-tree-bark",new Color3(.25,.16,.095)),16);
+  // Yggdrasil: sculpted trunk, flared roots, layered boughs and a dense multi-scale canopy.
+  const bark=mat(scene,"world-tree-bark",new Color3(.22,.13,.075),.96);
+  const barkLight=mat(scene,"world-tree-bark-ridge",new Color3(.34,.22,.12),.92);
+  cylinder(scene,"world-tree-trunk",[0,20,-93],6.2,40,bark,24);
+  for(let i=0;i<14;i++) {
+    const a=i*Math.PI*2/14;
+    const root=MeshBuilder.CreateCylinder("world-tree-buttress-root",{diameterTop:.32,diameterBottom:1.5,height:10,tessellation:10},scene);
+    root.position.set(Math.cos(a)*4.1,1.0,-93+Math.sin(a)*4.1);
+    root.rotation.z=Math.cos(a)*.48;root.rotation.x=Math.sin(a)*.48;
+    root.material=i%3===0?barkLight:bark;
+  }
+  for(let i=0;i<18;i++) {
+    const a=i*Math.PI*2/18,level=20+(i%6)*3.6;
+    const branch=MeshBuilder.CreateCylinder("world-tree-branch",{diameterTop:.28,diameterBottom:1.05,height:15+(i%4)*2,tessellation:12},scene);
+    branch.position.set(Math.cos(a)*7,level,-93+Math.sin(a)*5);
+    branch.rotation.z=-Math.cos(a)*.82;branch.rotation.x=Math.sin(a)*.72;
+    branch.material=i%4===0?barkLight:bark;
+  }
   for(let i=0;i<9;i++) {
-    const branch=MeshBuilder.CreateCylinder("world-tree-branch",{diameterTop:.35,diameterBottom:1.25,height:13,tessellation:10},scene);
-    branch.position.set((i%2?1:-1)*(3+i%3*2),25+i*2,-93);branch.rotation.z=(i%2?-.9:.9);branch.material=mats.trunk;
+    const rib=MeshBuilder.CreateCylinder("world-tree-bark-rib",{diameterTop:.12,diameterBottom:.22,height:32,tessellation:7},scene);
+    const a=i*Math.PI*2/9;
+    rib.position.set(Math.cos(a)*2.85,20,-93+Math.sin(a)*2.85);
+    rib.rotation.z=Math.cos(a)*.035;rib.rotation.x=Math.sin(a)*.035;
+    rib.material=barkLight;
   }
-  const canopyMats=[mat(scene,"canopy-deep",new Color3(.12,.28,.18)),mat(scene,"canopy-mid",new Color3(.18,.38,.22)),mat(scene,"canopy-light",new Color3(.28,.46,.25))];
+  const canopyMats=[
+    mat(scene,"canopy-deep",new Color3(.055,.19,.12),.88),
+    mat(scene,"canopy-mid",new Color3(.10,.32,.18),.82),
+    mat(scene,"canopy-light",new Color3(.22,.43,.23),.78),
+    mat(scene,"canopy-sunlit",new Color3(.48,.48,.22),.72)
+  ];
   const canopy=[];
-  for(let i=0;i<32;i++) {
-    const leaf=MeshBuilder.CreateSphere("world-tree-crown",{diameter:9+Math.random()*5,segments:12},scene);
-    leaf.position.set((Math.random()-.5)*26,30+Math.random()*20,-93+(Math.random()-.5)*10);
-    leaf.scaling.y=.72+Math.random()*.5;leaf.material=canopyMats[i%3];canopy.push({mesh:leaf,phase:Math.random()*Math.PI*2,base:leaf.rotation.z,baseY:leaf.position.y});
+  for(let i=0;i<116;i++) {
+    const a=Math.random()*Math.PI*2,ring=5+Math.random()*13,y=30+Math.random()*22;
+    const leaf=MeshBuilder.CreateSphere("world-tree-foliage",{diameter:2.8+Math.random()*2.8,segments:10},scene);
+    leaf.position.set(Math.cos(a)*ring,y,-93+Math.sin(a)*ring*.52);
+    leaf.scaling.set(.9+Math.random()*.5,.72+Math.random()*.48,.8+Math.random()*.45);
+    leaf.material=canopyMats[i%canopyMats.length];
+    canopy.push({mesh:leaf,phase:Math.random()*Math.PI*2,base:leaf.rotation.z,baseY:y});
   }
+  const seedGlow=mat(scene,"world-tree-seedlight",new Color3(.78,.72,.36),.28,.05);
+  seedGlow.emissiveColor=new Color3(.34,.25,.055);
+  for(let i=0;i<24;i++) {
+    const a=Math.random()*Math.PI*2,ring=7+Math.random()*12;
+    const seed=MeshBuilder.CreateSphere("world-tree-luminous-seed",{diameter:.22+Math.random()*.22,segments:8},scene);
+    seed.position.set(Math.cos(a)*ring,31+Math.random()*20,-93+Math.sin(a)*ring*.52);
+    seed.material=seedGlow;
+  }
+  const rootRing=MeshBuilder.CreateTorus("world-tree-root-rune",{diameter:18,thickness:.09,tessellation:96},scene);
+  rootRing.position.set(0,.05,-93);rootRing.material=seedGlow;
 
   // Detailed CC0 models add leaf geometry and a merchant wagon.
   const modelJobs = [
