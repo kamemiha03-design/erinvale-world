@@ -327,14 +327,27 @@ export async function createRoyalCity(engine, canvas) {
   addBarrel(scene,-29,11,mats.wood,mats.gold);addBarrel(scene,-13,11,mats.wood,mats.gold);
   addObstacle(-29,11,.68);addObstacle(-13,11,.68);
 
-  // Guild notice board and a cluster of posted parchment sheets.
-  box(scene,"quest-board-frame",[-12,2.25,-10],[4.2,3.4,.35],mats.wood);
-  addObstacle(-12,-10,1.35);
-  box(scene,"quest-board-face",[-12,2.25,-10.22],[3.75,2.95,.06],mats.woodLight);
-  for(let i=0;i<5;i++) {
-    const paper=box(scene,"guild-notice",[-13.3+(i%3)*1.25,2.45+Math.floor(i/3)*.6,-10.28],[.8,1.05,.035],mats.trim);
-    paper.rotation.z=(i%2?-.08:.05);
-  }
+  // A readable quest board stands beside the guild, close to the main square.
+  box(scene,"quest-board-post-left",[-10.1,1.9,-8.6],[.22,3.8,.28],mats.wood);
+  box(scene,"quest-board-post-right",[-5.9,1.9,-8.6],[.22,3.8,.28],mats.wood);
+  box(scene,"quest-board-frame",[-8,2.55,-8.6],[4.35,3.15,.42],mats.wood);
+  addObstacle(-8,-8.6,1.65);
+  box(scene,"quest-board-face",[-8,2.55,-8.85],[3.95,2.75,.06],mats.woodLight);
+  const questTexture=new DynamicTexture("guild-quest-board-lettering",{width:768,height:512},scene,false);
+  const questCtx=questTexture.getContext();
+  questCtx.fillStyle="#34251b";questCtx.fillRect(0,0,768,512);
+  questCtx.strokeStyle="#d5b879";questCtx.lineWidth=15;questCtx.strokeRect(12,12,744,488);
+  questCtx.fillStyle="#f5dfae";questCtx.textAlign="center";questCtx.font="bold 58px Georgia";questCtx.fillText("CURRENT QUESTS",384,86);
+  questCtx.textAlign="left";questCtx.font="bold 29px Georgia";questCtx.fillStyle="#f2d7a0";
+  questCtx.fillText("01  HERB GATHERING",54,174);
+  questCtx.fillText("02  NORTH ROAD PATROL",54,270);
+  questCtx.fillText("03  LAKE-SIDE ESCORT",54,366);
+  questCtx.font="22px Georgia";questCtx.fillStyle="#d7c29c";questCtx.fillText("Ask at the guild reception",54,440);
+  questTexture.update();
+  const questMat=new StandardMaterial("guild-quest-board-ink",scene);
+  questMat.diffuseTexture=questTexture;questMat.emissiveColor=new Color3(.12,.085,.045);
+  const questFace=MeshBuilder.CreatePlane("guild-quest-board-readable-face",{width:3.9,height:2.65},scene);
+  questFace.position.set(-8,2.55,-8.90);questFace.rotation.y=Math.PI;questFace.material=questMat;
 
   // Grand civic fountain: carved limestone tiers, broad water basins and a welcoming stone gathering plaza.
   const fountainStone=texturedMat(scene,"fountain-honed-limestone",new Color3(.72,.68,.59),"#b8ad98","#655b4c",.88);
