@@ -55,7 +55,7 @@ export function createWorldAudio() {
     fire.volume = inTavern ? 0.13 : 0;
     birds.volume = inTavern ? 0.015 : 0.12;
     const inside = currentLocation === "tavern" || currentLocation === "guild";
-    if (walking && now - lastStep > (inside ? 3600 : 2600)) {
+    if (walking && now - lastStep > (inside ? 640 : 500)) {
       lastStep = now;
       const step = new Audio(inside ? SOURCES.indoorSteps : SOURCES.steps);
       step.volume = 0.32;
