@@ -26,12 +26,21 @@ body { overscroll-behavior: none; }
 .hud { position: absolute; inset: env(safe-area-inset-top) 0 auto; padding: 16px; pointer-events: none; display: flex; justify-content: space-between; align-items: center; }
 .location { display: flex; gap: 9px; align-items: center; padding: 9px 13px; background: #101a1caa; border: 1px solid #d7c39a55; border-radius: 3px; font-size: 11px; letter-spacing: .08em; backdrop-filter: blur(8px); }
 .location-dot { width: 6px; height: 6px; border-radius: 50%; background: #d5b477; box-shadow: 0 0 10px #d5b477; }
-.hint { color: #fff2d5; font-size: 11px; text-shadow: 0 1px 5px #000; }
+.hint { max-width: min(56vw, 560px); color: #fff2d5; font-size: 11px; line-height: 1.6; text-shadow: 0 1px 5px #000; padding: 8px 12px; border-radius: 4px; background: #101a1c88; backdrop-filter: blur(6px); }
 .mobile-controls { position: absolute; inset: auto 0 env(safe-area-inset-bottom); height: 174px; pointer-events: none; }
 .move-pad { pointer-events: auto; position: absolute; left: 24px; bottom: 20px; width: 112px; height: 112px; border: 1px solid #f3e6c477; border-radius: 50%; background: #101a1c55; backdrop-filter: blur(5px); touch-action: none; }
 .move-pad::before { content: ""; position: absolute; inset: 28px; border: 1px solid #f3e6c433; border-radius: 50%; }
 #move-knob { position: absolute; width: 42px; height: 42px; left: 35px; top: 35px; border-radius: 50%; background: #d7c39a; opacity: .88; box-shadow: 0 2px 12px #0008; }
 .look-label { position: absolute; right: 18px; bottom: 31px; color: #fff2d5aa; font-size: 10px; text-shadow: 0 1px 4px #000; }
-.interact { pointer-events: auto; position: absolute; right: 20px; bottom: 72px; border: 1px solid #e6d4a477; border-radius: 24px; color: #fff2d5; background: #172729bb; padding: 9px 18px; font: inherit; font-size: 11px; }
+.interact { pointer-events: auto; min-width: 72px; min-height: 42px; cursor: pointer; -webkit-tap-highlight-color: transparent; position: absolute; right: 20px; bottom: 72px; border: 1px solid #e6d4a477; border-radius: 24px; color: #fff2d5; background: #172729bb; padding: 9px 18px; font: inherit; font-size: 11px; }
 .desktop-hint { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); color: #fff2d5; background: #101a1caa; padding: 10px 16px; border-radius: 3px; font-size: 11px; }
 @media (max-width: 600px) { .hud { padding: 12px; } .hint { max-width: 48%; text-align: right; } }
+button:active { transform: scale(.96); }
+@media (max-width: 600px) {
+  .location { font-size: 10px; padding: 8px 10px; }
+  .hint { max-width: 58vw; font-size: 10px; }
+  .move-pad { width: 106px; height: 106px; left: 18px; bottom: 16px; }
+  #move-knob { left: 32px; top: 32px; }
+  .look-label { font-size: 9px; right: 14px; bottom: 25px; }
+  .interact { right: 16px; bottom: 67px; }
+}
