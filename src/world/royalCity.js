@@ -427,7 +427,7 @@ export async function createRoyalCity(engine, canvas) {
   const questMat=new StandardMaterial("guild-quest-board-ink",scene);
   questMat.diffuseTexture=questTexture;questMat.emissiveColor=new Color3(.12,.085,.045);
   const questFace=MeshBuilder.CreatePlane("guild-quest-board-readable-face",{width:4.15,height:3.05},scene);
-  questFace.position.set(-23,3.15,-12.72);questFace.rotation.y=0;questFace.material=questMat;
+  questFace.position.set(-9.5,3.15,-12.78);questFace.rotation.y=0;questFace.material=questMat;
 
   // Grand civic fountain: carved limestone tiers, broad water basins and a welcoming stone gathering plaza.
   const fountainStone=texturedMat(scene,"fountain-honed-limestone",new Color3(.72,.68,.59),"#b8ad98","#655b4c",.88);
@@ -1070,7 +1070,7 @@ export async function createRoyalCity(engine, canvas) {
   const location=document.querySelector("#location-name");
   function getLocation(x,z) {
     if(x<-12&&z>0)return "銅鹿亭 — Copper Stag Tavern";
-    if(x<-12&&z<-8&&z>-26)return "冒険者ギルド";
+    if(x<-8&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
     if(x>34&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
     if(z<-72)return "王宮 — 王城の中庭";
