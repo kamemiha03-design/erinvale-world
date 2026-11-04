@@ -1086,95 +1086,107 @@ export async function createRoyalCity(engine, canvas) {
     glow.position.set(x,3.8,z);glow.material=mats.lantern;
   }
 
-  // Rigged, animated CC0 fantasy residents replace the primitive mannequin figures.
+  // Full-height townspeople are assembled locally so their proportions never depend
+  // on third-party model downloads. Head height is kept close to one-seventh of stature.
   const people=[];
-  const faceSkin=new StandardMaterial("npc-face-skin",scene);faceSkin.diffuseColor=new Color3(.72,.49,.34);faceSkin.roughness=.92;
-  const faceSkinLight=new StandardMaterial("npc-face-skin-light",scene);faceSkinLight.diffuseColor=new Color3(.88,.68,.52);
-  const eyeWhite=new StandardMaterial("npc-eye-white",scene);eyeWhite.diffuseColor=new Color3(.92,.88,.78);
-  const irisMat=new StandardMaterial("npc-iris",scene);irisMat.diffuseColor=new Color3(.18,.11,.07);
-  const pupilMat=new StandardMaterial("npc-pupil",scene);pupilMat.diffuseColor=new Color3(.025,.018,.015);
-  const hairBrown=new StandardMaterial("npc-hair-brown",scene);hairBrown.diffuseColor=new Color3(.12,.055,.025);
-  const hairChestnut=new StandardMaterial("npc-hair-chestnut",scene);hairChestnut.diffuseColor=new Color3(.32,.105,.045);
-  const hairBlonde=new StandardMaterial("npc-hair-blonde",scene);hairBlonde.diffuseColor=new Color3(.72,.48,.16);
-  const beardMat=new StandardMaterial("npc-beard",scene);beardMat.diffuseColor=new Color3(.19,.085,.035);
-  // Imported character models already contain faces and hair. Do not overlay
-  // oversized procedural features, which distort their intended proportions.
-  async function addTownsperson(file,x,z,walking,phase,heading=0,groundY=0) {
-    try {
-      const modelPath=file.includes("/")?file:"human003/"+file;
-      const modelName=file.split("/").pop();
-      const imported=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/",modelPath+".glb",scene);
-      const root=imported.meshes.find(m=>m.name==="__root__")||imported.meshes[0];
-      if(!root) return null;
-      root.position.set(x,groundY,z);root.rotation.y=heading;
-      root.computeWorldMatrix(true);
-      let bounds=root.getHierarchyBoundingVectors(true);
-      const height=Math.max(.01,bounds.max.y-bounds.min.y);
-      root.scaling.scaleInPlace(1.78/height);
-      // Slightly lengthen the silhouette vertically while preserving the individual outfits.
-      root.scaling.y*=1.22;
-      root.computeWorldMatrix(true);
-      bounds=root.getHierarchyBoundingVectors(true);
-      root.position.y-=bounds.min.y-groundY;
-      root.computeWorldMatrix(true);
-      // Keep the source model's own facial proportions and expression.
-      const wanted=walking?"walk":"idle";
-      const group=imported.animationGroups.find(g=>g.name.toLowerCase()===wanted)
-        || imported.animationGroups.find(g=>g.name.toLowerCase().includes(wanted));
-      if(group) group.start(true);
-      const actor={root,walking,phase,home:new Vector3(x,0,z),radius:walking?1.6+(phase%3)*.5:0};
-      people.push(actor);return actor;
-    } catch(error) {
-      console.warn("Townsperson model could not be loaded:",file,error);
-      return null;
+  const npcSkin=mat(scene,"npc-natural-skin",new Color3(.72,.51,.38),.94);
+  const npcSkinLight=mat(scene,"npc-fair-skin",new Color3(.88,.69,.54),.94);
+  const npcHair=[new Color3(.10,.055,.035),new Color3(.28,.12,.055),new Color3(.58,.36,.12),new Color3(.16,.13,.10)].map((color,i)=>mat(scene,"npc-hair-"+i,color,.9));
+  const npcCloth=[
+    new Color3(.16,.25,.34),new Color3(.43,.16,.12),new Color3(.22,.31,.20),
+    new Color3(.48,.35,.20),new Color3(.34,.22,.34),new Color3(.65,.57,.40)
+  ].map((color,i)=>mat(scene,"npc-cloth-"+i,color,.96));
+  const npcLeather=mat(scene,"npc-leather",new Color3(.19,.105,.055),.94);
+  const npcMetal=mat(scene,"npc-metal",new Color3(.48,.43,.32),.58,.45);
+  const npcGold=mat(scene,"npc-gold",new Color3(.68,.48,.19),.45,.55);
+  const npcWhite=mat(scene,"npc-eye-white",new Color3(.88,.83,.72),.8);
+  const npcDark=mat(scene,"npc-eye-dark",new Color3(.075,.045,.03),.8);
+  const npcBeard=mat(scene,"npc-beard",new Color3(.20,.095,.045),.96);
+
+  function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
+    const root=new TransformNode("townsperson-root",scene);
+    root.position.set(x,0,z);root.rotation.y=heading;
+    const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
+    const skin=phase%2?npcSkin:npcSkinLight;
+    const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
+    const part=(name,pos,size,material,kind="box")=>{
+      let mesh;
+      if(kind==="sphere") mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:14},scene);
+      else if(kind==="cylinder") mesh=MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:12},scene);
+      else mesh=MeshBuilder.CreateBox(name,{size:1},scene);
+      mesh.position.set(pos[0],pos[1],pos[2]);mesh.scaling.set(size[0],size[1],size[2]);
+      mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
+    };
+    // Boots, legs and hips: long lower body, not a compressed toy silhouette.
+    for(const side of [-1,1]) {
+      part("npc-boot",[side*.115,.105,.035],[.22,.20,.37],npcLeather);
+      part("npc-trouser",[side*.115,.49,0],[.205,.69,.23],npcLeather,"sphere");
+      part("npc-knee",[side*.115,.69,0],[.205,.22,.23],outfit,"sphere");
+      part("npc-sleeve",[side*.34,1.23,0],[.19,.52,.20],outfit,"sphere");
+      part("npc-hand",[side*.35,.91,.015],[.13,.16,.13],skin,"sphere");
+      if(role==="guard") {
+        part("npc-shoulder-plate",[side*.34,1.48,0],[.29,.18,.28],npcMetal,"sphere");
+        part("npc-bracer",[side*.35,1.03,0],[.22,.22,.22],npcMetal);
+      }
     }
+    part("npc-hips",[0,.86,0],[.43,.25,.28],npcLeather,"sphere");
+    part("npc-tunic",[0,1.23,0],[.58,.70,.34],outfit,"sphere");
+    part("npc-tunic-hem",[0,.91,0],[.59,.12,.35],outfit);
+    part("npc-belt",[0,1.00,-.012],[.56,.085,.37],npcLeather);
+    part("npc-belt-buckle",[0,1.01,-.205],[.09,.10,.035],npcGold);
+    part("npc-neck",[0,1.61,0],[.14,.16,.14],skin,"cylinder");
+    // Compact head with distinct hairline, ears, eyes and nose.
+    part("npc-head",[0,1.78,0],[.34,.39,.31],skin,"sphere");
+    part("npc-ear-left",[-.175,1.78,0],[.075,.12,.09],skin,"sphere");
+    part("npc-ear-right",[.175,1.78,0],[.075,.12,.09],skin,"sphere");
+    part("npc-hair-cap",[0,1.94,.005],[.365,.19,.34],hair,"sphere");
+    part("npc-hair-back",[0,1.80,.105],[.32,.28,.18],hair,"sphere");
+    for(const side of [-1,1]) {
+      part("npc-eye",[side*.075,1.80,-.148],[.045,.035,.025],npcWhite,"sphere");
+      part("npc-pupil",[side*.075,1.80,-.168],[.019,.025,.012],npcDark,"sphere");
+    }
+    part("npc-nose",[0,1.755,-.17],[.055,.075,.055],skin,"sphere");
+    if(role==="guard") {
+      part("npc-helmet-rim",[0,2.00,0],[.39,.075,.36],npcMetal);
+      part("npc-helmet-crown",[0,2.09,.015],[.29,.15,.28],npcMetal,"sphere");
+      part("npc-chest-armor",[0,1.28,-.18],[.49,.48,.075],npcMetal);
+      part("npc-armor-crest",[0,1.30,-.226],[.13,.20,.025],npcGold);
+      part("npc-cloak",[0,1.28,.19],[.48,.67,.055],npcCloth[4]);
+    } else if(role==="merchant") {
+      part("npc-apron",[0,1.17,-.19],[.43,.53,.045],npcCloth[5]);
+      part("npc-hat-brim",[0,2.00,0],[.43,.07,.40],npcCloth[3]);
+      part("npc-hat-top",[0,2.10,0],[.27,.18,.25],npcCloth[3],"sphere");
+    } else {
+      part("npc-cloak",[0,1.25,.19],[.49,.65,.06],npcCloth[(Math.floor(phase*7)+2)%npcCloth.length]);
+    }
+    if(phase%3===0) part("npc-beard",[0,1.66,-.12],[.20,.17,.12],npcBeard,"sphere");
+    if(walking) {
+      const actor={root,walking:true,phase,home:new Vector3(x,0,z),radius:1.25+(phase%3)*.35};
+      people.push(actor);return actor;
+    }
+    return root;
   }
 
-  // Replace the tiny placeholder crowd with detailed, properly proportioned fantasy NPCs.
-  async function addDetailedNpc(assetId,x,y,z,heading=0,idlePattern=/idle/i) {
-    try {
-      const imported=await SceneLoader.ImportMeshAsync("","https://vibeassets.io/download/",assetId,scene,undefined,".glb");
-      const root=imported.meshes.find(m=>m.name==="__root__")||imported.meshes[0];
-      if(!root) return null;
-      root.position.set(x,y,z);root.rotation.y=heading;
-      root.computeWorldMatrix(true);
-      let bounds=root.getHierarchyBoundingVectors(true);
-      const height=Math.max(.01,bounds.max.y-bounds.min.y);
-      root.scaling.scaleInPlace(1.82/height);
-      root.computeWorldMatrix(true);
-      bounds=root.getHierarchyBoundingVectors(true);
-      root.position.y-=bounds.min.y-y;
-      root.computeWorldMatrix(true);
-      const idle=imported.animationGroups.find(g=>idlePattern.test(g.name));
-      if(idle) idle.start(true);
-      return root;
-    } catch(error) {
-      console.warn("Detailed fantasy NPC could not be loaded:",assetId,error);
-      return null;
-    }
-  }
-  await Promise.all([
-    // The square should feel inhabited: merchants, townsfolk, guards and visitors around the fountain.
-    addTownsperson("PeasantMilitia",-5,24,true,1.2,.4),
-    addTownsperson("Scout",3,25,true,2.1,-.6),
-    addTownsperson("Footman",31,4,true,3.3,1.2),
-    addTownsperson("PeasantMilitia",29,22,false,4.4,Math.PI),
-    addTownsperson("human013/CrownedPrincess",4,-17,false,5.6,Math.PI/2),
-    addTownsperson("human013/Prince",29,-20,true,6.8,-1.1),
-    addTownsperson("Scout",-34,1,true,8.0,.8),
-    addTownsperson("PeasantMilitia",-2,-29,false,9.2,Math.PI),
-    addTownsperson("Footman",35,12,true,10.4,2.2),
-    addTownsperson("PeasantMilitia",6,31,true,11.6,-.3)
-  ]);
-  await Promise.all([
-    // A bearded traveller with a patched tunic belongs outside the Copper Stag.
-    addDetailedNpc("fbd1hbd0su",-18.8,0,3.6,0,/idle/i),
-    // The hooded guild clerk waits just inside the guild entrance.
-    addDetailedNpc("r5fphmizn8",-23,0,-17,0,/idle/i),
-    // Matching, fully proportioned royal guards stand at the open palace gate.
-    addDetailedNpc("gmxn9fptt1",-5.1,7.63,-80.4,0,/idle/i),
-    addDetailedNpc("gmxn9fptt1",5.1,7.63,-80.4,0,/idle/i)
-  ]);
+  // A varied crowd around the square, market, guild and tavern.
+  makeTownsperson(-5,24,"villager",1.2,.4,true);
+  makeTownsperson(3,25,"villager",2.1,-.6,true);
+  makeTownsperson(31,4,"guard",3.3,1.2,true);
+  makeTownsperson(29,22,"merchant",4.4,Math.PI,false);
+  makeTownsperson(4,-17,"villager",5.6,Math.PI/2,false);
+  makeTownsperson(29,-20,"villager",6.8,-1.1,true);
+  makeTownsperson(-34,1,"villager",8.0,.8,true);
+  makeTownsperson(-2,-29,"merchant",9.2,Math.PI,false);
+  makeTownsperson(35,12,"guard",10.4,2.2,true);
+  makeTownsperson(6,31,"villager",11.6,-.3,true);
+  makeTownsperson(-18.8,0,"villager",12.7,0,false);
+  makeTownsperson(-23,0,"merchant",13.8,0,false);
+  makeTownsperson(-5.1,7.63,"guard",14.9,0,false);
+  makeTownsperson(5.1,7.63,"guard",16.0,0,false);
+  // Extra residents make the fountain square feel like a lived-in town.
+  makeTownsperson(17,17,"merchant",17.1,Math.PI/2,false);
+  makeTownsperson(21,-4,"villager",18.2,-.7,true);
+  makeTownsperson(-9,-12,"villager",19.3,.5,true);
+  makeTownsperson(2,8,"villager",20.4,Math.PI,false);
 
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
