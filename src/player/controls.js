@@ -57,8 +57,8 @@ export function attachMobileControls(world, audio) {
     if(event.pointerId!==state.lookPointer)return;
     const dx=event.clientX-state.lastX,dy=event.clientY-state.lastY;
     state.lastX=event.clientX;state.lastY=event.clientY;
-    if(Math.abs(event.clientX-state.tapX)+Math.abs(event.clientY-state.tapY)>8)state.dragged=true;
-    if(state.dragged)world.turn(dx*.004,dy*.003);
+    if(Math.abs(event.clientX-state.tapX)+Math.abs(event.clientY-state.tapY)>2)state.dragged=true;
+    if(state.dragged)world.turn(dx*.0085,dy*.0065);
   });
   canvas.addEventListener("pointerup",event=>{
     if(event.pointerId!==state.lookPointer)return;
@@ -74,7 +74,7 @@ export function attachMobileControls(world, audio) {
   });
   canvas.addEventListener("pointercancel",()=>{state.lookPointer=null;});
   document.addEventListener("mousemove",event=>{
-    if(document.pointerLockElement===canvas)world.turn(event.movementX*.002,event.movementY*.0017);
+    if(document.pointerLockElement===canvas)world.turn(event.movementX*.0032,event.movementY*.0025);
   });
   document.addEventListener("pointerlockchange",()=>{
     if(document.pointerLockElement!==canvas&&state.keys.size===0)setWalk(false);
