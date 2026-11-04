@@ -305,7 +305,7 @@ export async function createRoyalCity(engine, canvas) {
   const obstacles=[];
   const addObstacle=(x,z,r)=>obstacles.push({x,z,r});
   addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"COPPER STAG • TAVERN",interior:true},{...mats},shadow,colliders,obstacles);
-  addBuilding(scene,{x:-21,z:-16,w:14,d:9,h:9.5,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:-23,z:-20,w:20,d:14,h:12,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
 
   // Tavern outdoor terrace: benches, tables, barrels, flower boxes and striped awning.
