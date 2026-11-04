@@ -44,5 +44,10 @@ async function boot() {
 }
 boot().catch(error=>{
   console.error("Erinvale failed to start:",error);
-  loading.innerHTML='<div class="loading-mark">✧</div><h1>ERINVALE</h1><p class="loading-copy">読み込みに失敗しました。ページを再読み込みしてください。</p>';
+  loading.innerHTML='<div class="loading-mark">✧</div><h1>ERINVALE</h1><p class="loading-copy">読み込みに失敗しました。</p>';
+  const detail=document.createElement("p");
+  detail.className="loading-copy";
+  detail.style.cssText="max-width:90%;margin:12px auto;font-size:12px;line-height:1.6;overflow-wrap:anywhere;color:#f2c9a0";
+  detail.textContent="診断情報: "+String(error?.name||"Error")+" — "+String(error?.message||error||"原因不明");
+  loading.appendChild(detail);
 });
