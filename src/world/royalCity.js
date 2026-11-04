@@ -280,7 +280,7 @@ export async function createRoyalCity(engine, canvas) {
   surfaceMaps(mats.roof,"T_RoundTiles_BaseColor.png","T_RoundTiles_Normal.png",2.4,2.4);
 
   // Cobblestone plaza with a repeating hand-laid pattern.
-  const ground=MeshBuilder.CreateGround("plaza-ground",{width:240,height:240,subdivisions:2},scene);
+  const ground=MeshBuilder.CreateGround("plaza-ground",{width:380,height:380,subdivisions:2},scene);
   ground.position.y=-.12;ground.material=texturedMat(scene,"cobblestone",new Color3(.53,.50,.43),"#8c8475","#39362f");
   surfaceMaps(ground.material,"T_UnevenBrick_BaseColor.png","T_UnevenBrick_Normal.png",9,9);
   for(let z=-39;z<=33;z+=6) for(let x=-39;x<=39;x+=6) {
@@ -685,21 +685,39 @@ export async function createRoyalCity(engine, canvas) {
     addLantern(scene,side*7.0,11.2,-77.15,mats.gold,mats.lantern);
   }
 
-  // Yggdrasil stands distinctly LEFT of the keep, framed against the open sky.
-  // Its sacred silhouette is intentionally separated from every castle roof and tower.
-  const treeX=57,treeZ=-101;
+  // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
+  // It now floats on a vast suspended island, rather than growing out of the castle grounds.
+  // The extra depth keeps its silhouette clear of the keep even on a narrow phone screen.
+  const treeX=34,treeZ=-165,treeLift=18;
+  const islandStone=mat(scene,"world-tree-floating-stone",new Color3(.28,.31,.29),.98);
+  const islandFace=mat(scene,"world-tree-floating-stone-face",new Color3(.39,.40,.34),.96);
+  const islandMoss=mat(scene,"world-tree-island-moss",new Color3(.15,.27,.16),.98);
+  const island=MeshBuilder.CreateCylinder("world-tree-floating-island",{diameterTop:49,diameterBottom:31,height:13,tessellation:16},scene);
+  island.position.set(treeX,11.5,treeZ);island.material=islandStone;
+  const islandTop=MeshBuilder.CreateCylinder("world-tree-island-grass-cap",{diameter:46,height:.65,tessellation:32},scene);
+  islandTop.position.set(treeX,18.05,treeZ);islandTop.material=islandMoss;
+  for(let i=0;i<18;i++) {
+    const a=i*Math.PI*2/18,r=16+Math.random()*5;
+    const rock=MeshBuilder.CreateSphere("world-tree-island-rock",{diameter:5+Math.random()*5,segments:10},scene);
+    rock.position.set(treeX+Math.cos(a)*r,8+Math.random()*7,treeZ+Math.sin(a)*r*.72);
+    rock.scaling.set(1.2,.9,1.0);rock.material=i%3===0?islandFace:islandStone;
+  }
+  const underGlow=mat(scene,"world-tree-island-underside-glow",new Color3(.44,.70,.55),.3,.12);
+  underGlow.emissiveColor=new Color3(.16,.34,.22);
+  const islandHalo=MeshBuilder.CreateTorus("world-tree-floating-island-halo",{diameter:42,thickness:.24,tessellation:96},scene);
+  islandHalo.position.set(treeX,17.7,treeZ);islandHalo.material=underGlow;
   const bark=mat(scene,"world-tree-bark",new Color3(.18,.115,.065),.96);
   const barkLight=mat(scene,"world-tree-bark-ridge",new Color3(.39,.27,.14),.9);
-  cylinder(scene,"world-tree-trunk",[treeX,24,treeZ],7.2,48,bark,32);
+  cylinder(scene,"world-tree-trunk",[treeX,treeLift+24,treeZ],8.2,48,bark,32);
   for(let i=0;i<16;i++) {
     const a=i*Math.PI*2/16;
     const root=MeshBuilder.CreateCylinder("world-tree-buttress-root",{diameterTop:.35,diameterBottom:2.0,height:12,tessellation:12},scene);
-    root.position.set(treeX+Math.cos(a)*4.8,1.0,treeZ+Math.sin(a)*4.8);
+    root.position.set(treeX+Math.cos(a)*4.8,treeLift+1.0,treeZ+Math.sin(a)*4.8);
     root.rotation.z=Math.cos(a)*.5;root.rotation.x=Math.sin(a)*.5;
     root.material=i%3===0?barkLight:bark;
   }
   for(let i=0;i<22;i++) {
-    const a=i*Math.PI*2/22,level=25+(i%7)*4.2;
+    const a=i*Math.PI*2/22,level=treeLift+25+(i%7)*4.2;
     const branch=MeshBuilder.CreateCylinder("world-tree-branch",{diameterTop:.24,diameterBottom:1.25,height:17+(i%4)*2.5,tessellation:14},scene);
     branch.position.set(treeX+Math.cos(a)*8,level,treeZ+Math.sin(a)*6);
     branch.rotation.z=-Math.cos(a)*.86;branch.rotation.x=Math.sin(a)*.74;
@@ -708,7 +726,7 @@ export async function createRoyalCity(engine, canvas) {
   for(let i=0;i<12;i++) {
     const rib=MeshBuilder.CreateCylinder("world-tree-bark-rib",{diameterTop:.12,diameterBottom:.26,height:39,tessellation:8},scene);
     const a=i*Math.PI*2/12;
-    rib.position.set(treeX+Math.cos(a)*3.25,24,treeZ+Math.sin(a)*3.25);
+    rib.position.set(treeX+Math.cos(a)*3.65,treeLift+24,treeZ+Math.sin(a)*3.65);
     rib.rotation.z=Math.cos(a)*.035;rib.rotation.x=Math.sin(a)*.035;
     rib.material=barkLight;
   }
@@ -719,29 +737,40 @@ export async function createRoyalCity(engine, canvas) {
     mat(scene,"canopy-sunlit",new Color3(.52,.52,.27),.72)
   ];
   const canopy=[];
-  for(let i=0;i<156;i++) {
-    const a=Math.random()*Math.PI*2,ring=7+Math.random()*16,y=38+Math.random()*31;
-    const leaf=MeshBuilder.CreateSphere("world-tree-foliage",{diameter:3.2+Math.random()*3.2,segments:12},scene);
-    leaf.position.set(treeX+Math.cos(a)*ring,y,treeZ+Math.sin(a)*ring*.58);
+  for(let i=0;i<190;i++) {
+    const a=Math.random()*Math.PI*2,ring=7+Math.random()*19,y=treeLift+38+Math.random()*33;
+    const leaf=MeshBuilder.CreateSphere("world-tree-foliage",{diameter:3.5+Math.random()*4.2,segments:14},scene);
+    leaf.position.set(treeX+Math.cos(a)*ring,y,treeZ+Math.sin(a)*ring*.62);
     leaf.scaling.set(.95+Math.random()*.5,.78+Math.random()*.5,.9+Math.random()*.45);
     leaf.material=canopyMats[i%canopyMats.length];
     canopy.push({mesh:leaf,phase:Math.random()*Math.PI*2,base:leaf.rotation.z,baseY:y});
   }
   const seedGlow=mat(scene,"world-tree-seedlight",new Color3(.84,.76,.43),.24,.04);
   seedGlow.emissiveColor=new Color3(.42,.31,.10);
-  for(let i=0;i<34;i++) {
-    const a=Math.random()*Math.PI*2,ring=8+Math.random()*17;
+  for(let i=0;i<46;i++) {
+    const a=Math.random()*Math.PI*2,ring=8+Math.random()*19;
     const seed=MeshBuilder.CreateSphere("world-tree-luminous-seed",{diameter:.18+Math.random()*.24,segments:10},scene);
-    seed.position.set(treeX+Math.cos(a)*ring,39+Math.random()*29,treeZ+Math.sin(a)*ring*.58);
+    seed.position.set(treeX+Math.cos(a)*ring,treeLift+39+Math.random()*34,treeZ+Math.sin(a)*ring*.62);
     seed.material=seedGlow;
   }
-  // Two quiet rings of ancient light suggest a sacred presence without hiding the branches.
-  for(const y of [31,47]) {
-    const halo=MeshBuilder.CreateTorus("world-tree-sacred-halo",{diameter:y===31?22:35,thickness:.10,tessellation:96},scene);
+  for(const y of [treeLift+31,treeLift+47,treeLift+64]) {
+    const halo=MeshBuilder.CreateTorus("world-tree-sacred-halo",{diameter:y===treeLift+31?25:39,thickness:.13,tessellation:96},scene);
     halo.position.set(treeX,y,treeZ);halo.material=seedGlow;
   }
-  const rootRing=MeshBuilder.CreateTorus("world-tree-root-rune",{diameter:22,thickness:.11,tessellation:96},scene);
-  rootRing.position.set(treeX,.05,treeZ);rootRing.material=seedGlow;
+  const rootRing=MeshBuilder.CreateTorus("world-tree-root-rune",{diameter:25,thickness:.13,tessellation:96},scene);
+  rootRing.position.set(treeX,treeLift+.1,treeZ);rootRing.material=seedGlow;
+  // Hanging roots and slender streams of sacred light make the island feel suspended.
+  for(let i=0;i<12;i++) {
+    const a=i*Math.PI*2/12;
+    const root=MeshBuilder.CreateCylinder("world-tree-hanging-root",{diameterTop:.18,diameterBottom:.8,height:9,tessellation:8},scene);
+    root.position.set(treeX+Math.cos(a)*8,6.0,treeZ+Math.sin(a)*7);
+    root.rotation.z=Math.cos(a)*.28;root.rotation.x=Math.sin(a)*.28;root.material=bark;
+  }
+  for(let i=0;i<4;i++) {
+    const beam=MeshBuilder.CreateCylinder("world-tree-sacred-lightfall",{diameter:.10,height:10+ i*2,tessellation:8},scene);
+    beam.position.set(treeX+Math.cos(i*Math.PI/2)*17,1.5,treeZ+Math.sin(i*Math.PI/2)*14);
+    beam.material=underGlow;
+  }
 
   // Detailed CC0 models add leaf geometry and a merchant wagon.
   const modelJobs = [
@@ -799,44 +828,53 @@ export async function createRoyalCity(engine, canvas) {
   const beardMat=new StandardMaterial("npc-beard",scene);beardMat.diffuseColor=new Color3(.19,.085,.035);
   function addFaceAndHair(root, skeleton, file) {
     const headBone=skeleton?.bones?.find(b=>/head/i.test(b.name)&&!/end|tip/i.test(b.name));
-    if(!headBone) return;
-    const anchorNode=new TransformNode("npc-head-details",scene);
-    headBone.linkTransformNode(anchorNode,root);
+    if(!headBone||!skeleton) return;
     const makeSphere=(name,position,scale,material)=>{
-      const mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:12},scene);
-      mesh.parent=anchorNode;mesh.position.set(...position);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
+      const mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:18},scene);
+      mesh.position.set(...position);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;
+      // Attach to the actual head bone. A linked transform node overrides the bone pose,
+      // which made the previous face details invisible or detached on some rigs.
+      mesh.attachToBone(headBone,skeleton);
+      return mesh;
     };
-    // Small sculpted facial features sit on the front of the head and follow its rig.
-    makeSphere("npc-face-overlay",[0,.015,.105],[.255,.29,.105],file==="Priestess"?faceSkinLight:faceSkin);
+    // Distinct eye whites, irises, pupils and tiny catchlights give the face readable expression.
     for(const side of [-1,1]) {
       makeSphere("npc-eye-sclera",[side*.067,.055,.194],[.052,.064,.025],eyeWhite);
       makeSphere("npc-iris",[side*.067,.052,.216],[.027,.036,.012],irisMat);
       makeSphere("npc-pupil",[side*.067,.052,.226],[.013,.022,.008],pupilMat);
+      makeSphere("npc-eye-glint",[side*.058,.067,.234],[.009,.012,.006],eyeWhite);
       makeSphere("npc-eyebrow",[side*.067,.112,.197],[.062,.018,.018],hairBrown);
+      makeSphere("npc-ear",[side*.205,-.005,.015],[.055,.09,.065],file==="Priestess"?faceSkinLight:faceSkin);
     }
-    makeSphere("npc-nose",[0,-.015,.215],[.035,.052,.045],faceSkin);
+    makeSphere("npc-nose",[0,-.015,.215],[.035,.052,.045],file==="Priestess"?faceSkinLight:faceSkin);
     makeSphere("npc-mouth",[0,-.09,.202],[.064,.014,.012],beardMat);
-    // Individual silhouettes: fringe, crown and back locks stop the NPCs reading as blank mannequins.
     const hair=file==="Priestess"?hairBlonde:(file==="Scout"?hairChestnut:hairBrown);
     if(file!=="Footman") {
       makeSphere("npc-hair-cap",[0,.145,-.005],[.29,.16,.27],hair);
       makeSphere("npc-fringe",[0,.105,.115],[.25,.075,.12],hair);
       if(file==="Priestess") {
-        for(const side of [-1,1]) makeSphere("npc-long-hair-lock",[side*.19,-.075,-.035],[.095,.30,.13],hair);
+        for(const side of [-1,1]) {
+          makeSphere("npc-long-hair-lock",[side*.19,-.075,-.035],[.095,.30,.13],hair);
+          makeSphere("npc-hair-ribbon",[side*.19,.12,-.01],[.10,.06,.09],mats.gold);
+        }
       } else if(file==="King") {
         makeSphere("npc-royal-beard",[0,-.19,.13],[.15,.19,.09],beardMat);
+        makeSphere("npc-royal-crown",[0,.25,0],[.31,.065,.28],mats.gold);
+        for(let i=-1;i<=1;i++) makeSphere("npc-crown-jewel",[i*.14,.31,.08],[.055,.08,.05],mats.flowers);
       } else if(file==="PeasantMilitia" || file==="Scout") {
         makeSphere("npc-side-hair-left",[-.19,.015,.015],[.09,.18,.16],hair);
         makeSphere("npc-side-hair-right",[.19,.015,.015],[.09,.18,.16],hair);
       }
     } else {
-      // Narrow eye opening under the guard's helmet.
       makeSphere("npc-helmet-brow",[0,.145,.13],[.25,.055,.08],hairBrown);
+      makeSphere("npc-helmet-nasal",[0,-.005,.24],[.035,.16,.05],mats.gold);
     }
   }
   async function addTownsperson(file,x,z,walking,phase,heading=0,groundY=0) {
     try {
-      const imported=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/human003/",file+".glb",scene);
+      const modelPath=file.includes("/")?file:"human003/"+file;
+      const modelName=file.split("/").pop();
+      const imported=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/",modelPath+".glb",scene);
       const root=imported.meshes.find(m=>m.name==="__root__")||imported.meshes[0];
       if(!root) return null;
       root.position.set(x,groundY,z);root.rotation.y=heading;
@@ -848,7 +886,7 @@ export async function createRoyalCity(engine, canvas) {
       bounds=root.getHierarchyBoundingVectors(true);
       root.position.y-=bounds.min.y-groundY;
       root.computeWorldMatrix(true);
-      addFaceAndHair(root,imported.skeletons?.[0],file);
+      addFaceAndHair(root,imported.skeletons?.[0],modelName);
       const wanted=walking?"walk":"idle";
       const group=imported.animationGroups.find(g=>g.name.toLowerCase()===wanted)
         || imported.animationGroups.find(g=>g.name.toLowerCase().includes(wanted));
@@ -862,13 +900,13 @@ export async function createRoyalCity(engine, canvas) {
   }
   await Promise.all([
     addTownsperson("PeasantMilitia",-5,12,true,1.1,.5),
-    addTownsperson("Priestess",5,8,false,2.4,Math.PI),
+    addTownsperson("human013/CrownedPrincess",5,8,false,2.4,Math.PI),
     addTownsperson("Scout",18,18,true,3.8,-.8),
     addTownsperson("Footman",29,5,true,5.2,1.4),
-    addTownsperson("King",-2,15,false,6.6,-.6),
+    addTownsperson("human013/Prince",-2,15,false,6.6,-.6),
     addTownsperson("PeasantMilitia",7,-3,true,8.1,.2),
-    addTownsperson("Footman",-5.1,-70.4,false,9.3,0,7.63),
-    addTownsperson("Footman",5.1,-70.4,false,10.7,Math.PI,7.63)
+    addTownsperson("human013/PalaceHalberdier",-5.1,-70.4,false,9.3,0,7.63),
+    addTownsperson("human013/PalaceHalberdier",5.1,-70.4,false,10.7,Math.PI,7.63)
   ]);
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
@@ -980,7 +1018,7 @@ export async function createRoyalCity(engine, canvas) {
     document.querySelector("#hint").textContent=message;
   }
 
-  const shadowNames = /facade-|side-wall-|rear-wall|roof-|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-trunk|world-tree-branch|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
+  const shadowNames = /facade-|side-wall-|rear-wall|roof-|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
   for (const mesh of scene.meshes) {
     if (shadowNames.test(mesh.name)) shadow.addShadowCaster(mesh, false);
   }
