@@ -5,6 +5,7 @@ const SOURCES = {
   steps: "https://sfxmint.com/dl/footsteps-stone-01.mp3",
   tavern: "https://sfxmint.com/dl/cafe-interior-ambience-01.mp3",
   fire: "https://sfxmint.com/dl/roaring-fireplace-sound-effect-01.mp3",
+  birds: "https://sfxmint.com/dl/growth-a3585cc018b5ba7237b35d4f-part-1-v1.mp3",
   indoorSteps: "https://sfxmint.com/dl/footsteps-wood-05.mp3",
 };
 
@@ -14,7 +15,8 @@ export function createWorldAudio() {
   const stream = new Audio(SOURCES.stream);
   const tavern = new Audio(SOURCES.tavern);
   const fire = new Audio(SOURCES.fire);
-  for (const audio of [town, market, stream, tavern, fire]) {
+  const birds = new Audio(SOURCES.birds);
+  for (const audio of [town, market, stream, tavern, fire, birds]) {
     audio.loop = true;
     audio.preload = "auto";
     audio.volume = 0;
@@ -22,7 +24,6 @@ export function createWorldAudio() {
   let unlocked = false;
   let walking = false;
   let lastStep = 0;
-  let lastPosition = { x: 0, z: 0 };
   let currentLocation = "town";
 
   function safePlay(audio) {
@@ -37,6 +38,7 @@ export function createWorldAudio() {
     safePlay(stream);
     safePlay(tavern);
     safePlay(fire);
+    safePlay(birds);
   }
   function setMovement(active, position, location) {
     walking = active;
@@ -51,6 +53,7 @@ export function createWorldAudio() {
     stream.volume = nearWater ? 0.19 : 0;
     tavern.volume = inTavern ? 0.32 : 0;
     fire.volume = inTavern ? 0.13 : 0;
+    birds.volume = inTavern ? 0.015 : 0.12;
     const inside = currentLocation === "tavern" || currentLocation === "guild";
     if (walking && now - lastStep > (inside ? 3600 : 2600)) {
       lastStep = now;
@@ -60,7 +63,6 @@ export function createWorldAudio() {
       safePlay(step);
       step.addEventListener("ended", () => step.remove(), { once: true });
     }
-    lastPosition = { x: position.x, z: position.z };
   }
   return { unlock, setMovement };
 }
