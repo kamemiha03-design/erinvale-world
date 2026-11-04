@@ -747,21 +747,55 @@ export async function createRoyalCity(engine, canvas) {
       light.position.set(cx,17.35,z-.18);light.material=mats.lantern;
     }
     if(side<0) {
+      // Library: floor-to-ceiling shelves, a rolling ladder, reading lamps and scroll cabinets.
       for(const x of [cx-5.3,cx+5.3]) {
         box(scene,"palace-library-bookcase",[x,13.2,-86.0],[1.0,8.2,3.8],wood);
-        for(let level=0;level<4;level++) for(let b=0;b<5;b++) {
-          const book=box(scene,"palace-library-book",[x-0.34+b*.17,11.5+level*1.55,-84.25],[.12,1.05,.38],b%2?mats.banner:mats.gold);
+        for(let level=0;level<4;level++) {
+          box(scene,"palace-library-shelf",[x,10.0+level*1.8,-84.0],[1.08,.13,3.9],mats.trim);
+          for(let b=0;b<5;b++) {
+            const book=box(scene,"palace-library-book",[x-0.34+b*.17,10.55+level*1.55,-84.25],[.12,1.05,.38],b%2?mats.banner:mats.gold);
+          }
         }
+      }
+      box(scene,"palace-library-ladder-rail",[cx-4.15,13.5,-82.7],[.12,6.6,.12],castleGold);
+      box(scene,"palace-library-ladder-rail",[cx-4.15,13.5,-87.1],[.12,6.6,.12],castleGold);
+      for(let rung=0;rung<8;rung++) box(scene,"palace-library-ladder-rung",[cx-4.15,10.6+rung*.78,-84.9],[.16,.09,4.4],wood);
+      box(scene,"palace-library-reading-desk",[cx,9.65,-86.0],[3.2,.16,1.15],wood);
+      for(let side2 of [-1,1]) {
+        const lamp=MeshBuilder.CreateSphere("palace-library-lamp",{diameter:.25,segments:10},scene);
+        lamp.position.set(cx+side2*1.2,10.25,-86.0);lamp.material=mats.lantern;
       }
       box(scene,"palace-council-map-table",[cx,9.35,-78.0],[4.8,.28,2.6],wood);
       box(scene,"palace-council-map",[cx,9.52,-78.0],[3.8,.035,1.8],mats.trim);
+      for(let i=0;i<4;i++) {
+        const marker=MeshBuilder.CreateCylinder("palace-council-map-marker",{diameter:.18,height:.12,tessellation:10},scene);
+        marker.position.set(cx-1.3+i*.82,9.66,-78.0+(i%2)*.42);marker.material=castleGold;
+      }
+      box(scene,"palace-council-fireplace",[cx,12.0,-74.95],[3.5,4.8,.8],wood);
+      box(scene,"palace-council-fire-opening",[cx,10.8,-74.48],[1.8,2.1,.08],castleShadow);
+      box(scene,"palace-council-mantel",[cx,14.5,-74.35],[4.2,.28,1.0],castleGold);
     } else {
+      // Banquet room: long feast table, place settings, carved fireplace and royal tapestry.
       for(let i=0;i<6;i++) {
         const plate=MeshBuilder.CreateCylinder("palace-banquet-plate",{diameter:.48,height:.06,tessellation:16},scene);
         plate.position.set(cx-1.5+i*.6,9.76,-78.0);plate.material=mats.trim;
+        const goblet=MeshBuilder.CreateCylinder("palace-banquet-goblet",{diameterTop:.16,diameterBottom:.07,height:.32,tessellation:10},scene);
+        goblet.position.set(cx-1.5+i*.6,9.96,-77.45);goblet.material=castleGold;
       }
+      box(scene,"palace-banquet-fireplace",[cx,12.0,-74.95],[3.8,5.0,.8],wood);
+      box(scene,"palace-banquet-fire-opening",[cx,10.9,-74.48],[2.0,2.2,.08],castleShadow);
+      const fire=MeshBuilder.CreateSphere("palace-banquet-fire",{diameter:1.0,segments:10},scene);
+      fire.position.set(cx,10.9,-74.25);fire.scaling.set(1.0,.75,.25);fire.material=mats.lantern;
+      box(scene,"palace-banquet-mantel",[cx,14.65,-74.35],[4.4,.3,1.0],castleGold);
+      box(scene,"palace-banquet-tapestry",[cx,18.3,-74.4],[3.4,4.6,.12],mats.banner);
+      box(scene,"palace-banquet-tapestry-crest",[cx,18.4,-74.28],[1.1,1.6,.08],castleGold);
       box(scene,"palace-salon-settee",[cx,9.25,-86.0],[4.0,.65,1.2],cloth);
       box(scene,"palace-salon-back",[cx,10.05,-86.5],[4.0,1.25,.28],cloth);
+      for(let side2 of [-1,1]) {
+        box(scene,"palace-salon-arm",[cx+side2*1.9,9.75,-86.0],[.3,1.0,1.2],castleGold);
+        const vase=MeshBuilder.CreateCylinder("palace-salon-vase",{diameterTop:.28,diameterBottom:.48,height:.85,tessellation:12},scene);
+        vase.position.set(cx+side2*5.0,9.45,-86.0);vase.material=mats.trim;
+      }
     }
     // Gilded pilasters and a restrained blue-and-gold banner mark each wing entrance.
     for(const z of [-88.6,-75.4]) {
@@ -785,6 +819,24 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"royal-throne-arm",[side*1.65,11.0,-87.7],[.42,1.4,1.8],castleGold);
     const finial=MeshBuilder.CreateSphere("royal-throne-finial",{diameter:.42,segments:12},scene);
     finial.position.set(side*1.65,14.2,-88.4);finial.material=castleGold;
+  }
+  // A grand suspended chandelier, paired royal standards and visitor benches.
+  const chandelier=MeshBuilder.CreateCylinder("royal-hall-chandelier-ring",{diameter:5.8,height:.22,tessellation:32},scene);
+  chandelier.position.set(0,21.8,-82);chandelier.material=castleGold;
+  for(let i=0;i<10;i++) {
+    const a=i*Math.PI*2/10;
+    const candle=MeshBuilder.CreateCylinder("royal-hall-chandelier-candle",{diameter:.16,height:.85,tessellation:10},scene);
+    candle.position.set(Math.cos(a)*2.45,22.35,-82+Math.sin(a)*2.45);candle.material=mats.trim;
+    const flame=MeshBuilder.CreateSphere("royal-hall-chandelier-flame",{diameter:.22,segments:8},scene);
+    flame.position.set(Math.cos(a)*2.45,22.9,-82+Math.sin(a)*2.45);flame.material=mats.lantern;
+    const chain=MeshBuilder.CreateCylinder("royal-hall-chandelier-chain",{diameter:.055,height:2.5,tessellation:8},scene);
+    chain.position.set(Math.cos(a)*2.45,23.8,-82+Math.sin(a)*2.45);chain.material=castleGold;
+  }
+  for(let side of [-1,1]) {
+    box(scene,"royal-hall-visitor-bench",[side*4.8,9.25,-77.4],[2.7,.35,1.0],wood);
+    box(scene,"royal-hall-visitor-bench-back",[side*4.8,10.0,-77.85],[2.7,1.1,.2],wood);
+    box(scene,"royal-hall-royal-standard",[side*7.0,17.0,-86.7],[.9,5.8,.12],mats.banner);
+    box(scene,"royal-hall-standard-crest",[side*7.0,17.1,-86.58],[.48,.8,.08],castleGold);
   }
   // Tall jewel-toned stained-glass panels glow behind the throne.
   for(let i=0;i<5;i++) {
