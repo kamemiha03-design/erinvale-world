@@ -25,6 +25,7 @@ export function createWorldAudio() {
   let lastFrame = performance.now();
   let audioContext = null;
   let windGain = null;
+  let palacePadGain = null;
 
   function safePlay(audio) {
     const result = audio.play();
@@ -52,6 +53,19 @@ export function createWorldAudio() {
       gain.connect(audioContext.destination);
       source.start();
       windGain = gain.gain;
+      // Original soft harmonic tones distinguish the palace courtyard from the busy town.
+      const padGain=audioContext.createGain();
+      padGain.gain.value=0;
+      const low=audioContext.createOscillator();
+      const high=audioContext.createOscillator();
+      const padFilter=audioContext.createBiquadFilter();
+      low.type="sine";low.frequency.value=174.61;
+      high.type="sine";high.frequency.value=261.63;
+      padFilter.type="lowpass";padFilter.frequency.value=680;
+      low.connect(padFilter);high.connect(padFilter);padFilter.connect(padGain);
+      padGain.connect(audioContext.destination);
+      low.start();high.start();
+      palacePadGain=padGain.gain;
     } catch (error) {
       console.warn("Wind ambience unavailable", error);
     }
@@ -75,22 +89,26 @@ export function createWorldAudio() {
     const inMarket = (location || "").includes("市場");
     const inTavern = (location || "").includes("銅鹿亭");
     const inGuild = (location || "").includes("ギルド");
+    const inPalace = location === "palace" || (location || "").includes("王宮");
     const indoors = inTavern || inGuild;
     const nearWater = Math.max(0, 1 - Math.hypot(position.x - 13, position.z - 5) / 25);
 
     const targets = {
-      town: indoors ? .035 : inMarket ? .075 : .23,
+      town: inPalace ? .045 : indoors ? .035 : inMarket ? .075 : .23,
       market: inMarket ? .36 : 0,
-      stream: nearWater * .25,
+      stream: nearWater * (inPalace ? .035 : .25),
       tavern: inTavern ? .34 : inGuild ? .07 : 0,
       fire: inTavern ? .18 : 0,
-      birds: indoors ? .012 : .14,
+      birds: inPalace ? .055 : indoors ? .012 : .14,
     };
     for (const [key, audio] of Object.entries(layers)) {
       audio.volume += ((targets[key] ?? 0) - audio.volume) * Math.min(1, dt * 1.8);
     }
     if (windGain && audioContext) {
-      windGain.setTargetAtTime(indoors ? .006 : .025, audioContext.currentTime, .8);
+      windGain.setTargetAtTime(inPalace ? .052 : indoors ? .006 : .025, audioContext.currentTime, .8);
+    }
+    if (palacePadGain && audioContext) {
+      palacePadGain.setTargetAtTime(inPalace ? .012 : 0, audioContext.currentTime, 1.4);
     }
 
     if (active && now - lastStep > (indoors ? 610 : 480)) {
