@@ -279,26 +279,63 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       const plaque=MeshBuilder.CreateCylinder(name+"-stag-crest",{diameter:1.05,height:.18,tessellation:6},scene);
       plaque.position.set(x,5.3,z-d/2+.38);plaque.rotation.x=Math.PI/2;plaque.material=mats.gold;
     } else if(name==="Adventurers Guild") {
-      // Guild hall interior: mission counter, trophy wall, weapon rack, map table and banners.
-      box(scene,"guild-reception-counter",[x,1.25,z-d/2+2.2],[6.8,1.55,1.0],mats.woodLight);
-      obstacles.push({x,z:z-d/2+2.2,r:2.8});
-      box(scene,"guild-counter-front-panel",[x,1.3,z-d/2+1.68],[5.8,.85,.08],mats.gold);
-      box(scene,"guild-map-table",[x-5,.95,z+1.2],[3.0,.22,2.0],mats.wood);
-      box(scene,"guild-map-table-map",[x-5,1.09,z+1.2],[2.55,.035,1.55],mats.banner);
-      // A large mission board and framed maps on the rear wall.
-      box(scene,"guild-interior-mission-board",[x,5.5,z-d/2+.38],[5.2,3.4,.22],mats.wood);
-      for(let i=0;i<3;i++) {
-        box(scene,"guild-mission-paper",[x-1.55+i*1.55,5.5,z-d/2+.22],[1.25,2.45,.05],mats.trim);
-        box(scene,"guild-mission-red-seal",[x-1.55+i*1.55,4.55,z-d/2+.15],[.28,.28,.08],mats.flowers);
+      // A bustling, warm timber guild inspired by classic fantasy adventurer halls:
+      // a broad reception counter, crowded quest wall, long communal tables and trophies.
+      box(scene,"guild-reception-counter",[x,1.35,z-d/2+2.4],[9.2,1.7,1.15],mats.woodLight);
+      obstacles.push({x,z:z-d/2+2.4,r:3.2});
+      box(scene,"guild-counter-front-panel",[x,1.35,z-d/2+1.80],[8.0,.95,.08],mats.gold);
+      for(let i=0;i<5;i++) {
+        box(scene,"guild-counter-post",[x-4+i*2,2.0,z-d/2+1.78],[.12,1.25,.12],mats.wood);
+        const ledger=box(scene,"guild-counter-ledger",[x-3.2+i*1.6,2.24,z-d/2+2.0],[.55,.05,.38],mats.trim);
       }
+      // Oversized wooden quest board with parchment notices, seals and crossed swords.
+      box(scene,"guild-interior-mission-board",[x,7.0,z-d/2+.42],[10.0,5.4,.32],mats.wood);
+      box(scene,"guild-quest-board-inner",[x,7.0,z-d/2+.22],[9.2,4.65,.08],mats.floor);
+      for(let i=0;i<5;i++) {
+        const px=x-3.8+(i%3)*3.8, py=6.5+Math.floor(i/3)*1.45;
+        box(scene,"guild-mission-paper",[px,py,z-d/2+.13],[2.2,2.1,.05],mats.trim);
+        box(scene,"guild-mission-red-seal",[px+.72,py-.58,z-d/2+.08],[.24,.24,.07],mats.flowers);
+        box(scene,"guild-mission-ink-line",[px,py+.18,z-d/2+.075],[1.45,.045,.04],mats.wood);
+      }
+      // A broad map table sits to the left; adventurers can gather around it.
+      box(scene,"guild-map-table",[x-8,1.05,z+1.0],[4.2,.28,3.0],mats.wood);
+      box(scene,"guild-map-table-map",[x-8,1.22,z+1.0],[3.65,.035,2.4],mats.banner);
       for(let side of [-1,1]) {
-        box(scene,"guild-weapon-rack",[x+side*7.0,2.4,z],[.3,3.3,.35],mats.wood);
-        for(let j=0;j<3;j++) {
-          const blade=box(scene,"guild-display-sword",[x+side*7.0,2.3,z-1+j],[.10,2.2,.12],mats.gold);
-          blade.rotation.z=(j-1)*.13;
-          box(scene,"guild-sword-crossguard",[x+side*7.0,2.0,z-1+j],[.7,.12,.2],mats.woodLight);
+        // Trophy racks, shields and weapon displays along the side walls.
+        box(scene,"guild-weapon-rack",[x+side*12.1,3.0,z],[.35,4.4,.5],mats.wood);
+        for(let j=0;j<4;j++) {
+          const blade=box(scene,"guild-display-sword",[x+side*12.1,2.8,z-2.1+j*1.35],[.11,2.65,.14],mats.gold);
+          blade.rotation.z=(j%2?-.10:.10);
+          box(scene,"guild-sword-crossguard",[x+side*12.1,2.25,z-2.1+j*1.35],[.85,.13,.2],mats.woodLight);
         }
-        box(scene,"guild-hall-banner",[x+side*7.8,6.3,z],[1.1,3.4,.12],mats.banner);
+        const shield=MeshBuilder.CreateCylinder("guild-wall-shield",{diameter:1.65,height:.22,tessellation:6},scene);
+        shield.position.set(x+side*12.0,6.0,z+5.1);shield.rotation.x=Math.PI/2;shield.material=mats.banner;
+        const crest=MeshBuilder.CreateCylinder("guild-shield-crest",{diameter:.68,height:.25,tessellation:6},scene);
+        crest.position.set(x+side*12.0,6.0,z+4.95);crest.rotation.x=Math.PI/2;crest.material=mats.gold;
+        box(scene,"guild-hall-banner",[x+side*11.4,8.3,z-1.0],[1.35,4.4,.14],mats.banner);
+      }
+      // A broad hearth gives the hall the welcoming, tavern-like atmosphere of a fantasy guild.
+      box(scene,"guild-hearth-surround",[x+8.8,2.1,z+7.8],[4.8,4.2,.75],mats.trim);
+      box(scene,"guild-hearth-opening",[x+8.8,1.9,z+7.36],[3.0,2.25,.08],mats.dark);
+      box(scene,"guild-hearth-mantel",[x+8.8,4.35,z+7.25],[5.3,.28,1.0],mats.woodLight);
+      const guildFire=MeshBuilder.CreateSphere("guild-hearth-fire",{diameter:1.2,segments:12},scene);
+      guildFire.position.set(x+8.8,1.95,z+7.22);guildFire.scaling.set(1.2,1.0,.22);guildFire.material=mats.lantern;
+      // Heavy exposed rafters and a large iron chandelier make the ceiling feel lofty.
+      for(let zz=z-d/2+4;zz<z+d/2-1;zz+=4.0) {
+        box(scene,"guild-ceiling-rafter",[x,h-.28,zz],[w-.8,.42,.55],mats.wood);
+      }
+      const guildRing=MeshBuilder.CreateTorus("guild-grand-chandelier",{diameter:4.4,thickness:.16,tessellation:24},scene);
+      guildRing.position.set(x, h-1.5,z);guildRing.material=mats.gold;
+      for(let i=0;i<8;i++) {
+        const angle=i*Math.PI/4;
+        const candle=MeshBuilder.CreateCylinder("guild-chandelier-candle",{diameter:.16,height:.75,tessellation:8},scene);
+        candle.position.set(x+Math.cos(angle)*2.0,h-1.25,z+Math.sin(angle)*2.0);candle.material=mats.trim;
+        const flame=MeshBuilder.CreateSphere("guild-chandelier-flame",{diameter:.2,segments:8},scene);
+        flame.position.set(x+Math.cos(angle)*2.0,h-.82,z+Math.sin(angle)*2.0);flame.material=mats.lantern;
+      }
+      // Framed notices and trophy plaques fill the high walls without cluttering walkways.
+      for(let side of [-1,1]) for(let i=0;i<3;i++) {
+        box(scene,"guild-framed-notice",[x+side*13.25,5.8,z-5+i*4.2],[.12,1.8,2.2],mats.gold);
       }
     }
     for(let zz=z-d/2+.7;zz<=z+d/2-.7;zz+=1.35) {
@@ -373,7 +410,7 @@ export async function createRoyalCity(engine, canvas) {
   const obstacles=[];
   const addObstacle=(x,z,r)=>obstacles.push({x,z,r});
   addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"COPPER STAG • TAVERN",interior:true},{...mats},shadow,colliders,obstacles);
-  addBuilding(scene,{x:-23,z:-20,w:20,d:14,h:12,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:-23,z:-20,w:28,d:20,h:15,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
   // Landmark dressing: make the tavern and guild unmistakable from the square.
   // Copper Stag: oversized hanging sign, steep timber gable, warm windows and a beer emblem.
@@ -757,16 +794,16 @@ export async function createRoyalCity(engine, canvas) {
   const wingWall=castleStone;
   const palaceWingStartIndex=scene.meshes.length;
   for(const side of [-1,1]) {
-    const cx=side*17.25, innerX=side*10.45, outerX=side*24.05;
+    const cx=side*19.25, innerX=side*10.45, outerX=side*28.05;
     // Continuous walkable floor and upper cornice define the east and west wings.
-    box(scene,"palace-wing-floor",[cx,8.58,-82],[13.6,.24,15.0],wingFloor);
-    box(scene,"palace-wing-ceiling",[cx,31.0,-82],[13.6,.42,15.0],castleStone);
+    box(scene,"palace-wing-floor",[cx,8.58,-82],[17.6,.24,15.0],wingFloor);
+    box(scene,"palace-wing-ceiling",[cx,31.0,-82],[17.6,.42,15.0],castleStone);
     // Steep blue-slate roofs make the two palace wings visible as real exterior volumes.
-    const innerRoof=box(scene,"palace-wing-inner-roof",[cx-side*3.2,27.45,-82],[7.8,.62,17.2],castleRoof);
+    const innerRoof=box(scene,"palace-wing-inner-roof",[cx-side*3.2,27.45,-82],[9.8,.62,17.2],castleRoof);
     innerRoof.rotation.z=-side*.36;
     const outerRoof=box(scene,"palace-wing-outer-roof",[cx+side*3.2,27.45,-82],[7.8,.62,17.2],castleRoof);
     outerRoof.rotation.z=side*.36;
-    box(scene,"palace-wing-gold-ridge",[cx,29.0,-82],[.48,.38,17.5],castleGold);
+    box(scene,"palace-wing-gold-ridge",[cx,29.0,-82],[.58,.38,17.5],castleGold);
     // Outer wall, with tall inset windows facing the gardens.
     box(scene,"palace-wing-outer-wall",[outerX,20.5,-82],[.9,24,15.0],wingWall);
     for(const z of [-86.2,-82,-77.8]) {
@@ -780,10 +817,10 @@ export async function createRoyalCity(engine, canvas) {
     // The inner wall has a broad doorway into the throne hall.
     for(const z of [-77.55,-87.0]) box(scene,"palace-wing-inner-wall",[innerX,20.5,z],[.9,24,5.0],wingWall);
     // Front and rear walls close the wing while leaving the central hall-facing door open.
-    box(scene,"palace-wing-front-wall",[cx,20.5,-74.55],[13.6,24,.9],wingWall);
+    box(scene,"palace-wing-front-wall",[cx,20.5,-74.55],[17.6,24,.9],wingWall);
     box(scene,"palace-wing-rear-wall",[cx,20.5,-89.45],[13.6,24,.9],wingWall);
     // A partition separates two rooms; its central opening keeps both rooms connected.
-    box(scene,"palace-wing-partition-front",[cx+side*.1,17,-84.85],[12.7,17,.75],castleStone);
+    box(scene,"palace-wing-partition-front",[cx+side*.1,17,-84.85],[16.7,17,.75],castleStone);
     box(scene,"palace-wing-partition-rear",[cx+side*.1,17,-79.15],[12.7,17,.75],castleStone);
     // Door frames and gilded lintels make the openings legible.
     for(const z of [-82,-82]) {
@@ -876,12 +913,12 @@ export async function createRoyalCity(engine, canvas) {
   // Keep the entire new wing assembly aligned with the central keep after the citadel depth adjustment.
   for(const mesh of scene.meshes.slice(palaceWingStartIndex)) mesh.position.z-=22;
   // Palace hall floor, pale columns, crimson runner and a visible throne.
-  box(scene,"royal-hall-floor",[0,8.62,-82],[15.2,.24,13.0],mats.trim);
-  box(scene,"royal-hall-carpet",[0,8.78,-82],[4.2,.06,12.5],mats.banner);
+  box(scene,"royal-hall-floor",[0,8.62,-82],[20.5,.24,15.0],mats.trim);
+  box(scene,"royal-hall-carpet",[0,8.78,-82],[5.6,.06,14.5],mats.banner);
   for(let side of [-1,1]) for(let z=-87;z<=-77;z+=3.3) {
-    cylinder(scene,"royal-hall-column-base",[side*6.2,9.05,z],1.25,.48,castleGold,16);
-    const col=cylinder(scene,"royal-hall-column",[side*6.2,16.5,z],.62,14.5,mats.trim,20);
-    cylinder(scene,"royal-hall-column-capital",[side*6.2,24.0,z],1.15,.55,castleGold,16);
+    cylinder(scene,"royal-hall-column-base",[side*8.5,9.05,z],1.25,.48,castleGold,16);
+    const col=cylinder(scene,"royal-hall-column",[side*8.5,16.5,z],.62,14.5,mats.trim,20);
+    cylinder(scene,"royal-hall-column-capital",[side*8.5,24.0,z],1.15,.55,castleGold,16);
   }
   const throne=box(scene,"royal-throne-seat",[0,10.2,-87.6],[3.4,.55,2.0],castleGold);
   box(scene,"royal-throne-back",[0,12.1,-88.4],[3.3,4.0,.55],castleStone);
@@ -920,10 +957,10 @@ export async function createRoyalCity(engine, canvas) {
   keepRoof.position.set(0,48.6,-82);keepRoof.rotation.y=Math.PI/4;keepRoof.material=castleRoof;
   // A second walkable palace suite continues directly beyond the throne hall.
   const suiteZ=-109.5;
-  box(scene,"royal-suite-floor",[0,8.62,suiteZ],[18,.24,20],wingFloor);
-  box(scene,"royal-suite-ceiling",[0,31.0,suiteZ],[18,.38,20],castleStone);
+  box(scene,"royal-suite-floor",[0,8.62,suiteZ],[24,.24,26],wingFloor);
+  box(scene,"royal-suite-ceiling",[0,31.0,suiteZ],[24,.38,26],castleStone);
   for(const side of [-1,1]) {
-    box(scene,"royal-suite-side-wall",[side*9,20.5,suiteZ],[.8,24,20],castleStone);
+    box(scene,"royal-suite-side-wall",[side*12,20.5,suiteZ],[.8,24,26],castleStone);
     for(const z of [-105,-109.5,-114]) {
       box(scene,"royal-suite-window-recess",[side*8.55,17.5,z],[.12,4.5,2.0],castleShadow);
       box(scene,"royal-suite-window-glass",[side*8.48,17.5,z],[.08,3.7,1.35],mats.glass);
@@ -935,7 +972,7 @@ export async function createRoyalCity(engine, canvas) {
       cylinder(scene,"royal-suite-column-cap",[side*7.5,24.5,z],.95,.4,castleGold,16);
     }
   }
-  box(scene,"royal-suite-back-wall",[0,20.5,suiteZ-10],[18,24,.8],castleStone);
+  box(scene,"royal-suite-back-wall",[0,20.5,suiteZ-13],[24,24,.8],castleStone);
   const suiteCloth=mat(scene,"royal-suite-velvet",new Color3(.34,.10,.16),.88);
   // Canopied royal bed, embroidered curtains and a carved headboard.
   box(scene,"royal-suite-bed-frame",[0,9.45,suiteZ-5.8],[5.6,.55,4.0],mats.wood);
