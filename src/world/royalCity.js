@@ -130,9 +130,12 @@ function addBanner(scene, x, y, z, wood, cloth, phase=0) {
 
 function addBuilding(scene, cfg, mats, shadows, colliders) {
   const {x,z,w,d,h,name,sign,interior=false} = cfg;
-  const wall = box(scene,name+"-facade",[x,h/2,z],[w,h,d],mats.wall);
-  wall.receiveShadows=true;
   const front=z-d/2;
+  // Split the front wall around the entrance so the doorway is physically walkable.
+  const sideWidth=(w-2.25)/2;
+  box(scene,name+"-facade-left",[x-(w+2.25)/4,h/2,z],[sideWidth,h,d],mats.wall).receiveShadows=true;
+  box(scene,name+"-facade-right",[x+(w+2.25)/4,h/2,z],[sideWidth,h,d],mats.wall).receiveShadows=true;
+  box(scene,name+"-facade-over-door",[x,h-0.52,z],[2.25,1.04,d],mats.wall).receiveShadows=true;
   // Timber framing and stone quoins make the facade read as a crafted medieval building.
   for (const side of [-1,1]) {
     box(scene,name+"-corner-post",[x+side*(w/2-.35),h/2,front-.13],[.32,h+.12,.28],mats.wood);
@@ -156,9 +159,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders) {
   box(scene,name+"-door-left",[x-.93,1.35,front-.28],[.16,2.9,.45],mats.trim);
   box(scene,name+"-door-right",[x+.93,1.35,front-.28],[.16,2.9,.45],mats.trim);
   box(scene,name+"-door-lintel",[x,2.82,front-.28],[2.05,.22,.45],mats.trim);
-  box(scene,name+"-door-leaf",[x,1.22,front-.32],[1.55,2.42,.12],mats.wood);
-  box(scene,name+"-door-inset",[x,1.35,front-.40],[1.18,1.8,.04],mats.woodLight);
-  cylinder(scene,name+"-door-handle",[x+.52,1.2,front-.46],.12,.12,mats.gold,12);
+  // The entrance is intentionally open so the player can walk inside.
   const windowY=h*.67;
   addWindow(scene,x-w*.27,windowY,front-.16,mats.wood,mats.glass);
   addWindow(scene,x+w*.27,windowY,front-.16,mats.wood,mats.glass);
@@ -246,7 +247,7 @@ export async function createRoyalCity(engine, canvas) {
   }
   box(scene,"tavern-awning-frame",[-21,5.6,.2],[11,.18,2.5],mats.wood);
   for(let i=0;i<8;i++) {
-    const stripe=box(scene,"canvas-awning-stripe",[-26+i*1.42,5.28,-.8],[1.35,.13,2.2],i%2?mats.banner:mats.paleStone);
+    const stripe=box(scene,"canvas-awning-stripe",[-26+i*1.42,5.28,-.8],[1.35,.13,2.2],i%2?mats.banner:mats.trim);
     stripe.rotation.x=.12;
   }
   addPlanter(scene,-30,4,mats.trim,mats.green,mats.flowers);
