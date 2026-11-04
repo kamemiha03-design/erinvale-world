@@ -422,16 +422,7 @@ export async function createRoyalCity(engine, canvas) {
   const plazaGold=mat(scene,"plaza-warm-brass",new Color3(.62,.43,.19),.38,.62);
   const pavingLight=texturedMat(scene,"sun-warmed-paving",new Color3(.72,.67,.56),"#b7aa91","#6d6251",.94);
   const pavingDark=mat(scene,"paving-joint-shadow",new Color3(.32,.30,.26),.98);
-  for(const radius of [17.2,19.0,22.5]) {
-    const ring=MeshBuilder.CreateTorus("plaza-stone-inlay",{diameter:radius*2,thickness:.12,tessellation:96},scene);
-    ring.position.set(13,.015,5);ring.material=radius===19?plazaGold:pavingLight;
-  }
-  // Radial flagstones make the square feel like a carefully laid public place, not an empty floor.
-  for(let i=0;i<32;i++) {
-    const a=i*Math.PI/16;
-    const tile=box(scene,"radial-plaza-flagstone",[13+Math.cos(a)*20.6,.012,5+Math.sin(a)*20.6],[3.65,.045,1.42],i%4===0?pavingLight:mats.trim);
-    tile.rotation.y=-a;
-  }
+  // Keep the fountain plaza's paving broad and calm; omit concentric inlays and spoke-like strips.
   // Ornate stone lamp standards with warm glass lanterns.
   for(let i=0;i<8;i++) {
     const a=i*Math.PI/4,x=13+Math.cos(a)*23.5,z=5+Math.sin(a)*23.5;
@@ -784,10 +775,10 @@ export async function createRoyalCity(engine, canvas) {
     addCC0Model(scene,"Prop_Crate",[13.4,0.02,-7.4],[.85,.85,.85],.2),
     addCC0Model(scene,"Prop_Crate",[17.6,0.02,-14.2],[.85,.85,.85],-.15),
     addCC0Model(scene,"Prop_Crate",[26.8,0.02,-11.0],[.85,.85,.85],.3),
-    addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-14.8],[1.25,1.25,1.25],Math.PI*.5),
+    addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-18.0],[1.25,1.25,1.25],Math.PI*.5),
   ];
   await Promise.all(modelJobs);
-  addObstacle(32.2,-14.8,1.8);
+  addObstacle(32.2,-18.0,1.8);
   addObstacle(13.4,-7.4,.72);
   addObstacle(17.6,-14.2,.72);
   addObstacle(26.8,-11.0,.72);
@@ -826,50 +817,8 @@ export async function createRoyalCity(engine, canvas) {
   const hairChestnut=new StandardMaterial("npc-hair-chestnut",scene);hairChestnut.diffuseColor=new Color3(.32,.105,.045);
   const hairBlonde=new StandardMaterial("npc-hair-blonde",scene);hairBlonde.diffuseColor=new Color3(.72,.48,.16);
   const beardMat=new StandardMaterial("npc-beard",scene);beardMat.diffuseColor=new Color3(.19,.085,.035);
-  function addFaceAndHair(root, skeleton, file) {
-    const headBone=skeleton?.bones?.find(b=>/head/i.test(b.name)&&!/end|tip/i.test(b.name));
-    if(!headBone||!skeleton) return;
-    const makeSphere=(name,position,scale,material)=>{
-      const mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:18},scene);
-      mesh.position.set(...position);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;
-      // Attach to the actual head bone. A linked transform node overrides the bone pose,
-      // which made the previous face details invisible or detached on some rigs.
-      mesh.attachToBone(headBone,skeleton);
-      return mesh;
-    };
-    // Distinct eye whites, irises, pupils and tiny catchlights give the face readable expression.
-    for(const side of [-1,1]) {
-      makeSphere("npc-eye-sclera",[side*.067,.055,.194],[.052,.064,.025],eyeWhite);
-      makeSphere("npc-iris",[side*.067,.052,.216],[.027,.036,.012],irisMat);
-      makeSphere("npc-pupil",[side*.067,.052,.226],[.013,.022,.008],pupilMat);
-      makeSphere("npc-eye-glint",[side*.058,.067,.234],[.009,.012,.006],eyeWhite);
-      makeSphere("npc-eyebrow",[side*.067,.112,.197],[.062,.018,.018],hairBrown);
-      makeSphere("npc-ear",[side*.205,-.005,.015],[.055,.09,.065],file==="Priestess"?faceSkinLight:faceSkin);
-    }
-    makeSphere("npc-nose",[0,-.015,.215],[.035,.052,.045],file==="Priestess"?faceSkinLight:faceSkin);
-    makeSphere("npc-mouth",[0,-.09,.202],[.064,.014,.012],beardMat);
-    const hair=file==="Priestess"?hairBlonde:(file==="Scout"?hairChestnut:hairBrown);
-    if(file!=="Footman") {
-      makeSphere("npc-hair-cap",[0,.145,-.005],[.29,.16,.27],hair);
-      makeSphere("npc-fringe",[0,.105,.115],[.25,.075,.12],hair);
-      if(file==="Priestess") {
-        for(const side of [-1,1]) {
-          makeSphere("npc-long-hair-lock",[side*.19,-.075,-.035],[.095,.30,.13],hair);
-          makeSphere("npc-hair-ribbon",[side*.19,.12,-.01],[.10,.06,.09],mats.gold);
-        }
-      } else if(file==="King") {
-        makeSphere("npc-royal-beard",[0,-.19,.13],[.15,.19,.09],beardMat);
-        makeSphere("npc-royal-crown",[0,.25,0],[.31,.065,.28],mats.gold);
-        for(let i=-1;i<=1;i++) makeSphere("npc-crown-jewel",[i*.14,.31,.08],[.055,.08,.05],mats.flowers);
-      } else if(file==="PeasantMilitia" || file==="Scout") {
-        makeSphere("npc-side-hair-left",[-.19,.015,.015],[.09,.18,.16],hair);
-        makeSphere("npc-side-hair-right",[.19,.015,.015],[.09,.18,.16],hair);
-      }
-    } else {
-      makeSphere("npc-helmet-brow",[0,.145,.13],[.25,.055,.08],hairBrown);
-      makeSphere("npc-helmet-nasal",[0,-.005,.24],[.035,.16,.05],mats.gold);
-    }
-  }
+  // Imported character models already contain faces and hair. Do not overlay
+  // oversized procedural features, which distort their intended proportions.
   async function addTownsperson(file,x,z,walking,phase,heading=0,groundY=0) {
     try {
       const modelPath=file.includes("/")?file:"human003/"+file;
@@ -882,11 +831,13 @@ export async function createRoyalCity(engine, canvas) {
       let bounds=root.getHierarchyBoundingVectors(true);
       const height=Math.max(.01,bounds.max.y-bounds.min.y);
       root.scaling.scaleInPlace(1.78/height);
+      // Slightly lengthen the silhouette vertically while preserving the individual outfits.
+      root.scaling.y*=1.22;
       root.computeWorldMatrix(true);
       bounds=root.getHierarchyBoundingVectors(true);
       root.position.y-=bounds.min.y-groundY;
       root.computeWorldMatrix(true);
-      addFaceAndHair(root,imported.skeletons?.[0],modelName);
+      // Keep the source model's own facial proportions and expression.
       const wanted=walking?"walk":"idle";
       const group=imported.animationGroups.find(g=>g.name.toLowerCase()===wanted)
         || imported.animationGroups.find(g=>g.name.toLowerCase().includes(wanted));
@@ -914,7 +865,8 @@ export async function createRoyalCity(engine, canvas) {
     const horse=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/animal012/","PalominoHorse.glb",scene);
     horseRoot=horse.meshes.find(m=>m.name==="__root__")||horse.meshes[0];
     if(horseRoot) {
-      horseRoot.position.set(34,0,-22);horseRoot.rotation.y=-Math.PI/2;
+      // Harness the sole horse directly in front of the sole merchant wagon.
+      horseRoot.position.set(32.2,0,-24.6);horseRoot.rotation.y=0;
       horseRoot.computeWorldMatrix(true);
       let bounds=horseRoot.getHierarchyBoundingVectors(true);
       const height=Math.max(.01,bounds.max.y-bounds.min.y);
@@ -957,22 +909,16 @@ export async function createRoyalCity(engine, canvas) {
   } catch(error) {
     console.warn("Animated horse model could not be loaded:",error);
   }
-  addObstacle(34,-22,1.35);
-  // Timber merchant cart with iron-rimmed wheels and a piled cargo bed.
-  const cart=MeshBuilder.CreateBox("market-handcart-bed",{width:2.3,height:.25,depth:2.8},scene);
-  cart.position.set(34,.9,-25);cart.material=mats.wood;
-  for(let side of [-1,1]) {
-    const wheel=MeshBuilder.CreateCylinder("market-handcart-wheel",{diameter:1.35,height:.18,tessellation:24},scene);
-    wheel.position.set(34+side*1.18,.82,-25);wheel.rotation.z=Math.PI/2;wheel.material=mats.dark;
-    const hub=MeshBuilder.CreateCylinder("market-handcart-hub",{diameter:.34,height:.24,tessellation:16},scene);
-    hub.position.copyFrom(wheel.position);hub.rotation.z=Math.PI/2;hub.material=mats.gold;
-    box(scene,"market-handcart-rail",[34+side*.9,1.55,-25],[.12,.9,2.8],mats.woodLight);
-  }
-  for(let z=-25;z<=-23;z+=2) box(scene,"market-handcart-board",[34,1.48,z],[2.0,.12,.12],mats.woodLight);
-  for(let i=0;i<5;i++) {
-    const sack=MeshBuilder.CreateSphere("market-cart-cargo",{diameter:.82,segments:10},scene);
-    sack.position.set(33.55+(i%2)*.78,1.45+Math.floor(i/2)*.25,-24.6+Math.floor(i/2)*.6);
-    sack.scaling.y=.72;sack.material=i%2?mats.trim:mats.green;
+  addObstacle(32.2,-24.6,1.35);
+  // Paired leather traces visibly connect the horse to the wagon shafts.
+  const harnessLeather=new StandardMaterial("wagon-harness-leather",scene);
+  harnessLeather.diffuseColor=new Color3(.20,.075,.035);
+  for(const side of [-1,1]) {
+    const shaft=MeshBuilder.CreateTube("wagon-horse-shaft",{
+      path:[new Vector3(32.2+side*.62,.92,-22.2),new Vector3(32.2+side*.62,.86,-20.0),new Vector3(32.2+side*.62,.82,-18.5)],
+      radius:.075,tessellation:8
+    },scene);
+    shaft.material=harnessLeather;
   }
 
     // Camera, collision and interaction.
@@ -1003,8 +949,9 @@ export async function createRoyalCity(engine, canvas) {
     if(x<-12&&z>0)return "銅鹿亭 — Copper Stag Tavern";
     if(x<-12&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
-    if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
+    if(z<-62)return "王宮 — 王城の中庭";
     if(z<-35)return "王城への大通り";
+    if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
     return "王都エリンヴェイル";
   }
   function interact() {
