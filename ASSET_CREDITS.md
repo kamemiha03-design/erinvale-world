@@ -39,3 +39,13 @@ These are stylized modular assets, not photorealistic scans. They are a first as
 
 
 The same CC0 pack provides the following runtime PBR texture maps: `T_Plaster_BaseColor.png`, `T_Plaster_Normal.png`, `T_WoodTrim_BaseColor.png`, `T_RoundTiles_BaseColor.png`, `T_RoundTiles_Normal.png`, `T_UnevenBrick_BaseColor.png`, and `T_UnevenBrick_Normal.png`.
+
+## Animated townspeople and horse (CC0 1.0)
+
+- Asset library: Gobkit free rigged character and animal models
+- Source catalogue and exact model URLs: https://gobkit.com/api/free
+- Licence: CC0 1.0 Universal (the library's model metadata identifies these files as public domain)
+- Human models used: PeasantMilitia, Priestess, Scout, Footman, King
+- Horse model used: PalominoHorse
+- Runtime files: https://gobkit.com/freebies/human003/ and https://gobkit.com/freebies/animal012/
+- These are stylized, rigged low-poly models with baked animation groups; they are a step up from the hand-built primitive figures, not photorealistic scans.
