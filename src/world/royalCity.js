@@ -1,5 +1,5 @@
 import {
-  ArcRotateCamera,
+  UniversalCamera,
   Color3,
   Color4,
   DirectionalLight,
@@ -91,12 +91,10 @@ export async function createRoyalCity(engine, canvas) {
   scene.fogColor = new Color3(0.68, 0.78, 0.83);
   scene.environmentIntensity = 0.8;
 
-  const camera = new ArcRotateCamera("explorer-camera", -Math.PI / 2, Math.PI / 2.35, 10, new Vector3(0, 1.7, 0), scene);
-  camera.detachControl(canvas);
-  camera.lowerRadiusLimit = 0.1;
-  camera.upperRadiusLimit = 0.1;
+  const camera = new UniversalCamera("explorer-camera", new Vector3(0, 2.1, 11), scene);
   camera.minZ = 0.08;
   camera.fov = 0.92;
+  camera.inputs.clear();
 
   const skyLight = new HemisphericLight("sky-fill", new Vector3(0, 1, 0), scene);
   skyLight.intensity = 0.78;
@@ -162,8 +160,8 @@ export async function createRoyalCity(engine, canvas) {
     turn(dx, dy) {
       yaw += dx;
       pitch = Math.max(-1.05, Math.min(1.05, pitch + dy));
-      camera.alpha = -Math.PI / 2 - yaw;
-      camera.beta = Math.PI / 2 - pitch;
+      camera.rotation.y = yaw + Math.PI;
+      camera.rotation.x = pitch;
     },
     interact() {
       document.querySelector("#hint").textContent = interactHint;
