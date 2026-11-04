@@ -936,9 +936,10 @@ export async function createRoyalCity(engine, canvas) {
     }
   }
   box(scene,"royal-suite-back-wall",[0,20.5,suiteZ-10],[18,24,.8],castleStone);
+  const suiteCloth=mat(scene,"royal-suite-velvet",new Color3(.34,.10,.16),.88);
   // Canopied royal bed, embroidered curtains and a carved headboard.
   box(scene,"royal-suite-bed-frame",[0,9.45,suiteZ-5.8],[5.6,.55,4.0],mats.wood);
-  box(scene,"royal-suite-mattress",[0,9.85,suiteZ-5.7],[5.1,.42,3.6],cloth);
+  box(scene,"royal-suite-mattress",[0,9.85,suiteZ-5.7],[5.1,.42,3.6],suiteCloth);
   box(scene,"royal-suite-headboard",[0,11.4,suiteZ-7.55],[5.5,3.0,.38],castleGold);
   for(const side of [-1,1]) {
     box(scene,"royal-suite-bedpost",[side*2.5,11.8,suiteZ-7.5],[.24,4.8,.24],castleGold);
@@ -949,8 +950,8 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"royal-suite-dresser-top",[side*6.0,10.65,suiteZ+2.2],[2.3,.16,1.1],castleGold);
     const vase=MeshBuilder.CreateCylinder("royal-suite-vase",{diameterTop:.32,diameterBottom:.65,height:1.2,tessellation:14},scene);
     vase.position.set(side*6.0,11.3,suiteZ+2.2);vase.material=mats.trim;
-    box(scene,"royal-suite-sofa",[side*4.8,9.25,suiteZ+6.0],[3.4,.65,1.3],cloth);
-    box(scene,"royal-suite-sofa-back",[side*4.8,10.0,suiteZ+6.55],[3.4,1.2,.24],cloth);
+    box(scene,"royal-suite-sofa",[side*4.8,9.25,suiteZ+6.0],[3.4,.65,1.3],suiteCloth);
+    box(scene,"royal-suite-sofa-back",[side*4.8,10.0,suiteZ+6.55],[3.4,1.2,.24],suiteCloth);
   }
   // Writing table, stools, a fireplace and a long runner make this a furnished chamber.
   box(scene,"royal-suite-writing-table",[0,9.7,suiteZ+4.2],[4.4,.22,1.8],mats.wood);
