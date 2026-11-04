@@ -1,8 +1,26 @@
 import {
   UniversalCamera, Color3, Color4, DirectionalLight, HemisphericLight,
   MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial,
-  DynamicTexture, Vector3, Animation, Scalar,
+  DynamicTexture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
 } from "@babylonjs/core";
+import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader.js";
+
+const ASSET_ROOT = "https://raw.githubusercontent.com/J-Ponzo/gltf-medieval-village-megakit/main/glTF/";
+
+async function addCC0Model(scene, file, position, scale, rotationY = 0) {
+  try {
+    const imported = await SceneLoader.ImportMeshAsync("", ASSET_ROOT, file + ".gltf", scene);
+    const root = imported.meshes.find(mesh => mesh.name === "__root__") || imported.meshes[0];
+    if (!root) return null;
+    root.position.set(position[0], position[1], position[2]);
+    root.scaling.set(scale[0], scale[1], scale[2]);
+    root.rotation.y = rotationY;
+    return root;
+  } catch (error) {
+    console.warn("Optional CC0 model could not be loaded:", file, error);
+    return null;
+  }
+}
 
 const C = {
   stone: new Color3(0.66, 0.61, 0.51),
@@ -212,8 +230,12 @@ export async function createRoyalCity(engine, canvas) {
   scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.0028;scene.fogColor=new Color3(.68,.78,.84);
   const sky=new HemisphericLight("sky-fill",new Vector3(0,1,0),scene);sky.intensity=.86;sky.groundColor=new Color3(.29,.25,.20);
   const sun=new DirectionalLight("golden-sun",new Vector3(-.45,-1,.3),scene);sun.position=new Vector3(45,70,-20);sun.intensity=2.0;
-  const shadow=new ShadowGenerator(1536,sun);shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=24;
-  shadow.setDarkness(.25);
+  const shadow=new ShadowGenerator(2048,sun);shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=24;
+  shadow.setDarkness(.22);shadow.bias=.0005;shadow.normalBias=.025;
+  scene.imageProcessingConfiguration.toneMappingEnabled=true;
+  scene.imageProcessingConfiguration.toneMappingType=ImageProcessingConfiguration.TONEMAPPING_ACES;
+  scene.imageProcessingConfiguration.exposure=1.12;
+  scene.imageProcessingConfiguration.contrast=1.16;
 
   const mats={
     wall:texturedMat(scene,"aged-limestone",C.stone,"#a99a7d","#594d3d"),
@@ -356,6 +378,16 @@ export async function createRoyalCity(engine, canvas) {
     leaf.position.set((Math.random()-.5)*26,30+Math.random()*20,-93+(Math.random()-.5)*10);
     leaf.scaling.y=.72+Math.random()*.5;leaf.material=canopyMats[i%3];canopy.push({mesh:leaf,phase:Math.random()*Math.PI*2,base:leaf.rotation.z,baseY:leaf.position.y});
   }
+
+  // Detailed CC0 models add leaf geometry and a merchant wagon.
+  const modelJobs = [
+    addCC0Model(scene,"Prop_Vine1",[-26.6,2.1,11.24],[1.35,1.35,1.35],0),
+    addCC0Model(scene,"Prop_Vine1",[-15.4,2.0,11.24],[1.15,1.25,1.15],0),
+    addCC0Model(scene,"Prop_Vine2",[-13.9,2.3,-11.1],[1.2,1.2,1.2],0),
+    addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-14.8],[1.25,1.25,1.25],Math.PI*.5),
+  ];
+  await Promise.all(modelJobs);
+  addObstacle(32.2,-14.8,1.8);
 
   // Old trees, clipped hedges and flower planters around the outer square.
   for(const [x,z,s] of [[-37,20,1.8],[36,19,1.6],[-39,-20,1.5],[38,-28,1.7],[-8,27,1.1],[29,28,1.3]]) {
