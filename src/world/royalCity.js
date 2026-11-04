@@ -472,9 +472,12 @@ export async function createRoyalCity(engine, canvas) {
       const input=moveSource();
       const step=Math.min(dt,.045);
       const speed=4.4;
-      const fx=Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=Math.sin(yaw);
-      const dx=(fx*input.y+rx*input.x)*speed*step;
-      const dz=(fz*input.y+rz*input.x)*speed*step;
+      const forward=camera.getDirection(new Vector3(0,0,1));
+      forward.y=0;
+      if(forward.lengthSquared()>0.0001) forward.normalize();
+      const right=Vector3.Cross(forward,Vector3.Up()).normalize();
+      const dx=(forward.x*input.y+right.x*input.x)*speed*step;
+      const dz=(forward.z*input.y+right.z*input.x)*speed*step;
       const nx=camera.position.x+dx,nz=camera.position.z+dz;
       if(!collides(nx,camera.position.z))camera.position.x=nx;
       if(!collides(camera.position.x,nz))camera.position.z=nz;
