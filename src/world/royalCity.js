@@ -651,7 +651,7 @@ export async function createRoyalCity(engine, canvas) {
   }
   // A long, walkable royal stair climbs from the city approach to the elevated gate.
   // Each visible tread is a real individual stone step; player height follows the stair profile.
-  const stairStartZ=-47, stairEndZ=-72, stairRise=8.25, stairCount=40;
+  const stairStartZ=-57, stairEndZ=-82, stairRise=8.25, stairCount=40;
   for(let step=0;step<stairCount;step++) {
     const rise=stairRise/stairCount, tread= (stairStartZ-stairEndZ)/stairCount;
     const top=(step+1)*rise, z=stairStartZ-(step+.5)*tread;
@@ -908,8 +908,8 @@ export async function createRoyalCity(engine, canvas) {
     addTownsperson("Footman",29,5,true,5.2,1.4),
     addTownsperson("human013/Prince",-2,15,false,6.6,-.6),
     addTownsperson("PeasantMilitia",7,-3,true,8.1,.2),
-    addTownsperson("human013/PalaceHalberdier",-5.1,-70.4,false,9.3,0,7.63),
-    addTownsperson("human013/PalaceHalberdier",5.1,-70.4,false,10.7,Math.PI,7.63)
+    addTownsperson("human013/PalaceHalberdier",-5.1,-80.4,false,9.3,0,7.63),
+    addTownsperson("human013/PalaceHalberdier",5.1,-80.4,false,10.7,Math.PI,7.63)
   ]);
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
