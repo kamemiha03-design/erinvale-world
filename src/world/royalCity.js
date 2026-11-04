@@ -250,6 +250,9 @@ export async function createRoyalCity(engine, canvas) {
 
   // Tavern outdoor terrace: benches, tables, barrels, flower boxes and striped awning.
   for(let i=0;i<3;i++) {
+    addObstacle(-27+i*4,-1,1.0);
+    addObstacle(-27+i*4,-2.05,1.05);
+    addObstacle(-30+i*2.3,-1.4,.68);
     box(scene,"terrace-table",[-27+i*4,.9,-1],[1.6,.18,1.2],mats.woodLight);
     box(scene,"terrace-bench",[-27+i*4, .52,-2.05],[2,.22,.42],mats.wood);
     addBarrel(scene,-30+i*2.3,-1.4,mats.wood,mats.gold);
@@ -262,9 +265,11 @@ export async function createRoyalCity(engine, canvas) {
   addPlanter(scene,-30,4,mats.trim,mats.green,mats.flowers);
   addPlanter(scene,-12,4,mats.trim,mats.green,mats.flowers);
   addBarrel(scene,-29,11,mats.wood,mats.gold);addBarrel(scene,-13,11,mats.wood,mats.gold);
+  addObstacle(-29,11,.68);addObstacle(-13,11,.68);
 
   // Guild notice board and a cluster of posted parchment sheets.
   box(scene,"quest-board-frame",[-12,2.25,-10],[4.2,3.4,.35],mats.wood);
+  addObstacle(-12,-10,1.35);
   box(scene,"quest-board-face",[-12,2.25,-10.22],[3.75,2.95,.06],mats.woodLight);
   for(let i=0;i<5;i++) {
     const paper=box(scene,"guild-notice",[-13.3+(i%3)*1.25,2.45+Math.floor(i/3)*.6,-10.28],[.8,1.05,.035],mats.trim);
@@ -296,6 +301,8 @@ export async function createRoyalCity(engine, canvas) {
   // Market stalls, cloth roofs, produce crates and baskets.
   for(let i=0;i<4;i++) {
     const x=14+i*4.5,z=-10-(i%2)*3;
+    addObstacle(x,z,1.9);
+    addObstacle(x-1.3,z+1.5,.68);
     box(scene,"market-counter",[x,1,z],[3.3,1.6,2.1],mats.wood);
     box(scene,"market-canopy",[x,2.65,z],[3.8,.18,2.7],i%2?mats.banner:mats.flowers);
     for(const dx of [-1.65,1.65]) for(const dz of [-1.05,1.05])
@@ -352,6 +359,7 @@ export async function createRoyalCity(engine, canvas) {
 
   // Old trees, clipped hedges and flower planters around the outer square.
   for(const [x,z,s] of [[-37,20,1.8],[36,19,1.6],[-39,-20,1.5],[38,-28,1.7],[-8,27,1.1],[29,28,1.3]]) {
+    addObstacle(x,z,1.0*s);
     cylinder(scene,"plaza-tree-trunk",[x,2.4*s,z],.75*s,4.8*s,mats.trunk,12);
     for(let j=0;j<5;j++) {
       const crown=MeshBuilder.CreateSphere("plaza-tree-crown",{diameter:4.6*s,segments:10},scene);
@@ -361,9 +369,11 @@ export async function createRoyalCity(engine, canvas) {
   }
   addPlanter(scene,8,15,mats.trim,mats.green,mats.flowers);
   addPlanter(scene,25,13,mats.trim,mats.green,mats.flowers);
+  addObstacle(8,15,1.15);addObstacle(25,13,1.15);
 
   // Ambient decorative street lamps and benches.
   for(const [x,z] of [[-7,20],[7,20],[-8,-27],[8,-27],[30,2],[-32,-2]]) {
+    addObstacle(x,z,.5);
     cylinder(scene,"street-lamp-post",[x,2.1,z],.16,4.2,mats.wood,12);
     box(scene,"street-lamp-top",[x,4.2,z],[.9,.18,.9],mats.gold);
     const glow=MeshBuilder.CreateSphere("street-lamp-glow",{diameter:.38,segments:10},scene);
