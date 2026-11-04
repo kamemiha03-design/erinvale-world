@@ -2,7 +2,8 @@ const SOURCES = {
   town: "https://sfxmint.com/dl/village-ambience-01.mp3",
   market: "https://sfxmint.com/dl/village-ambience-05.mp3",
   stream: "https://sfxmint.com/dl/village-ambience-08.mp3",
-  steps: "https://sfxmint.com/dl/footsteps-concrete-03.mp3",
+  steps: "https://sfxmint.com/dl/footsteps-stone-01.mp3",
+  indoorSteps: "https://sfxmint.com/dl/footsteps-wood-05.mp3",
 };
 
 export function createWorldAudio() {
@@ -43,7 +44,8 @@ export function createWorldAudio() {
     stream.volume = nearWater ? 0.19 : 0;
     if (walking && now - lastStep > 510) {
       lastStep = now;
-      const step = new Audio(SOURCES.steps);
+      const inside = currentLocation === "tavern" || currentLocation === "guild";
+      const step = new Audio(inside ? SOURCES.indoorSteps : SOURCES.steps);
       step.volume = 0.32;
       step.playbackRate = 0.94 + Math.random() * 0.13;
       safePlay(step);
