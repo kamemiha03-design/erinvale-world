@@ -515,13 +515,13 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   // Gatehouse and layered city approach.
-  addBuilding(scene,{x:0,z:-43,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE",passThrough:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:0,z:-53,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE",passThrough:true},{...mats},shadow,colliders,obstacles);
   for(let side of [-1,1]) {
-    const tower=cylinder(scene,"gatehouse-tower",[side*11,9,-43],5.4,18,mats.wall,16);
+    const tower=cylinder(scene,"gatehouse-tower",[side*11,9,-53],5.4,18,mats.wall,16);
     const cap=MeshBuilder.CreateCylinder("gatehouse-turret-roof",{diameterTop:0,diameterBottom:6.4,height:4.8,tessellation:12},scene);
     cap.position.set(side*11,20.4,-43);cap.material=mats.roof;
-    box(scene,"gate-banner-bracket",[side*11,14,-46],[.2,.2,1],mats.gold);
-    addBanner(scene,side*11,17,-46,mats.gold,mats.banner,side);
+    box(scene,"gate-banner-bracket",[side*11,14,-56],[.2,.2,1],mats.gold);
+    addBanner(scene,side*11,17,-56,mats.gold,mats.banner,side);
   }
   for(let i=0;i<8;i++) {
     const house=MeshBuilder.CreateBox("distant-city-house",{width:5+Math.random()*3,height:5+Math.random()*7,depth:5},scene);
@@ -1010,7 +1010,7 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
     // Keep the central stair corridor open; the cliff shoulders remain solid.
-    if(z<-68 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
+    if(z<-78 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
     return false;
   };
   const location=document.querySelector("#location-name");
@@ -1018,8 +1018,9 @@ export async function createRoyalCity(engine, canvas) {
     if(x<-12&&z>0)return "銅鹿亭 — Copper Stag Tavern";
     if(x<-12&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
-    if(z<-62)return "王宮 — 王城の中庭";
-    if(z<-35)return "王城への大通り";
+    if(x>43&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
+    if(z<-72)return "王宮 — 王城の中庭";
+    if(z<-45)return "王城への大通り";
     if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
     return "王都エリンヴェイル";
   }
@@ -1029,7 +1030,8 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
     else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
-    else if(z<-35)message="王城へ続く大門。崖の上に王城、その背後には世界樹がそびえる。";
+    else if(z<-45)message="王城へ続く大門。街の喧騒が遠のき、王宮の静けさが近づいてくる。";
+    else if(x>43&&z>-3&&z<35)message="酒場通り。旅人や商人、冒険者たちが夜まで集う街の一角。";
     else if(x>10&&z<-5)message="市場の屋台。果物や旅の道具が並んでいる。";
     document.querySelector("#hint").textContent=message;
   }
