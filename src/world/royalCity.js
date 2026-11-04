@@ -1,7 +1,7 @@
 import {
   UniversalCamera, Color3, Color4, DirectionalLight, HemisphericLight,
   MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial,
-  DynamicTexture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
+  DynamicTexture, Texture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
 } from "@babylonjs/core";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader.js";
 
@@ -255,9 +255,27 @@ export async function createRoyalCity(engine, canvas) {
     banner:mat(scene,"royal-blue-cloth",C.blue),
   };
 
+
+  // Real CC0 tile maps replace procedural noise on the hero surfaces.
+  function surfaceMaps(material, baseColor, normal, tileU=3, tileV=3) {
+    const albedo=new Texture(ASSET_ROOT+baseColor,scene,true,false);
+    albedo.uScale=tileU;albedo.vScale=tileV;
+    material.albedoTexture=albedo;
+    if(normal) {
+      const normalMap=new Texture(ASSET_ROOT+normal,scene,true,false);
+      normalMap.uScale=tileU;normalMap.vScale=tileV;
+      material.bumpTexture=normalMap;
+      material.bumpTexture.level=.48;
+    }
+  }
+  surfaceMaps(mats.wall,"T_Plaster_BaseColor.png","T_Plaster_Normal.png",2.6,2.6);
+  surfaceMaps(mats.wood,"T_WoodTrim_BaseColor.png",null,2.2,2.2);
+  surfaceMaps(mats.roof,"T_RoundTiles_BaseColor.png","T_RoundTiles_Normal.png",2.4,2.4);
+
   // Cobblestone plaza with a repeating hand-laid pattern.
   const ground=MeshBuilder.CreateGround("plaza-ground",{width:150,height:150,subdivisions:2},scene);
   ground.position.y=-.12;ground.material=texturedMat(scene,"cobblestone",new Color3(.53,.50,.43),"#8c8475","#39362f");
+  surfaceMaps(ground.material,"T_UnevenBrick_BaseColor.png","T_UnevenBrick_Normal.png",9,9);
   for(let z=-39;z<=33;z+=6) for(let x=-39;x<=39;x+=6) {
     const p=MeshBuilder.CreateBox("individual-cobble",{width:5.78,height:.055,depth:5.78},scene);
     p.position.set(x,-.055,z);p.material=(Math.floor((x+39)/6+z/6)%6===0)?mats.trim:ground.material;
@@ -384,6 +402,13 @@ export async function createRoyalCity(engine, canvas) {
     addCC0Model(scene,"Prop_Vine1",[-26.6,2.1,11.24],[1.35,1.35,1.35],0),
     addCC0Model(scene,"Prop_Vine1",[-15.4,2.0,11.24],[1.15,1.25,1.15],0),
     addCC0Model(scene,"Prop_Vine2",[-13.9,2.3,-11.1],[1.2,1.2,1.2],0),
+    addCC0Model(scene,"Prop_Vine4",[-28.2,2.0,11.2],[1.0,1.1,1.0],0),
+    addCC0Model(scene,"Prop_Vine5",[-13.9,2.0,-20.5],[1.0,1.0,1.0],0),
+    addCC0Model(scene,"Roof_Dormer_RoundTile",[-24.5,9.4,6.2],[1.15,1.15,1.15],0),
+    addCC0Model(scene,"Roof_Dormer_RoundTile",[-18.0,9.4,6.2],[1.15,1.15,1.15],0),
+    addCC0Model(scene,"Prop_Crate",[13.4,0.02,-7.4],[.85,.85,.85],.2),
+    addCC0Model(scene,"Prop_Crate",[17.6,0.02,-14.2],[.85,.85,.85],-.15),
+    addCC0Model(scene,"Prop_Crate",[26.8,0.02,-11.0],[.85,.85,.85],.3),
     addCC0Model(scene,"Roof_RoundTiles_6x8",[-21,9.35,6],[1.7,1.0,1.1],0),
     addCC0Model(scene,"Roof_RoundTiles_6x8",[-21,9.85,-16],[1.6,1.0,1.0],0),
     addCC0Model(scene,"Roof_RoundTiles_6x8",[22,8.95,-18],[1.7,1.0,1.0],0),
