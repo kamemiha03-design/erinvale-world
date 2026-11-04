@@ -685,11 +685,18 @@ export async function createRoyalCity(engine, canvas) {
   // The side-wing walls are split around real door openings so the rooms can be explored.
   const wingFloor=mat(scene,"palace-wing-floor",new Color3(.73,.70,.62),.92);
   const wingWall=castleStone;
+  const palaceWingStartIndex=scene.meshes.length;
   for(const side of [-1,1]) {
     const cx=side*17.25, innerX=side*10.45, outerX=side*24.05;
     // Continuous walkable floor and upper cornice define the east and west wings.
     box(scene,"palace-wing-floor",[cx,8.58,-82],[13.6,.24,15.0],wingFloor);
     box(scene,"palace-wing-ceiling",[cx,25.9,-82],[13.6,.42,15.0],castleStone);
+    // Steep blue-slate roofs make the two palace wings visible as real exterior volumes.
+    const innerRoof=box(scene,"palace-wing-inner-roof",[cx-side*3.2,27.45,-82],[7.8,.62,17.2],castleRoof);
+    innerRoof.rotation.z=-side*.36;
+    const outerRoof=box(scene,"palace-wing-outer-roof",[cx+side*3.2,27.45,-82],[7.8,.62,17.2],castleRoof);
+    outerRoof.rotation.z=side*.36;
+    box(scene,"palace-wing-gold-ridge",[cx,29.0,-82],[.48,.38,17.5],castleGold);
     // Outer wall, with tall inset windows facing the gardens.
     box(scene,"palace-wing-outer-wall",[outerX,17,-82],[.9,17,15.0],wingWall);
     for(const z of [-86.2,-82,-77.8]) {
@@ -762,6 +769,8 @@ export async function createRoyalCity(engine, canvas) {
       box(scene,"palace-wing-gilt-capital",[cx,24.9,z],[1.0,.38,.9],castleGold);
     }
   }
+  // Keep the entire new wing assembly aligned with the central keep after the citadel depth adjustment.
+  for(const mesh of scene.meshes.slice(palaceWingStartIndex)) mesh.position.z-=22;
   // Palace hall floor, pale columns, crimson runner and a visible throne.
   box(scene,"royal-hall-floor",[0,8.62,-82],[15.2,.24,13.0],mats.trim);
   box(scene,"royal-hall-carpet",[0,8.78,-82],[4.2,.06,12.5],mats.banner);
