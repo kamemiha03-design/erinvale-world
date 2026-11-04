@@ -1,6 +1,6 @@
 import {
   UniversalCamera, Color3, Color4, DirectionalLight, HemisphericLight,
-  MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial,
+  MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial, TransformNode,
   DynamicTexture, Texture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
 } from "@babylonjs/core";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader.js";
@@ -788,6 +788,52 @@ export async function createRoyalCity(engine, canvas) {
 
   // Rigged, animated CC0 fantasy residents replace the primitive mannequin figures.
   const people=[];
+  const faceSkin=new StandardMaterial("npc-face-skin",scene);faceSkin.diffuseColor=new Color3(.72,.49,.34);faceSkin.roughness=.92;
+  const faceSkinLight=new StandardMaterial("npc-face-skin-light",scene);faceSkinLight.diffuseColor=new Color3(.88,.68,.52);
+  const eyeWhite=new StandardMaterial("npc-eye-white",scene);eyeWhite.diffuseColor=new Color3(.92,.88,.78);
+  const irisMat=new StandardMaterial("npc-iris",scene);irisMat.diffuseColor=new Color3(.18,.11,.07);
+  const pupilMat=new StandardMaterial("npc-pupil",scene);pupilMat.diffuseColor=new Color3(.025,.018,.015);
+  const hairBrown=new StandardMaterial("npc-hair-brown",scene);hairBrown.diffuseColor=new Color3(.12,.055,.025);
+  const hairChestnut=new StandardMaterial("npc-hair-chestnut",scene);hairChestnut.diffuseColor=new Color3(.32,.105,.045);
+  const hairBlonde=new StandardMaterial("npc-hair-blonde",scene);hairBlonde.diffuseColor=new Color3(.72,.48,.16);
+  const beardMat=new StandardMaterial("npc-beard",scene);beardMat.diffuseColor=new Color3(.19,.085,.035);
+  function addFaceAndHair(root, skeleton, file) {
+    const headBone=skeleton?.bones?.find(b=>/head/i.test(b.name)&&!/end|tip/i.test(b.name));
+    if(!headBone) return;
+    const anchorNode=new TransformNode("npc-head-details",scene);
+    headBone.linkTransformNode(anchorNode,root);
+    const makeSphere=(name,position,scale,material)=>{
+      const mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:12},scene);
+      mesh.parent=anchorNode;mesh.position.set(...position);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
+    };
+    // Small sculpted facial features sit on the front of the head and follow its rig.
+    makeSphere("npc-face-overlay",[0,.015,.105],[.255,.29,.105],file==="Priestess"?faceSkinLight:faceSkin);
+    for(const side of [-1,1]) {
+      makeSphere("npc-eye-sclera",[side*.067,.055,.194],[.052,.064,.025],eyeWhite);
+      makeSphere("npc-iris",[side*.067,.052,.216],[.027,.036,.012],irisMat);
+      makeSphere("npc-pupil",[side*.067,.052,.226],[.013,.022,.008],pupilMat);
+      makeSphere("npc-eyebrow",[side*.067,.112,.197],[.062,.018,.018],hairBrown);
+    }
+    makeSphere("npc-nose",[0,-.015,.215],[.035,.052,.045],faceSkin);
+    makeSphere("npc-mouth",[0,-.09,.202],[.064,.014,.012],beardMat);
+    // Individual silhouettes: fringe, crown and back locks stop the NPCs reading as blank mannequins.
+    const hair=file==="Priestess"?hairBlonde:(file==="Scout"?hairChestnut:hairBrown);
+    if(file!=="Footman") {
+      makeSphere("npc-hair-cap",[0,.145,-.005],[.29,.16,.27],hair);
+      makeSphere("npc-fringe",[0,.105,.115],[.25,.075,.12],hair);
+      if(file==="Priestess") {
+        for(const side of [-1,1]) makeSphere("npc-long-hair-lock",[side*.19,-.075,-.035],[.095,.30,.13],hair);
+      } else if(file==="King") {
+        makeSphere("npc-royal-beard",[0,-.19,.13],[.15,.19,.09],beardMat);
+      } else if(file==="PeasantMilitia" || file==="Scout") {
+        makeSphere("npc-side-hair-left",[-.19,.015,.015],[.09,.18,.16],hair);
+        makeSphere("npc-side-hair-right",[.19,.015,.015],[.09,.18,.16],hair);
+      }
+    } else {
+      // Narrow eye opening under the guard's helmet.
+      makeSphere("npc-helmet-brow",[0,.145,.13],[.25,.055,.08],hairBrown);
+    }
+  }
   async function addTownsperson(file,x,z,walking,phase,heading=0,groundY=0) {
     try {
       const imported=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/human003/",file+".glb",scene);
@@ -802,6 +848,7 @@ export async function createRoyalCity(engine, canvas) {
       bounds=root.getHierarchyBoundingVectors(true);
       root.position.y-=bounds.min.y-groundY;
       root.computeWorldMatrix(true);
+      addFaceAndHair(root,imported.skeletons?.[0],file);
       const wanted=walking?"walk":"idle";
       const group=imported.animationGroups.find(g=>g.name.toLowerCase()===wanted)
         || imported.animationGroups.find(g=>g.name.toLowerCase().includes(wanted));
