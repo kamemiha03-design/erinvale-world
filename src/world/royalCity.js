@@ -764,12 +764,12 @@ export async function createRoyalCity(engine, canvas) {
 
   // Rigged, animated CC0 fantasy residents replace the primitive mannequin figures.
   const people=[];
-  async function addTownsperson(file,x,z,walking,phase,heading=0) {
+  async function addTownsperson(file,x,z,walking,phase,heading=0,groundY=0) {
     try {
       const imported=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/human003/",file+".glb",scene);
       const root=imported.meshes.find(m=>m.name==="__root__")||imported.meshes[0];
       if(!root) return null;
-      root.position.set(x,0,z);root.rotation.y=heading;
+      root.position.set(x,groundY,z);root.rotation.y=heading;
       root.computeWorldMatrix(true);
       let bounds=root.getHierarchyBoundingVectors(true);
       const height=Math.max(.01,bounds.max.y-bounds.min.y);
@@ -796,8 +796,8 @@ export async function createRoyalCity(engine, canvas) {
     addTownsperson("Footman",29,5,true,5.2,1.4),
     addTownsperson("King",-2,15,false,6.6,-.6),
     addTownsperson("PeasantMilitia",7,-3,true,8.1,.2),
-    addTownsperson("Footman",-5.1,8.25,-70.4,false,9.3,0),
-    addTownsperson("Footman",5.1,8.25,-70.4,false,10.7,Math.PI)
+    addTownsperson("Footman",-5.1,-70.4,false,9.3,0,8.25),
+    addTownsperson("Footman",5.1,-70.4,false,10.7,Math.PI,8.25)
   ]);
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
@@ -913,7 +913,7 @@ export async function createRoyalCity(engine, canvas) {
       const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?stairProgress*stairRise:0;
-      const onLanding=Math.abs(camera.position.x)<8.6 && camera.position.z<stairEndZ && camera.position.z>-75.2;
+      const onLanding=Math.abs(camera.position.x)<8.6 && camera.position.z<stairEndZ && camera.position.z>-82.5;
       camera.position.y=1.72+(onRoyalStair?stairFloor:(onLanding?stairRise:0));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
