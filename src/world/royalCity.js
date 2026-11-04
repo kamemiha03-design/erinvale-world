@@ -661,6 +661,30 @@ export async function createRoyalCity(engine, canvas) {
   waterfall.position.set(27,7,-68);waterfall.material=new StandardMaterial("waterfall-material",scene);
   waterfall.material.diffuseColor=new Color3(.45,.75,.82);waterfall.material.alpha=.72;waterfall.material.emissiveColor=new Color3(.12,.2,.22);
 
+  // Set the keep behind the curtain wall, creating a genuine arrival courtyard.
+  for(const mesh of scene.meshes) {
+    if(/^(royal-keep|royal-hall|royal-throne|keep-|castle-tower|castle-spire|castle-roof|castle-tower-foot)/.test(mesh.name)) mesh.position.z-=12;
+  }
+  // Formal garden courtyard between the open gate and the palace entrance.
+  box(scene,"citadel-courtyard-paving",[0,8.48,-81.4],[17.5,.18,8.8],pavingLight);
+  box(scene,"citadel-courtyard-runner",[0,8.60,-81.5],[4.8,.035,8.2],mats.banner);
+  for(let side of [-1,1]) {
+    box(scene,"citadel-courtyard-flowerbed",[side*6.15,8.82,-81.4],[2.2,.5,5.6],mats.trim);
+    box(scene,"citadel-courtyard-soil",[side*6.15,9.09,-81.4],[1.85,.08,5.2],mats.floor);
+    for(let j=0;j<9;j++) {
+      const flower=MeshBuilder.CreateSphere("citadel-courtyard-rose",{diameter:.48,segments:10},scene);
+      flower.position.set(side*6.15+(Math.random()-.5)*1.5,9.48,-83.7+j*.58);
+      flower.scaling.y=1.25;flower.material=j%3===0?mats.gold:mats.flowers;
+    }
+    for(let j=0;j<3;j++) {
+      cylinder(scene,"courtyard-arcade-pillar",[side*8.2,11.1,-79.4+j*2.8],.62,5.2,mats.trim,16);
+      cylinder(scene,"courtyard-pillar-cap",[side*8.2,13.75,-79.4+j*2.8],1.0,.28,castleGold,16);
+    }
+    const crest=MeshBuilder.CreateCylinder("courtyard-royal-crest",{diameter:1.25,height:.16,tessellation:12},scene);
+    crest.position.set(side*5.9,12.2,-77.25);crest.rotation.x=Math.PI/2;crest.material=castleGold;
+    addLantern(scene,side*7.0,11.2,-77.15,mats.gold,mats.lantern);
+  }
+
   // Yggdrasil stands distinctly LEFT of the keep, framed against the open sky.
   // Its sacred silhouette is intentionally separated from every castle roof and tower.
   const treeX=57,treeZ=-101;
@@ -913,7 +937,7 @@ export async function createRoyalCity(engine, canvas) {
       const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?stairProgress*stairRise:0;
-      const onLanding=Math.abs(camera.position.x)<8.6 && camera.position.z<stairEndZ && camera.position.z>-82.5;
+      const onLanding=Math.abs(camera.position.x)<8.6 && camera.position.z<stairEndZ && camera.position.z>-102;
       camera.position.y=1.72+(onRoyalStair?stairFloor:(onLanding?stairRise:0));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
