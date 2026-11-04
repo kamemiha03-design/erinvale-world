@@ -220,6 +220,19 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
     obstacles.push({x:x+3,z:z+1.6,r:1.55});
     for(let i=0;i<3;i++) obstacles.push({x:x-3+i*3,z:z+1,r:1.05});
     for(let i=0;i<4;i++) box(scene,name+"-shelf",[x+2.6+i*.18,3.2,z+d*.18],[.12,2.3,.55],mats.wood);
+    if(name==="The Copper Stag Tavern") {
+      // Hearth, firelight and ale mugs make the interior unmistakably a tavern.
+      box(scene,"tavern-hearth-stone",[x-5,.72,z-d/2+.72],[3.2,1.35,.62],mats.trim);
+      box(scene,"tavern-hearth-opening",[x-5,1.0,z-d/2+.38],[1.75,.95,.08],mats.dark);
+      const ember=mat(scene,"tavern-ember-glow",new Color3(1,.24,.035),.35);
+      ember.emissiveColor=new Color3(.95,.16,.015);
+      const flame=MeshBuilder.CreateSphere("tavern-hearth-fire",{diameter:1,segments:12},scene);
+      flame.position.set(x-5,1.12,z-d/2+.27);flame.scaling.set(.72,.85,.18);flame.material=ember;
+      for(let j=0;j<3;j++) {
+        cylinder(scene,"tavern-ale-mug",[x-3+j*1.5,1.12,z+1],.25,.42,mats.gold,12);
+        box(scene,"tavern-mug-handle",[x-3.17+j*1.5,1.15,z+1],[.12,.25,.12],mats.gold);
+      }
+    }
     for(let zz=z-d/2+.7;zz<=z+d/2-.7;zz+=1.35) {
       obstacles.push({x:x-w/2+.12,z:zz,r:.68});
       obstacles.push({x:x+w/2-.12,z:zz,r:.68});
@@ -291,7 +304,7 @@ export async function createRoyalCity(engine, canvas) {
   const colliders=[];
   const obstacles=[];
   const addObstacle=(x,z,r)=>obstacles.push({x,z,r});
-  addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"THE COPPER STAG",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"COPPER STAG • TAVERN",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:-21,z:-16,w:14,d:9,h:9.5,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
 
