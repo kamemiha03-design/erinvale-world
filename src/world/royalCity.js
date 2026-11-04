@@ -130,7 +130,7 @@ function addBanner(scene, x, y, z, wood, cloth, phase=0) {
 
 function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   const {x,z,w,d,h,name,sign,interior=false} = cfg;
-  const front=z-d/2;
+  const front=z+d/2;
   // Split the front wall around the entrance so the doorway is physically walkable.
   const sideWidth=(w-2.25)/2;
   box(scene,name+"-facade-left",[x-(w+2.25)/4,h/2,z],[sideWidth,h,d],mats.wall).receiveShadows=true;
