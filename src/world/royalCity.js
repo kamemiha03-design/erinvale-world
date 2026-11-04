@@ -658,7 +658,10 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"royal-keep-left-wing",[-7.8,17.0,-82],[5.4,17,15],castleStone);
   box(scene,"royal-keep-right-wing",[7.8,17.0,-82],[5.4,17,15],castleStone);
   box(scene,"royal-keep-over-door",[0,23.0,-82],[10.2,5.0,15],castleStone);
-  box(scene,"royal-keep-back-wall",[0,17.0,-89.35],[21,17,1.0],castleStone);
+  // The rear wall is split around a broad doorway, so the throne hall continues into the private suite.
+  box(scene,"royal-keep-back-wall-left",[-7.5,17.0,-89.35],[6,17,1.0],castleStone);
+  box(scene,"royal-keep-back-wall-right",[7.5,17.0,-89.35],[6,17,1.0],castleStone);
+  box(scene,"royal-keep-back-wall-lintel",[0,24.0,-89.35],[9,3,1.0],castleStone);
   box(scene,"royal-keep-upper",[0,40.2,-82],[16.8,7.5,12.2],mats.trim);
   // Four connected palace apartments extend from the central throne hall.
   // The side-wing walls are split around real door openings so the rooms can be explored.
@@ -825,6 +828,52 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"royal-keep-roof-base",[0,44.3,-82],[18.5,.65,13.8],castleGold);
   const keepRoof=MeshBuilder.CreateCylinder("royal-keep-pitched-roof",{diameterTop:0,diameterBottom:18.5,height:8.5,tessellation:4},scene);
   keepRoof.position.set(0,48.6,-82);keepRoof.rotation.y=Math.PI/4;keepRoof.material=castleRoof;
+  // A second walkable palace suite continues directly beyond the throne hall.
+  const suiteZ=-109.5;
+  box(scene,"royal-suite-floor",[0,8.62,suiteZ],[18,.24,20],wingFloor);
+  box(scene,"royal-suite-ceiling",[0,25.2,suiteZ],[18,.38,20],castleStone);
+  for(const side of [-1,1]) {
+    box(scene,"royal-suite-side-wall",[side*9,17,suiteZ],[.8,17,20],castleStone);
+    for(const z of [-105,-109.5,-114]) {
+      box(scene,"royal-suite-window-recess",[side*8.55,17.5,z],[.12,4.5,2.0],castleShadow);
+      box(scene,"royal-suite-window-glass",[side*8.48,17.5,z],[.08,3.7,1.35],mats.glass);
+      box(scene,"royal-suite-window-sill",[side*8.25,15.1,z],[.45,.2,2.25],castleGold);
+    }
+    for(const z of [-105,-109.5,-114]) {
+      cylinder(scene,"royal-suite-column-base",[side*7.5,9.0,z],1.0,.4,castleGold,16);
+      cylinder(scene,"royal-suite-column",[side*7.5,16.8,z],.48,15.2,mats.trim,16);
+      cylinder(scene,"royal-suite-column-cap",[side*7.5,24.5,z],.95,.4,castleGold,16);
+    }
+  }
+  box(scene,"royal-suite-back-wall",[0,17,suiteZ-10],[18,17,.8],castleStone);
+  // Canopied royal bed, embroidered curtains and a carved headboard.
+  box(scene,"royal-suite-bed-frame",[0,9.45,suiteZ-5.8],[5.6,.55,4.0],wood);
+  box(scene,"royal-suite-mattress",[0,9.85,suiteZ-5.7],[5.1,.42,3.6],cloth);
+  box(scene,"royal-suite-headboard",[0,11.4,suiteZ-7.55],[5.5,3.0,.38],castleGold);
+  for(const side of [-1,1]) {
+    box(scene,"royal-suite-bedpost",[side*2.5,11.8,suiteZ-7.5],[.24,4.8,.24],castleGold);
+    const finial=MeshBuilder.CreateSphere("royal-suite-bed-finial",{diameter:.55,segments:12},scene);
+    finial.position.set(side*2.5,14.25,suiteZ-7.5);finial.material=castleGold;
+    box(scene,"royal-suite-bed-curtain",[side*2.35,13.1,suiteZ-5.7],[.16,3.3,3.6],mats.banner);
+    box(scene,"royal-suite-dresser",[side*6.0,9.8,suiteZ+2.2],[2.1,1.6,1.0],wood);
+    box(scene,"royal-suite-dresser-top",[side*6.0,10.65,suiteZ+2.2],[2.3,.16,1.1],castleGold);
+    const vase=MeshBuilder.CreateCylinder("royal-suite-vase",{diameterTop:.32,diameterBottom:.65,height:1.2,tessellation:14},scene);
+    vase.position.set(side*6.0,11.3,suiteZ+2.2);vase.material=mats.trim;
+    box(scene,"royal-suite-sofa",[side*4.8,9.25,suiteZ+6.0],[3.4,.65,1.3],cloth);
+    box(scene,"royal-suite-sofa-back",[side*4.8,10.0,suiteZ+6.55],[3.4,1.2,.24],cloth);
+  }
+  // Writing table, stools, a fireplace and a long runner make this a furnished chamber.
+  box(scene,"royal-suite-writing-table",[0,9.7,suiteZ+4.2],[4.4,.22,1.8],wood);
+  for(const side of [-1,1]) {
+    for(const dz of [-1,1]) box(scene,"royal-suite-table-leg",[side*1.9,9.0,suiteZ+4.2+dz*.65],[.16,1.25,.16],wood);
+    box(scene,"royal-suite-stool",[side*2.8,9.15,suiteZ+4.2],[.8,.3,.8],wood);
+  }
+  box(scene,"royal-suite-hearth-surround",[0,12.2,suiteZ-9.25],[4.4,4.6,.8],castleGold);
+  box(scene,"royal-suite-hearth-opening",[0,11.0,suiteZ-8.8],[2.5,2.2,.08],castleShadow);
+  const suiteFire=MeshBuilder.CreateSphere("royal-suite-fire",{diameter:1.1,segments:12},scene);
+  suiteFire.position.set(0,11.0,suiteZ-8.65);suiteFire.scaling.set(1,.8,.18);suiteFire.material=mats.lantern;
+  box(scene,"royal-suite-carpet",[0,8.79,suiteZ+1.0],[4.2,.05,13],mats.banner);
+
   // Tall arched windows, inset dark glass, stone frames and carved horizontal courses.
   for(let floor=0;floor<3;floor++) for(let col=-2;col<=2;col++) {
     const x=col*3.45,y=20+floor*8.2;
