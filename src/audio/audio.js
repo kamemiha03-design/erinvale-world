@@ -10,59 +10,98 @@ const SOURCES = {
 };
 
 export function createWorldAudio() {
-  const town = new Audio(SOURCES.town);
-  const market = new Audio(SOURCES.market);
-  const stream = new Audio(SOURCES.stream);
-  const tavern = new Audio(SOURCES.tavern);
-  const fire = new Audio(SOURCES.fire);
-  const birds = new Audio(SOURCES.birds);
-  for (const audio of [town, market, stream, tavern, fire, birds]) {
-    audio.loop = true;
-    audio.preload = "auto";
-    audio.volume = 0;
-  }
+  const layers = Object.fromEntries(
+    Object.entries(SOURCES).filter(([key]) => !["steps", "indoorSteps"].includes(key))
+      .map(([key, src]) => {
+        const audio = new Audio(src);
+        audio.loop = true;
+        audio.preload = "auto";
+        audio.volume = 0;
+        return [key, audio];
+      })
+  );
   let unlocked = false;
-  let walking = false;
   let lastStep = 0;
-  let currentLocation = "town";
+  let lastFrame = performance.now();
+  let audioContext = null;
+  let windGain = null;
 
   function safePlay(audio) {
     const result = audio.play();
     if (result?.catch) result.catch(() => {});
   }
+
+  function startWind() {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass || audioContext) return;
+      audioContext = new AudioContextClass();
+      const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 3, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * .22;
+      const source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      const filter = audioContext.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 520;
+      const gain = audioContext.createGain();
+      gain.gain.value = 0;
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioContext.destination);
+      source.start();
+      windGain = gain.gain;
+    } catch (error) {
+      console.warn("Wind ambience unavailable", error);
+    }
+  }
+
   function unlock() {
     if (unlocked) return;
     unlocked = true;
-    safePlay(town);
-    safePlay(market);
-    safePlay(stream);
-    safePlay(tavern);
-    safePlay(fire);
-    safePlay(birds);
+    Object.values(layers).forEach(safePlay);
+    startWind();
+    audioContext?.resume?.();
   }
+
   function setMovement(active, position, location) {
-    walking = active;
-    currentLocation = location || "town";
-    if (!unlocked) return;
     const now = performance.now();
-    const inMarket = currentLocation === "market";
-    const inTavern = currentLocation === "tavern";
-    const nearWater = Math.hypot(position.x - 13, position.z - 5) < 15;
-    town.volume = inTavern ? 0.055 : inMarket ? 0.11 : 0.27;
-    market.volume = inMarket ? 0.34 : 0;
-    stream.volume = nearWater ? 0.19 : 0;
-    tavern.volume = inTavern ? 0.32 : 0;
-    fire.volume = inTavern ? 0.13 : 0;
-    birds.volume = inTavern ? 0.015 : 0.12;
-    const inside = currentLocation === "tavern" || currentLocation === "guild";
-    if (walking && now - lastStep > (inside ? 640 : 500)) {
+    const dt = Math.min(.12, Math.max(.008, (now - lastFrame) / 1000));
+    lastFrame = now;
+    if (!unlocked) return;
+
+    // getLocation() returns Japanese labels; use those to activate the correct sound zones.
+    const inMarket = (location || "").includes("市場");
+    const inTavern = (location || "").includes("銅鹿亭");
+    const inGuild = (location || "").includes("ギルド");
+    const indoors = inTavern || inGuild;
+    const nearWater = Math.max(0, 1 - Math.hypot(position.x - 13, position.z - 5) / 25);
+
+    const targets = {
+      town: indoors ? .035 : inMarket ? .075 : .23,
+      market: inMarket ? .36 : 0,
+      stream: nearWater * .25,
+      tavern: inTavern ? .34 : inGuild ? .07 : 0,
+      fire: inTavern ? .18 : 0,
+      birds: indoors ? .012 : .14,
+    };
+    for (const [key, audio] of Object.entries(layers)) {
+      audio.volume += ((targets[key] ?? 0) - audio.volume) * Math.min(1, dt * 1.8);
+    }
+    if (windGain && audioContext) {
+      windGain.setTargetAtTime(indoors ? .006 : .025, audioContext.currentTime, .8);
+    }
+
+    if (active && now - lastStep > (indoors ? 610 : 480)) {
       lastStep = now;
-      const step = new Audio(inside ? SOURCES.indoorSteps : SOURCES.steps);
-      step.volume = 0.32;
-      step.playbackRate = 0.94 + Math.random() * 0.13;
+      const step = new Audio(indoors ? SOURCES.indoorSteps : SOURCES.steps);
+      step.volume = .3;
+      step.playbackRate = .92 + Math.random() * .16;
       safePlay(step);
       step.addEventListener("ended", () => step.remove(), { once: true });
     }
   }
+
   return { unlock, setMovement };
 }
