@@ -510,8 +510,33 @@ export async function createRoyalCity(engine, canvas) {
     if(i%2===0) box(scene,"citadel-arrow-slit",[x,18.8,-75.28],[.22,2.0,.08],castleShadow);
   }
   // Central keep rises behind the gate, with layered roofs and a readable silhouette.
-  box(scene,"royal-keep-main",[0,27,-82],[21,25,15],castleStone);
+  // The lower keep is built as a real open-front hall instead of a sealed block.
+  // Its broad central doorway lets visitors see the royal hall from the courtyard.
+  box(scene,"royal-keep-left-wing",[-7.8,17.0,-82],[5.4,17,15],castleStone);
+  box(scene,"royal-keep-right-wing",[7.8,17.0,-82],[5.4,17,15],castleStone);
+  box(scene,"royal-keep-over-door",[0,23.0,-82],[10.2,5.0,15],castleStone);
+  box(scene,"royal-keep-back-wall",[0,17.0,-89.35],[21,17,1.0],castleStone);
   box(scene,"royal-keep-upper",[0,40.2,-82],[16.8,7.5,12.2],mats.trim);
+  // Palace hall floor, pale columns, crimson runner and a visible throne.
+  box(scene,"royal-hall-floor",[0,8.62,-82],[15.2,.24,13.0],mats.trim);
+  box(scene,"royal-hall-carpet",[0,8.78,-82],[4.2,.06,12.5],mats.banner);
+  for(let side of [-1,1]) for(let z=-87;z<=-77;z+=3.3) {
+    cylinder(scene,"royal-hall-column-base",[side*6.2,9.05,z],1.25,.48,castleGold,16);
+    const col=cylinder(scene,"royal-hall-column",[side*6.2,14.0,z],.62,9.5,mats.trim,20);
+    cylinder(scene,"royal-hall-column-capital",[side*6.2,18.9,z],1.15,.55,castleGold,16);
+  }
+  const throne=box(scene,"royal-throne-seat",[0,10.2,-87.6],[3.4,.55,2.0],castleGold);
+  box(scene,"royal-throne-back",[0,12.1,-88.4],[3.3,4.0,.55],castleStone);
+  for(let side of [-1,1]) {
+    box(scene,"royal-throne-arm",[side*1.65,11.0,-87.7],[.42,1.4,1.8],castleGold);
+    const finial=MeshBuilder.CreateSphere("royal-throne-finial",{diameter:.42,segments:12},scene);
+    finial.position.set(side*1.65,14.2,-88.4);finial.material=castleGold;
+  }
+  // Tall jewel-toned stained-glass panels glow behind the throne.
+  for(let i=0;i<5;i++) {
+    const pane=box(scene,"royal-hall-stained-glass",[-4+i*2,16.2,-88.72],[1.1,4.8,.08],i%2?mats.banner:mats.glass);
+    pane.material.emissiveColor=new Color3(.08,.12,.18);
+  }
   box(scene,"royal-keep-roof-base",[0,44.3,-82],[18.5,.65,13.8],castleGold);
   const keepRoof=MeshBuilder.CreateCylinder("royal-keep-pitched-roof",{diameterTop:0,diameterBottom:18.5,height:8.5,tessellation:4},scene);
   keepRoof.position.set(0,48.6,-82);keepRoof.rotation.y=Math.PI/4;keepRoof.material=castleRoof;
@@ -544,10 +569,20 @@ export async function createRoyalCity(engine, canvas) {
     const finial=cylinder(scene,"castle-roof-finial",[x,baseY+height/2+8.35,-77],.18,.8,castleGold,8);
   }
   // A monumental gate arch with recessed portcullis, voussoirs and a carved royal crest.
+  // The royal gate is permanently open: deep arch, carved voussoirs and two leaves folded back.
   box(scene,"gate-shadow",[0,14,-74.9],[8.4,11,.2],castleShadow);
-  box(scene,"gate-portcullis",[0,13.6,-74.55],[6.8,8.8,.18],mats.wood);
-  for(let x=-3;x<=3;x+=.85) box(scene,"gate-portcullis-bars",[x,13.6,-74.35],[.12,8.8,.12],castleGold);
-  for(let y=9.4;y<=17.8;y+=1.0) box(scene,"gate-portcullis-crossbar",[0,y,-74.32],[6.8,.12,.12],castleGold);
+  for(let side of [-1,1]) {
+    const openLeaf=box(scene,"royal-gate-open-leaf",[side*4.15,13.5,-74.42],[.34,8.2,1.0],mats.wood);
+    openLeaf.rotation.y=side*.18;
+    for(let y=10;y<=17.1;y+=1.15) {
+      const hinge=box(scene,"royal-gate-gold-strapping",[side*4.15,y,-73.88],[.42,.12,.10],castleGold);
+      hinge.rotation.y=side*.18;
+    }
+    for(let y=9.2;y<=18.4;y+=1.0) {
+      const stone=box(scene,"gate-arch-inner-voussoir",[side*(4.05+(18.4-y)*.10),y,-74.72],[.82,.88,.65],mats.trim);
+      stone.rotation.z=side*.08;
+    }
+  }
   for(let side of [-1,1]) {
     box(scene,"gate-pier",[side*5,16,-74.7],[1.8,15,2.2],castleStone);
     for(let row=0;row<9;row++) {
@@ -571,10 +606,27 @@ export async function createRoyalCity(engine, canvas) {
       for(let k=-2;k<=2;k++) box(scene,"keep-baluster",[side*6.9+k*.52,35.0,-73.48],[.10,.58,.10],castleGold);
     }
   }
-  // A layered entrance stair and broad landing make the approach feel monumental.
-  for(let step=0;step<7;step++) {
-    const stair=box(scene,"castle-approach-step",[0,.25+step*.48,-61-step*1.05],[17+step*.65,.50,1.25],castleStone);
-    stair.receiveShadows=true;
+  // A long, walkable royal stair climbs from the city approach to the elevated gate.
+  // Each visible tread is a real individual stone step; player height follows the stair profile.
+  const stairStartZ=-47, stairEndZ=-72, stairRise=8.25, stairCount=40;
+  for(let step=0;step<stairCount;step++) {
+    const rise=stairRise/stairCount, tread= (stairStartZ-stairEndZ)/stairCount;
+    const top=(step+1)*rise, z=stairStartZ-(step+.5)*tread;
+    const treadMesh=box(scene,"castle-approach-step",[0,top-rise/2,z],[15.8,rise,tread+.08],castleStone);
+    treadMesh.receiveShadows=true;
+    box(scene,"castle-step-nosing",[0,top-.045,z+tread*.43],[15.95,.09,.12],mats.trim);
+    for(let side of [-1,1]) {
+      const baluster=box(scene,"castle-stair-side-parapet",[side*8.15,top/2,z],[.48,Math.max(.5,top),tread+.08],castleStone);
+      baluster.receiveShadows=true;
+    }
+  }
+  // Broad upper landing, paired urns and a ceremonial carpet lead to the open gate.
+  box(scene,"royal-gate-landing",[0,8.34,-73.0],[18,.36,3.2],mats.trim);
+  box(scene,"royal-gate-carpet",[0,8.54,-72.95],[5.6,.035,2.8],mats.banner);
+  for(let side of [-1,1]) {
+    cylinder(scene,"royal-stair-urn-foot",[side*7.2,8.7,-72.8],1.0,.35,castleGold,16);
+    const urn=MeshBuilder.CreateCylinder("royal-stair-urn",{diameterTop:.45,diameterBottom:.85,height:1.2,tessellation:12},scene);
+    urn.position.set(side*7.2,9.45,-72.8);urn.material=mats.trim;
   }
   for(let side of [-1,1]) {
     for(let level=0;level<4;level++) {
@@ -743,7 +795,9 @@ export async function createRoyalCity(engine, canvas) {
     addTownsperson("Scout",18,18,true,3.8,-.8),
     addTownsperson("Footman",29,5,true,5.2,1.4),
     addTownsperson("King",-2,15,false,6.6,-.6),
-    addTownsperson("PeasantMilitia",7,-3,true,8.1,.2)
+    addTownsperson("PeasantMilitia",7,-3,true,8.1,.2),
+    addTownsperson("Footman",-5.1,8.25,-70.4,false,9.3,0),
+    addTownsperson("Footman",5.1,8.25,-70.4,false,10.7,Math.PI)
   ]);
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
@@ -803,6 +857,7 @@ export async function createRoyalCity(engine, canvas) {
     // Fountain basin, market counters, and castle cliff are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
+    // Keep the central stair corridor open; the cliff shoulders remain solid.
     if(z<-68 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
     return false;
   };
@@ -854,7 +909,12 @@ export async function createRoyalCity(engine, canvas) {
       const nx=camera.position.x+dx,nz=camera.position.z+dz;
       if(!collides(nx,camera.position.z))camera.position.x=nx;
       if(!collides(camera.position.x,nz))camera.position.z=nz;
-      camera.position.y=1.72;
+      // Walk the player up the stepped approach instead of pinning the camera to flat ground.
+      const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
+      const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
+      const stairFloor=onRoyalStair?stairProgress*stairRise:0;
+      const onLanding=Math.abs(camera.position.x)<8.6 && camera.position.z<stairEndZ && camera.position.z>-75.2;
+      camera.position.y=1.72+(onRoyalStair?stairFloor:(onLanding?stairRise:0));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
