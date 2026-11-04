@@ -609,56 +609,63 @@ export async function createRoyalCity(engine, canvas) {
   waterfall.position.set(27,7,-68);waterfall.material=new StandardMaterial("waterfall-material",scene);
   waterfall.material.diffuseColor=new Color3(.45,.75,.82);waterfall.material.alpha=.72;waterfall.material.emissiveColor=new Color3(.12,.2,.22);
 
-  // Yggdrasil: sculpted trunk, flared roots, layered boughs and a dense multi-scale canopy.
-  const bark=mat(scene,"world-tree-bark",new Color3(.22,.13,.075),.96);
-  const barkLight=mat(scene,"world-tree-bark-ridge",new Color3(.34,.22,.12),.92);
-  cylinder(scene,"world-tree-trunk",[0,20,-93],6.2,40,bark,24);
-  for(let i=0;i<14;i++) {
-    const a=i*Math.PI*2/14;
-    const root=MeshBuilder.CreateCylinder("world-tree-buttress-root",{diameterTop:.32,diameterBottom:1.5,height:10,tessellation:10},scene);
-    root.position.set(Math.cos(a)*4.1,1.0,-93+Math.sin(a)*4.1);
-    root.rotation.z=Math.cos(a)*.48;root.rotation.x=Math.sin(a)*.48;
+  // Yggdrasil stands distinctly LEFT of the keep, framed against the open sky.
+  // Its sacred silhouette is intentionally separated from every castle roof and tower.
+  const treeX=-57,treeZ=-101;
+  const bark=mat(scene,"world-tree-bark",new Color3(.18,.115,.065),.96);
+  const barkLight=mat(scene,"world-tree-bark-ridge",new Color3(.39,.27,.14),.9);
+  cylinder(scene,"world-tree-trunk",[treeX,24,treeZ],7.2,48,bark,32);
+  for(let i=0;i<16;i++) {
+    const a=i*Math.PI*2/16;
+    const root=MeshBuilder.CreateCylinder("world-tree-buttress-root",{diameterTop:.35,diameterBottom:2.0,height:12,tessellation:12},scene);
+    root.position.set(treeX+Math.cos(a)*4.8,1.0,treeZ+Math.sin(a)*4.8);
+    root.rotation.z=Math.cos(a)*.5;root.rotation.x=Math.sin(a)*.5;
     root.material=i%3===0?barkLight:bark;
   }
-  for(let i=0;i<18;i++) {
-    const a=i*Math.PI*2/18,level=20+(i%6)*3.6;
-    const branch=MeshBuilder.CreateCylinder("world-tree-branch",{diameterTop:.28,diameterBottom:1.05,height:15+(i%4)*2,tessellation:12},scene);
-    branch.position.set(Math.cos(a)*7,level,-93+Math.sin(a)*5);
-    branch.rotation.z=-Math.cos(a)*.82;branch.rotation.x=Math.sin(a)*.72;
+  for(let i=0;i<22;i++) {
+    const a=i*Math.PI*2/22,level=25+(i%7)*4.2;
+    const branch=MeshBuilder.CreateCylinder("world-tree-branch",{diameterTop:.24,diameterBottom:1.25,height:17+(i%4)*2.5,tessellation:14},scene);
+    branch.position.set(treeX+Math.cos(a)*8,level,treeZ+Math.sin(a)*6);
+    branch.rotation.z=-Math.cos(a)*.86;branch.rotation.x=Math.sin(a)*.74;
     branch.material=i%4===0?barkLight:bark;
   }
-  for(let i=0;i<9;i++) {
-    const rib=MeshBuilder.CreateCylinder("world-tree-bark-rib",{diameterTop:.12,diameterBottom:.22,height:32,tessellation:7},scene);
-    const a=i*Math.PI*2/9;
-    rib.position.set(Math.cos(a)*2.85,20,-93+Math.sin(a)*2.85);
+  for(let i=0;i<12;i++) {
+    const rib=MeshBuilder.CreateCylinder("world-tree-bark-rib",{diameterTop:.12,diameterBottom:.26,height:39,tessellation:8},scene);
+    const a=i*Math.PI*2/12;
+    rib.position.set(treeX+Math.cos(a)*3.25,24,treeZ+Math.sin(a)*3.25);
     rib.rotation.z=Math.cos(a)*.035;rib.rotation.x=Math.sin(a)*.035;
     rib.material=barkLight;
   }
   const canopyMats=[
-    mat(scene,"canopy-deep",new Color3(.055,.19,.12),.88),
-    mat(scene,"canopy-mid",new Color3(.10,.32,.18),.82),
-    mat(scene,"canopy-light",new Color3(.22,.43,.23),.78),
-    mat(scene,"canopy-sunlit",new Color3(.48,.48,.22),.72)
+    mat(scene,"canopy-deep",new Color3(.035,.16,.095),.9),
+    mat(scene,"canopy-mid",new Color3(.075,.28,.15),.84),
+    mat(scene,"canopy-light",new Color3(.18,.39,.19),.8),
+    mat(scene,"canopy-sunlit",new Color3(.52,.52,.27),.72)
   ];
   const canopy=[];
-  for(let i=0;i<116;i++) {
-    const a=Math.random()*Math.PI*2,ring=5+Math.random()*13,y=30+Math.random()*22;
-    const leaf=MeshBuilder.CreateSphere("world-tree-foliage",{diameter:2.8+Math.random()*2.8,segments:10},scene);
-    leaf.position.set(Math.cos(a)*ring,y,-93+Math.sin(a)*ring*.52);
-    leaf.scaling.set(.9+Math.random()*.5,.72+Math.random()*.48,.8+Math.random()*.45);
+  for(let i=0;i<156;i++) {
+    const a=Math.random()*Math.PI*2,ring=7+Math.random()*16,y=38+Math.random()*31;
+    const leaf=MeshBuilder.CreateSphere("world-tree-foliage",{diameter:3.2+Math.random()*3.2,segments:12},scene);
+    leaf.position.set(treeX+Math.cos(a)*ring,y,treeZ+Math.sin(a)*ring*.58);
+    leaf.scaling.set(.95+Math.random()*.5,.78+Math.random()*.5,.9+Math.random()*.45);
     leaf.material=canopyMats[i%canopyMats.length];
     canopy.push({mesh:leaf,phase:Math.random()*Math.PI*2,base:leaf.rotation.z,baseY:y});
   }
-  const seedGlow=mat(scene,"world-tree-seedlight",new Color3(.78,.72,.36),.28,.05);
-  seedGlow.emissiveColor=new Color3(.34,.25,.055);
-  for(let i=0;i<24;i++) {
-    const a=Math.random()*Math.PI*2,ring=7+Math.random()*12;
-    const seed=MeshBuilder.CreateSphere("world-tree-luminous-seed",{diameter:.22+Math.random()*.22,segments:8},scene);
-    seed.position.set(Math.cos(a)*ring,31+Math.random()*20,-93+Math.sin(a)*ring*.52);
+  const seedGlow=mat(scene,"world-tree-seedlight",new Color3(.84,.76,.43),.24,.04);
+  seedGlow.emissiveColor=new Color3(.42,.31,.10);
+  for(let i=0;i<34;i++) {
+    const a=Math.random()*Math.PI*2,ring=8+Math.random()*17;
+    const seed=MeshBuilder.CreateSphere("world-tree-luminous-seed",{diameter:.18+Math.random()*.24,segments:10},scene);
+    seed.position.set(treeX+Math.cos(a)*ring,39+Math.random()*29,treeZ+Math.sin(a)*ring*.58);
     seed.material=seedGlow;
   }
-  const rootRing=MeshBuilder.CreateTorus("world-tree-root-rune",{diameter:18,thickness:.09,tessellation:96},scene);
-  rootRing.position.set(0,.05,-93);rootRing.material=seedGlow;
+  // Two quiet rings of ancient light suggest a sacred presence without hiding the branches.
+  for(const y of [31,47]) {
+    const halo=MeshBuilder.CreateTorus("world-tree-sacred-halo",{diameter:y===31?22:35,thickness:.10,tessellation:96},scene);
+    halo.position.set(treeX,y,treeZ);halo.material=seedGlow;
+  }
+  const rootRing=MeshBuilder.CreateTorus("world-tree-root-rune",{diameter:22,thickness:.11,tessellation:96},scene);
+  rootRing.position.set(treeX,.05,treeZ);rootRing.material=seedGlow;
 
   // Detailed CC0 models add leaf geometry and a merchant wagon.
   const modelJobs = [
@@ -703,83 +710,78 @@ export async function createRoyalCity(engine, canvas) {
     glow.position.set(x,3.8,z);glow.material=mats.lantern;
   }
 
-  // Everyday life in the capital: a few residents strolling and talking in the square.
-  // Lightweight grouped meshes keep the scene comfortable on mobile hardware.
+  // Rigged, animated CC0 fantasy residents replace the primitive mannequin figures.
   const people=[];
-  const skinMats=[
-    mat(scene,"townsfolk-skin-warm",new Color3(.68,.43,.29)),
-    mat(scene,"townsfolk-skin-light",new Color3(.83,.63,.47)),
-    mat(scene,"townsfolk-skin-deep",new Color3(.38,.23,.16))
-  ];
-  const clothes=[
-    mat(scene,"townsfolk-cloth-rust",new Color3(.48,.19,.12)),
-    mat(scene,"townsfolk-cloth-ochre",new Color3(.66,.43,.16)),
-    mat(scene,"townsfolk-cloth-teal",new Color3(.12,.31,.32)),
-    mat(scene,"townsfolk-cloth-cream",new Color3(.72,.65,.49)),
-    mat(scene,"townsfolk-cloth-forest",new Color3(.20,.32,.19))
-  ];
-  const makePerson=(x,z,index,walking=true)=>{
-    const root=MeshBuilder.CreateBox("townsfolk-root",{width:.01,height:.01,depth:.01},scene);
-    root.isVisible=false;root.position.set(x,0,z);
-    const shirt=clothes[index%clothes.length],skin=skinMats[index%skinMats.length];
-    const torso=MeshBuilder.CreateCylinder("townsfolk-tunic",{diameterTop:.48,diameterBottom:.68,height:1.12,tessellation:8},scene);
-    torso.parent=root;torso.position.y=1.22;torso.material=shirt;
-    const head=MeshBuilder.CreateSphere("townsfolk-head",{diameter:.43,segments:10},scene);
-    head.parent=root;head.position.y=2.05;head.material=skin;
-    const hair=MeshBuilder.CreateSphere("townsfolk-hair",{diameter:.46,segments:8},scene);
-    hair.parent=root;hair.position.set(0,2.22,-.015);hair.scaling.y=.48;hair.material=clothes[(index+2)%clothes.length];
-    const arms=[],legs=[];
-    for(let side of [-1,1]) {
-      const arm=MeshBuilder.CreateCylinder("townsfolk-arm",{diameterTop:.15,diameterBottom:.20,height:.76,tessellation:7},scene);
-      arm.parent=root;arm.position.set(side*.39,1.35,0);arm.rotation.z=side*-.18;arm.material=shirt;arms.push(arm);
-      const leg=MeshBuilder.CreateCylinder("townsfolk-leg",{diameter:.19,height:.72,tessellation:7},scene);
-      leg.parent=root;leg.position.set(side*.19,.42,0);leg.material=clothes[(index+1)%clothes.length];legs.push(leg);
+  async function addTownsperson(file,x,z,walking,phase,heading=0) {
+    try {
+      const imported=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/human003/",file+".glb",scene);
+      const root=imported.meshes.find(m=>m.name==="__root__")||imported.meshes[0];
+      if(!root) return null;
+      root.position.set(x,0,z);root.rotation.y=heading;
+      root.computeWorldMatrix(true);
+      let bounds=root.getHierarchyBoundingVectors(true);
+      const height=Math.max(.01,bounds.max.y-bounds.min.y);
+      root.scaling.scaleInPlace(1.78/height);
+      root.computeWorldMatrix(true);
+      bounds=root.getHierarchyBoundingVectors(true);
+      root.position.y-=bounds.min.y;
+      root.computeWorldMatrix(true);
+      const wanted=walking?"walk":"idle";
+      const group=imported.animationGroups.find(g=>g.name.toLowerCase()===wanted)
+        || imported.animationGroups.find(g=>g.name.toLowerCase().includes(wanted));
+      if(group) group.start(true);
+      const actor={root,walking,phase,home:new Vector3(x,0,z),radius:walking?1.6+(phase%3)*.5:0};
+      people.push(actor);return actor;
+    } catch(error) {
+      console.warn("Townsperson model could not be loaded:",file,error);
+      return null;
     }
-    const person={root,arms,legs,walking,phase:index*1.7,home:new Vector3(x,0,z),radius:2.4+index%3};
-    people.push(person);return person;
-  };
-  const walkers=[
-    [-5,12],[-2,15],[2,11],[5,17],[18,18],[29,5],[7,-3],[34,-5],
-    [-8,-4],[5,-19],[30,-24]
-  ];
-  walkers.forEach(([x,z],i)=>makePerson(x,z,i,i%4!==0));
-  // A pair of villagers pause beside the fountain as if chatting.
-  const chatA=makePerson(5,8,2,false),chatB=makePerson(7,8,4,false);
-  chatA.root.rotation.y=.9;chatB.root.rotation.y=-.9;
-  // A calm pack horse and a small timber cart add life to the market road.
-  const horseRoot=MeshBuilder.CreateBox("market-horse-root",{width:.01,height:.01,depth:.01},scene);
-  horseRoot.isVisible=false;horseRoot.position.set(34,0,-22);horseRoot.rotation.y=-Math.PI/2;
-  const horseCoat=mat(scene,"horse-chestnut-coat",new Color3(.30,.13,.065),.92);
-  const horseMane=mat(scene,"horse-dark-mane",new Color3(.09,.055,.035),.95);
-  const horseBody=MeshBuilder.CreateSphere("horse-body",{diameter:1.2,segments:12},scene);
-  horseBody.parent=horseRoot;horseBody.scaling.set(.85,.72,1.65);horseBody.position.y=1.45;horseBody.material=horseCoat;
-  const horseNeck=MeshBuilder.CreateCylinder("horse-neck",{diameterTop:.34,diameterBottom:.62,height:1.45,tessellation:10},scene);
-  horseNeck.parent=horseRoot;horseNeck.position.set(0,2.05,.95);horseNeck.rotation.x=-.38;horseNeck.material=horseCoat;
-  const horseHead=MeshBuilder.CreateSphere("horse-head",{diameter:.62,segments:10},scene);
-  horseHead.parent=horseRoot;horseHead.position.set(0,2.55,1.45);horseHead.scaling.set(.72,1.05,.8);horseHead.material=horseCoat;
-  const horseManeMesh=MeshBuilder.CreateCylinder("horse-mane",{diameterTop:.08,diameterBottom:.34,height:1.35,tessellation:8},scene);
-  horseManeMesh.parent=horseRoot;horseManeMesh.position.set(0,2.48,.86);horseManeMesh.rotation.x=-.35;horseManeMesh.material=horseMane;
-  const horseLegs=[];
-  for(let side of [-1,1]) for(let front of [-1,1]) {
-    const leg=MeshBuilder.CreateCylinder("horse-leg",{diameterTop:.12,diameterBottom:.19,height:1.05,tessellation:8},scene);
-    leg.parent=horseRoot;leg.position.set(side*.34,.63,front*.92);leg.material=horseCoat;horseLegs.push(leg);
-    const hoof=MeshBuilder.CreateCylinder("horse-hoof",{diameter:.23,height:.20,tessellation:8},scene);
-    hoof.parent=horseRoot;hoof.position.set(side*.34,.12,front*.92);hoof.material=horseMane;
   }
-  const horseHarness=mat(scene,"horse-harness-leather",new Color3(.22,.12,.065),.78);
-  const bridle=MeshBuilder.CreateTorus("horse-bridle",{diameter:.58,thickness:.055,tessellation:16},scene);
-  bridle.parent=horseRoot;bridle.position.set(0,2.5,1.48);bridle.rotation.x=Math.PI/2;bridle.material=horseHarness;
+  await Promise.all([
+    addTownsperson("PeasantMilitia",-5,12,true,1.1,.5),
+    addTownsperson("Priestess",5,8,false,2.4,Math.PI),
+    addTownsperson("Scout",18,18,true,3.8,-.8),
+    addTownsperson("Footman",29,5,true,5.2,1.4),
+    addTownsperson("King",-2,15,false,6.6,-.6),
+    addTownsperson("PeasantMilitia",7,-3,true,8.1,.2)
+  ]);
+  // A properly rigged and animated palomino stands beside the merchant's timber cart.
+  let horseRoot=null;
+  try {
+    const horse=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/animal012/","PalominoHorse.glb",scene);
+    horseRoot=horse.meshes.find(m=>m.name==="__root__")||horse.meshes[0];
+    if(horseRoot) {
+      horseRoot.position.set(34,0,-22);horseRoot.rotation.y=-Math.PI/2;
+      horseRoot.computeWorldMatrix(true);
+      let bounds=horseRoot.getHierarchyBoundingVectors(true);
+      const height=Math.max(.01,bounds.max.y-bounds.min.y);
+      horseRoot.scaling.scaleInPlace(2.05/height);
+      horseRoot.computeWorldMatrix(true);
+      bounds=horseRoot.getHierarchyBoundingVectors(true);
+      horseRoot.position.y-=bounds.min.y;horseRoot.computeWorldMatrix(true);
+      const gait=horse.animationGroups.find(g=>g.name.toLowerCase()==="idle")
+        ||horse.animationGroups.find(g=>g.name.toLowerCase().includes("idle"));
+      if(gait) gait.start(true);
+    }
+  } catch(error) {
+    console.warn("Animated horse model could not be loaded:",error);
+  }
   addObstacle(34,-22,1.35);
-  // Keep the horse/cart as a parked scene vignette rather than blocking the player's route.
+  // Timber merchant cart with iron-rimmed wheels and a piled cargo bed.
   const cart=MeshBuilder.CreateBox("market-handcart-bed",{width:2.3,height:.25,depth:2.8},scene);
   cart.position.set(34,.9,-25);cart.material=mats.wood;
   for(let side of [-1,1]) {
-    const wheel=MeshBuilder.CreateCylinder("market-handcart-wheel",{diameter:1.35,height:.18,tessellation:20},scene);
-    wheel.position.set(34+side*1.18,.82,-25);wheel.rotation.z=Math.PI/2;wheel.material=horseMane;
-    const rail=box(scene,"market-handcart-rail",[34+side*.9,1.55,-25],[.12,.9,2.8],mats.woodLight);
+    const wheel=MeshBuilder.CreateCylinder("market-handcart-wheel",{diameter:1.35,height:.18,tessellation:24},scene);
+    wheel.position.set(34+side*1.18,.82,-25);wheel.rotation.z=Math.PI/2;wheel.material=mats.dark;
+    const hub=MeshBuilder.CreateCylinder("market-handcart-hub",{diameter:.34,height:.24,tessellation:16},scene);
+    hub.position.copyFrom(wheel.position);hub.rotation.z=Math.PI/2;hub.material=mats.gold;
+    box(scene,"market-handcart-rail",[34+side*.9,1.55,-25],[.12,.9,2.8],mats.woodLight);
   }
-  for(let z=-25;z<=-23;z+=2) {
-    const board=box(scene,"market-handcart-board",[34,1.48,z],[2.0,.12,.12],mats.woodLight);
+  for(let z=-25;z<=-23;z+=2) box(scene,"market-handcart-board",[34,1.48,z],[2.0,.12,.12],mats.woodLight);
+  for(let i=0;i<5;i++) {
+    const sack=MeshBuilder.CreateSphere("market-cart-cargo",{diameter:.82,segments:10},scene);
+    sack.position.set(33.55+(i%2)*.78,1.45+Math.floor(i/2)*.25,-24.6+Math.floor(i/2)*.6);
+    sack.scaling.y=.72;sack.material=i%2?mats.trim:mats.green;
   }
 
     // Camera, collision and interaction.
@@ -863,18 +865,13 @@ export async function createRoyalCity(engine, canvas) {
       // Subtle fountain ripples and falling droplets keep the water from feeling static.
       waterRing.scaling.x=1+Math.sin(time*1.2)*.025;
       basinInnerBand.scaling.x=1+Math.sin(time*.9)*.012;
-      people.forEach((person,i)=>{
+      people.forEach(person=>{
         if(!person.walking)return;
-        const t=time*.22+person.phase;
+        const t=time*.12+person.phase;
         person.root.position.x=person.home.x+Math.sin(t)*person.radius;
         person.root.position.z=person.home.z+Math.cos(t*.72)*person.radius*.55;
         person.root.rotation.y=Math.atan2(Math.cos(t)*person.radius*.72,Math.cos(t)*person.radius)+Math.PI/2;
-        const stride=Math.sin(time*3.2+person.phase)*.42;
-        person.legs[0].rotation.x=stride;person.legs[1].rotation.x=-stride;
-        person.arms[0].rotation.x=-stride*.55;person.arms[1].rotation.x=stride*.55;
       });
-      horseLegs.forEach((leg,i)=>{leg.rotation.x=Math.sin(time*2.2+(i%2)*Math.PI)*.035;});
-      horseHead.rotation.x=Math.sin(time*.8)*.035;
     }
   };
 }
