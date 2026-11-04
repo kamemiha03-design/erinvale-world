@@ -1,6 +1,5 @@
 # Asset credits
 
-No third-party art or audio assets have been imported yet.
 
 Every asset added to this project must be recorded here with:
 - Asset name
@@ -24,3 +23,16 @@ Audio currently uses CC0 assets hosted by SFXMint. The provider describes these 
 - Wooden-floor footsteps: https://sfxmint.com/sounds/footsteps-wood-05
 
 All listed clips are marked CC0 1.0 by their provider.
+
+## 3D models (CC0 1.0)
+
+The following optional models are loaded at runtime from the public glTF repository below. The source repository includes a CC0 1.0 license file. The model files and their referenced textures are served from its `glTF/` directory.
+
+- Asset pack: J-Ponzo, glTF Medieval Village MegaKit (standard GLTF subset)
+- Source: https://github.com/J-Ponzo/gltf-medieval-village-megakit
+- License: CC0 1.0 (see repository LICENSE)
+- Models currently used: `Prop_Vine1.gltf` (tavern facade ivy), `Prop_Vine2.gltf` (guild facade ivy), `Prop_Wagon.gltf` (market merchant wagon)
+- Runtime asset base: https://raw.githubusercontent.com/J-Ponzo/gltf-medieval-village-megakit/main/glTF/
+- Local file path: remote runtime assets (not bundled in this repository)
+
+These are stylized modular assets, not photorealistic scans. They are a first asset-driven pass and do not yet replace the main building, castle, or world-tree geometry.
