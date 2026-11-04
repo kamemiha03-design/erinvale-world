@@ -336,10 +336,25 @@ export async function createRoyalCity(engine, canvas) {
   cylinder(scene,"fountain-foundation-shadowline",[13,.57,5],15.6,.10,fountainShadow,12);
   cylinder(scene,"fountain-outer-basin-foot",[13,.82,5],15.2,.48,fountainStone,64);
   cylinder(scene,"fountain-outer-basin-wall",[13,1.42,5],14.4,.92,fountainStone,64);
-  cylinder(scene,"fountain-basin-inner-recess",[13,1.91,5],12.9,.10,fountainShadow,64);
-  cylinder(scene,"fountain-water-lower",[13,1.98,5],12.55,.12,fountainWater,64);
-  cylinder(scene,"fountain-rim-lower",[13,1.94,5],14.75,.22,fountainEdge,64);
-  cylinder(scene,"fountain-rim-inlay",[13,2.075,5],13.7,.045,fountainMetal,64);
+  // The water sits visibly BELOW the stone lip, so the basin reads as a hollow vessel.
+  cylinder(scene,"fountain-basin-inner-recess",[13,1.70,5],12.9,.10,fountainShadow,64);
+  cylinder(scene,"fountain-water-lower",[13,1.77,5],12.45,.08,fountainWater,64);
+  cylinder(scene,"fountain-rim-lower",[13,1.91,5],14.75,.22,fountainEdge,64);
+  cylinder(scene,"fountain-rim-inlay",[13,2.045,5],13.7,.045,fountainMetal,64);
+  const basinInnerBand=MeshBuilder.CreateTorus("fountain-inner-waterline",{diameter:12.48,thickness:.10,tessellation:64},scene);
+  basinInnerBand.position.set(13,1.83,5);basinInnerBand.material=fountainEdge;
+  // Stone courses, voussoirs and buttresses give the basin real architectural weight.
+  for(let course=0;course<2;course++) {
+    const band=MeshBuilder.CreateTorus("fountain-basin-carved-course",{diameter:14.52-course*.16,thickness:.13,tessellation:64},scene);
+    band.position.set(13,1.10+course*.48,5);band.material=course?fountainEdge:fountainShadow;
+  }
+  for(let i=0;i<16;i++) {
+    const a=i*Math.PI/8, x=13+Math.cos(a)*7.12, z=5+Math.sin(a)*7.12;
+    const buttress=box(scene,"fountain-basin-stone-pilaster",[x,1.38,z],[.58,1.12,.72],fountainEdge);
+    buttress.rotation.y=-a;
+    const cap=box(scene,"fountain-basin-pilaster-cap",[x,1.99,z],[.82,.16,.88],fountainStone);
+    cap.rotation.y=-a;
+  }
   // Repeated carved stone panels and small bronze rosettes around the basin.
   for(let i=0;i<24;i++) {
     const a=i*Math.PI/12, r=7.12;
@@ -359,7 +374,7 @@ export async function createRoyalCity(engine, canvas) {
   const upperRim=MeshBuilder.CreateTorus("fountain-upper-rim",{diameter:4.8,thickness:.16,tessellation:48},scene);
   upperRim.position.set(13,4.83,5);upperRim.material=fountainEdge;
   const lowerRipple=MeshBuilder.CreateTorus("fountain-lower-ripple",{diameter:8.4,thickness:.045,tessellation:64},scene);
-  lowerRipple.position.set(13,2.07,5);lowerRipple.material=mat(scene,"fountain-water-glint",new Color3(.65,.84,.86),.12,.18);
+  lowerRipple.position.set(13,1.84,5);lowerRipple.material=mat(scene,"fountain-water-glint",new Color3(.65,.84,.86),.12,.18);
   // A dignified stone guardian, rather than a plain gold mannequin, crowns the fountain.
   cylinder(scene,"guardian-footing",[13,5.12,5],2.0,.35,fountainMetal,16);
   const statue=MeshBuilder.CreateSphere("emperor-statue-torso",{diameter:1.55,segments:24},scene);
@@ -543,6 +558,44 @@ export async function createRoyalCity(engine, canvas) {
   }
   const crest=MeshBuilder.CreateCylinder("royal-crest-medallion",{diameter:2.2,height:.22,tessellation:12},scene);
   crest.position.set(0,23.3,-74.6);crest.rotation.x=Math.PI/2;crest.material=castleGold;
+  // Fine-grained royal architecture: corner quoins, balconies, reliefs and lit windows.
+  for(let floor=0;floor<4;floor++) {
+    const y=14+floor*7.7;
+    for(let side of [-1,1]) {
+      for(let row=0;row<9;row++) {
+        const block=box(scene,"citadel-corner-quoin",[side*(26.65),y+row*.78,-75.05],[.62,.68,.5],mats.trim);
+        block.rotation.y=side*.08;
+      }
+      const balcony=box(scene,"keep-window-balcony",[side*6.9,34.5,-73.9],[2.7,.22,.9],castleGold);
+      box(scene,"keep-balcony-front",[side*6.9,35.05,-73.48],[2.7,.72,.12],castleStone);
+      for(let k=-2;k<=2;k++) box(scene,"keep-baluster",[side*6.9+k*.52,35.0,-73.48],[.10,.58,.10],castleGold);
+    }
+  }
+  // A layered entrance stair and broad landing make the approach feel monumental.
+  for(let step=0;step<7;step++) {
+    const stair=box(scene,"castle-approach-step",[0,1.0+step*.48,-61-step*1.05],[17+step*.65,.42,1.25],castleStone);
+    stair.receiveShadows=true;
+  }
+  for(let side of [-1,1]) {
+    for(let level=0;level<4;level++) {
+      const y=13+level*3.1;
+      box(scene,"gatehouse-side-stringcourse",[side*11,y,-74.15],[6.0,.22,.42],castleGold);
+    }
+    for(let k=0;k<5;k++) {
+      const slit=box(scene,"gatehouse-tower-window",[side*11,9+k*2.65,-40.18],[.48,1.35,.08],castleShadow);
+      const sill=box(scene,"gatehouse-window-sill",[side*11,8.3+k*2.65,-40.12],[.95,.16,.28],mats.trim);
+    }
+    const balcony=box(scene,"gatehouse-tower-balcony",[side*11,18,-40.0],[5.2,.28,1.1],castleGold);
+    for(let k=-3;k<=3;k++) box(scene,"gatehouse-baluster",[side*11+k*.68,18.55,-39.48],[.12,.72,.12],castleStone);
+  }
+  // Gold roof ridges and small finials catch the late-afternoon light.
+  for(let x=-8;x<=8;x+=2) {
+    const finial=cylinder(scene,"keep-roof-gold-finial",[x,52.2,-82],.12,.7,castleGold,8);
+  }
+  for(let side of [-1,1]) {
+    const rose=MeshBuilder.CreateCylinder("royal-wall-relief",{diameter:2.0,height:.16,tessellation:12},scene);
+    rose.position.set(side*17,18,-74.85);rose.rotation.x=Math.PI/2;rose.material=castleGold;
+  }
   // Corner turrets and rooftop details break up the large keep silhouette.
   for(let side of [-1,1]) {
     const turret=cylinder(scene,"keep-corner-turret",[side*8.2,44,-82],3.1,11,castleStone,20);
@@ -650,7 +703,86 @@ export async function createRoyalCity(engine, canvas) {
     glow.position.set(x,3.8,z);glow.material=mats.lantern;
   }
 
-  // Camera, collision and interaction.
+  // Everyday life in the capital: a few residents strolling and talking in the square.
+  // Lightweight grouped meshes keep the scene comfortable on mobile hardware.
+  const people=[];
+  const skinMats=[
+    mat(scene,"townsfolk-skin-warm",new Color3(.68,.43,.29)),
+    mat(scene,"townsfolk-skin-light",new Color3(.83,.63,.47)),
+    mat(scene,"townsfolk-skin-deep",new Color3(.38,.23,.16))
+  ];
+  const clothes=[
+    mat(scene,"townsfolk-cloth-rust",new Color3(.48,.19,.12)),
+    mat(scene,"townsfolk-cloth-ochre",new Color3(.66,.43,.16)),
+    mat(scene,"townsfolk-cloth-teal",new Color3(.12,.31,.32)),
+    mat(scene,"townsfolk-cloth-cream",new Color3(.72,.65,.49)),
+    mat(scene,"townsfolk-cloth-forest",new Color3(.20,.32,.19))
+  ];
+  const makePerson=(x,z,index,walking=true)=>{
+    const root=MeshBuilder.CreateBox("townsfolk-root",{width:.01,height:.01,depth:.01},scene);
+    root.isVisible=false;root.position.set(x,0,z);
+    const shirt=clothes[index%clothes.length],skin=skinMats[index%skinMats.length];
+    const torso=MeshBuilder.CreateCylinder("townsfolk-tunic",{diameterTop:.48,diameterBottom:.68,height:1.12,tessellation:8},scene);
+    torso.parent=root;torso.position.y=1.22;torso.material=shirt;
+    const head=MeshBuilder.CreateSphere("townsfolk-head",{diameter:.43,segments:10},scene);
+    head.parent=root;head.position.y=2.05;head.material=skin;
+    const hair=MeshBuilder.CreateSphere("townsfolk-hair",{diameter:.46,segments:8},scene);
+    hair.parent=root;hair.position.set(0,2.22,-.015);hair.scaling.y=.48;hair.material=clothes[(index+2)%clothes.length];
+    const arms=[],legs=[];
+    for(let side of [-1,1]) {
+      const arm=MeshBuilder.CreateCylinder("townsfolk-arm",{diameterTop:.15,diameterBottom:.20,height:.76,tessellation:7},scene);
+      arm.parent=root;arm.position.set(side*.39,1.35,0);arm.rotation.z=side*-.18;arm.material=shirt;arms.push(arm);
+      const leg=MeshBuilder.CreateCylinder("townsfolk-leg",{diameter:.19,height:.72,tessellation:7},scene);
+      leg.parent=root;leg.position.set(side*.19,.42,0);leg.material=clothes[(index+1)%clothes.length];legs.push(leg);
+    }
+    const person={root,arms,legs,walking,phase:index*1.7,home:new Vector3(x,0,z),radius:2.4+index%3};
+    people.push(person);return person;
+  };
+  const walkers=[
+    [-5,12],[-2,15],[2,11],[5,17],[18,18],[29,5],[7,-3],[34,-5],
+    [-8,-4],[5,-19],[30,-24]
+  ];
+  walkers.forEach(([x,z],i)=>makePerson(x,z,i,i%4!==0));
+  // A pair of villagers pause beside the fountain as if chatting.
+  const chatA=makePerson(5,8,2,false),chatB=makePerson(7,8,4,false);
+  chatA.root.rotation.y=.9;chatB.root.rotation.y=-.9;
+  // A calm pack horse and a small timber cart add life to the market road.
+  const horseRoot=MeshBuilder.CreateBox("market-horse-root",{width:.01,height:.01,depth:.01},scene);
+  horseRoot.isVisible=false;horseRoot.position.set(34,0,-22);horseRoot.rotation.y=-Math.PI/2;
+  const horseCoat=mat(scene,"horse-chestnut-coat",new Color3(.30,.13,.065),.92);
+  const horseMane=mat(scene,"horse-dark-mane",new Color3(.09,.055,.035),.95);
+  const horseBody=MeshBuilder.CreateSphere("horse-body",{diameter:1.2,segments:12},scene);
+  horseBody.parent=horseRoot;horseBody.scaling.set(.85,.72,1.65);horseBody.position.y=1.45;horseBody.material=horseCoat;
+  const horseNeck=MeshBuilder.CreateCylinder("horse-neck",{diameterTop:.34,diameterBottom:.62,height:1.45,tessellation:10},scene);
+  horseNeck.parent=horseRoot;horseNeck.position.set(0,2.05,.95);horseNeck.rotation.x=-.38;horseNeck.material=horseCoat;
+  const horseHead=MeshBuilder.CreateSphere("horse-head",{diameter:.62,segments:10},scene);
+  horseHead.parent=horseRoot;horseHead.position.set(0,2.55,1.45);horseHead.scaling.set(.72,1.05,.8);horseHead.material=horseCoat;
+  const horseManeMesh=MeshBuilder.CreateCylinder("horse-mane",{diameterTop:.08,diameterBottom:.34,height:1.35,tessellation:8},scene);
+  horseManeMesh.parent=horseRoot;horseManeMesh.position.set(0,2.48,.86);horseManeMesh.rotation.x=-.35;horseManeMesh.material=horseMane;
+  const horseLegs=[];
+  for(let side of [-1,1]) for(let front of [-1,1]) {
+    const leg=MeshBuilder.CreateCylinder("horse-leg",{diameterTop:.12,diameterBottom:.19,height:1.05,tessellation:8},scene);
+    leg.parent=horseRoot;leg.position.set(side*.34,.63,front*.92);leg.material=horseCoat;horseLegs.push(leg);
+    const hoof=MeshBuilder.CreateCylinder("horse-hoof",{diameter:.23,height:.20,tessellation:8},scene);
+    hoof.parent=horseRoot;hoof.position.set(side*.34,.12,front*.92);hoof.material=horseMane;
+  }
+  const horseHarness=mat(scene,"horse-harness-leather",new Color3(.22,.12,.065),.78);
+  const bridle=MeshBuilder.CreateTorus("horse-bridle",{diameter:.58,thickness:.055,tessellation:16},scene);
+  bridle.parent=horseRoot;bridle.position.set(0,2.5,1.48);bridle.rotation.x=Math.PI/2;bridle.material=horseHarness;
+  addObstacle(34,-22,1.35);
+  // Keep the horse/cart as a parked scene vignette rather than blocking the player's route.
+  const cart=MeshBuilder.CreateBox("market-handcart-bed",{width:2.3,height:.25,depth:2.8},scene);
+  cart.position.set(34,.9,-25);cart.material=mats.wood;
+  for(let side of [-1,1]) {
+    const wheel=MeshBuilder.CreateCylinder("market-handcart-wheel",{diameter:1.35,height:.18,tessellation:20},scene);
+    wheel.position.set(34+side*1.18,.82,-25);wheel.rotation.z=Math.PI/2;wheel.material=horseMane;
+    const rail=box(scene,"market-handcart-rail",[34+side*.9,1.55,-25],[.12,.9,2.8],mats.woodLight);
+  }
+  for(let z=-25;z<=-23;z+=2) {
+    const board=box(scene,"market-handcart-board",[34,1.48,z],[2.0,.12,.12],mats.woodLight);
+  }
+
+    // Camera, collision and interaction.
   const camera=new UniversalCamera("first-person-explorer",new Vector3(0,1.72,27),scene);
   camera.minZ=.08;camera.fov=.92;camera.inputs.clear();camera.rotation.y=Math.PI;
   let yaw=0,pitch=0,moveSource=()=>Vector3.Zero();
@@ -728,8 +860,21 @@ export async function createRoyalCity(engine, canvas) {
       if(this.onMovement)this.onMovement(moving,camera.position,getLocation(camera.position.x,camera.position.z));
       const time=performance.now()*.001;
       canopy.forEach(o=>{o.mesh.rotation.z=o.base+Math.sin(time*.35+o.phase)*.025;o.mesh.position.y=o.baseY+Math.sin(time*.35+o.phase)*.16;});
+      // Subtle fountain ripples and falling droplets keep the water from feeling static.
       waterRing.scaling.x=1+Math.sin(time*1.2)*.025;
-      inner.position.y=1.17+Math.sin(time*1.6)*.018;
+      basinInnerBand.scaling.x=1+Math.sin(time*.9)*.012;
+      people.forEach((person,i)=>{
+        if(!person.walking)return;
+        const t=time*.22+person.phase;
+        person.root.position.x=person.home.x+Math.sin(t)*person.radius;
+        person.root.position.z=person.home.z+Math.cos(t*.72)*person.radius*.55;
+        person.root.rotation.y=Math.atan2(Math.cos(t)*person.radius*.72,Math.cos(t)*person.radius)+Math.PI/2;
+        const stride=Math.sin(time*3.2+person.phase)*.42;
+        person.legs[0].rotation.x=stride;person.legs[1].rotation.x=-stride;
+        person.arms[0].rotation.x=-stride*.55;person.arms[1].rotation.x=stride*.55;
+      });
+      horseLegs.forEach((leg,i)=>{leg.rotation.x=Math.sin(time*2.2+(i%2)*Math.PI)*.035;});
+      horseHead.rotation.x=Math.sin(time*.8)*.035;
     }
   };
 }
