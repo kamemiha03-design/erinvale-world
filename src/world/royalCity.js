@@ -1013,8 +1013,8 @@ export async function createRoyalCity(engine, canvas) {
     }
     addBanner(scene,side*8,18,-73.8,castleGold,mats.banner,side);
   }
-  const crest=MeshBuilder.CreateCylinder("royal-crest-medallion",{diameter:2.2,height:.22,tessellation:12},scene);
-  crest.position.set(0,23.3,-74.6);crest.rotation.x=Math.PI/2;crest.material=castleGold;
+  const royalGateCrest=MeshBuilder.CreateCylinder("royal-crest-medallion",{diameter:2.2,height:.22,tessellation:12},scene);
+  royalGateCrest.position.set(0,23.3,-74.6);royalGateCrest.rotation.x=Math.PI/2;royalGateCrest.material=castleGold;
   // Fine-grained royal architecture: corner quoins, balconies, reliefs and lit windows.
   for(let floor=0;floor<4;floor++) {
     const y=14+floor*7.7;
