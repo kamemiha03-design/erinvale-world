@@ -31,7 +31,7 @@ The following optional models are loaded at runtime from the public glTF reposit
 - Asset pack: J-Ponzo, glTF Medieval Village MegaKit (standard GLTF subset)
 - Source: https://github.com/J-Ponzo/gltf-medieval-village-megakit
 - License: CC0 1.0 (see repository LICENSE)
-- Models currently used: `Prop_Vine1.gltf` (tavern facade ivy), `Prop_Vine2.gltf` (guild facade ivy), `Prop_Wagon.gltf` (market merchant wagon)
+- Models currently used: `Prop_Vine1.gltf` (tavern facade ivy), `Prop_Vine2.gltf` (guild facade ivy), `Roof_RoundTiles_6x8.gltf` (tiled roof layers on the tavern, guild and market hall), `Prop_Wagon.gltf` (market merchant wagon)
 - Runtime asset base: https://raw.githubusercontent.com/J-Ponzo/gltf-medieval-village-megakit/main/glTF/
 - Local file path: remote runtime assets (not bundled in this repository)
 
