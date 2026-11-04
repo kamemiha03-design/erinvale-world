@@ -370,6 +370,8 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.abs(x)>69||Math.abs(z)>69)return true;
     for(const c of colliders) {
       if(x>c.minX-.5&&x<c.maxX+.5&&z>c.minZ-.5&&z<c.maxZ+.5) {
+        const insideRoom=c.interior&&x>c.minX+.55&&x<c.maxX-.55&&z>c.minZ+.55&&z<c.maxZ-.55;
+        if(insideRoom)continue;
         const inDoor=Math.abs(x-c.doorX)<c.doorWidth/2 && z<c.doorZ+.7 && z>c.doorZ-1.5;
         if(!inDoor)return true;
       }
