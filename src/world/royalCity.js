@@ -1157,7 +1157,8 @@ export async function createRoyalCity(engine, canvas) {
 
   function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
     const root=new TransformNode("townsperson-root",scene);
-    root.position.set(x,0,z);root.rotation.y=heading;
+    const baseY=role==="guard"&&z<-70?7.63:0;
+    root.position.set(x,baseY,z);root.rotation.y=heading;
     const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
@@ -1232,8 +1233,8 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(6,31,"villager",11.6,-.3,true);
   makeTownsperson(-18.8,0,"villager",12.7,0,false);
   makeTownsperson(-23,0,"merchant",13.8,0,false);
-  makeTownsperson(-5.1,7.63,"guard",14.9,0,false);
-  makeTownsperson(5.1,7.63,"guard",16.0,0,false);
+  makeTownsperson(-5.1,-80.4,"guard",14.9,0,false);
+  makeTownsperson(5.1,-80.4,"guard",16.0,0,false);
   // Extra residents make the fountain square feel like a lived-in town.
   makeTownsperson(17,17,"merchant",17.1,Math.PI/2,false);
   makeTownsperson(21,-4,"villager",18.2,-.7,true);
