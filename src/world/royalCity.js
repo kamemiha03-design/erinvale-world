@@ -273,7 +273,7 @@ export async function createRoyalCity(engine, canvas) {
   surfaceMaps(mats.roof,"T_RoundTiles_BaseColor.png","T_RoundTiles_Normal.png",2.4,2.4);
 
   // Cobblestone plaza with a repeating hand-laid pattern.
-  const ground=MeshBuilder.CreateGround("plaza-ground",{width:150,height:150,subdivisions:2},scene);
+  const ground=MeshBuilder.CreateGround("plaza-ground",{width:240,height:240,subdivisions:2},scene);
   ground.position.y=-.12;ground.material=texturedMat(scene,"cobblestone",new Color3(.53,.50,.43),"#8c8475","#39362f");
   surfaceMaps(ground.material,"T_UnevenBrick_BaseColor.png","T_UnevenBrick_Normal.png",9,9);
   for(let z=-39;z<=33;z+=6) for(let x=-39;x<=39;x+=6) {
@@ -371,8 +371,15 @@ export async function createRoyalCity(engine, canvas) {
     roof.position.set(house.position.x,house.position.y+5,house.position.z);roof.material=mats.roof;
   }
   // Cliff, castle towers and distant waterfall.
-  const cliff=MeshBuilder.CreateBox("castle-cliff",{width:64,height:17,depth:17},scene);
-  cliff.position.set(0,7.5,-77);cliff.material=mat(scene,"cliff-rock",new Color3(.34,.36,.35));
+  const cliffMat=mat(scene,"cliff-rock",new Color3(.34,.36,.35));
+  // Split the cliff into two shoulders and leave a broad central road to the World Tree.
+  for(const side of [-1,1]) {
+    const cliff=MeshBuilder.CreateBox("castle-cliff-shoulder",{width:24,height:17,depth:17},scene);
+    cliff.position.set(side*20,7.5,-77);cliff.material=cliffMat;
+  }
+  const approach=MeshBuilder.CreateGround("world-tree-approach",{width:15,height:68,subdivisions:1},scene);
+  approach.position.set(0,-.08,-88);
+  approach.material=mats.floor;
   for(let i=0;i<7;i++) {
     const tower=MeshBuilder.CreateCylinder("castle-tower",{diameter:5.5,height:17+(i%3)*4,tessellation:16},scene);
     tower.position.set(-23+i*7.5,19+(i%2)*1.5,-77);tower.material=mats.trim;
@@ -449,7 +456,7 @@ export async function createRoyalCity(engine, canvas) {
   let yaw=0,pitch=0,moveSource=()=>Vector3.Zero();
   const velocity=new Vector3();
   const collides=(x,z)=>{
-    if(Math.abs(x)>69||Math.abs(z)>69)return true;
+    if(Math.abs(x)>112||Math.abs(z)>116)return true;
     for(const c of colliders) {
       if(x>c.minX-.5&&x<c.maxX+.5&&z>c.minZ-.5&&z<c.maxZ+.5) {
         const insideRoom=c.interior&&x>c.minX+.55&&x<c.maxX-.55&&z>c.minZ+.55&&z<c.maxZ-.55;
@@ -462,7 +469,7 @@ export async function createRoyalCity(engine, canvas) {
     // Fountain basin, market counters, and castle cliff are solid.
     if(Math.hypot(x-13,z-5)<6.1)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
-    if(z<-68 && Math.abs(x)<32)return true;
+    if(z<-68 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
     return false;
   };
   const location=document.querySelector("#location-name");
@@ -504,8 +511,12 @@ export async function createRoyalCity(engine, canvas) {
       forward.y=0;
       if(forward.lengthSquared()>0.0001) forward.normalize();
       const right=Vector3.Cross(forward,Vector3.Up()).normalize();
-      const dx=(forward.x*input.y+right.x*input.x)*speed*step;
-      const dz=(forward.z*input.y+right.z*input.x)*speed*step;
+      // controls.js stores forward/back input on Vector3.z (not Vector3.y).
+      // Reading input.y here silently discarded every forward/back command,
+      // which is why only strafing worked.
+      const forwardInput=input.z;
+      const dx=(forward.x*forwardInput+right.x*input.x)*speed*step;
+      const dz=(forward.z*forwardInput+right.z*input.x)*speed*step;
       const nx=camera.position.x+dx,nz=camera.position.z+dz;
       if(!collides(nx,camera.position.z))camera.position.x=nx;
       if(!collides(camera.position.x,nz))camera.position.z=nz;
