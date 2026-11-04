@@ -190,6 +190,8 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         box(scene,name+"-table-leg",[x-3+i*3+dx,.48,z+1+dz],[.13,.8,.13],mats.wood);
     }
     box(scene,name+"-counter",[x+3,1.25,z+1.6],[2.8,1.5,.85],mats.woodLight);
+    obstacles.push({x:x+3,z:z+1.6,r:1.55});
+    for(let i=0;i<3;i++) obstacles.push({x:x-3+i*3,z:z+1,r:1.05});
     for(let i=0;i<4;i++) box(scene,name+"-shelf",[x+2.6+i*.18,3.2,z+d*.18],[.12,2.3,.55],mats.wood);
     // Interior side walls leave a clear path through the doorway.
     box(scene,name+"-interior-left",[x-w/2+.12,h/2,z],[.2,h-.3,d],mats.wall);
