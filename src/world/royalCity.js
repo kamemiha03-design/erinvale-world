@@ -323,27 +323,85 @@ export async function createRoyalCity(engine, canvas) {
     paper.rotation.z=(i%2?-.08:.05);
   }
 
-  // Imperial fountain with layered stone basin, animated water and crown-like jets.
-  const basin=cylinder(scene,"imperial-fountain-basin",[13,.58,5],12,1.1,mats.trim,64);
-  const inner=cylinder(scene,"fountain-inner-water",[13,1.18,5],10.7,.16,mat(scene,"turquoise-water",C.water,.14,.25),64);
-  const plinth=cylinder(scene,"fountain-plinth",[13,2.05,5],2.5,1.8,mats.wall,32);
-  cylinder(scene,"statue-collar",[13,3.12,5],1.65,.38,mats.gold,32);
-  const statue=MeshBuilder.CreateSphere("emperor-statue-torso",{diameter:1.55,segments:24},scene);
-  statue.position.set(13,4.2,5);statue.scaling.y=1.6;statue.material=mats.gold;
-  const head=MeshBuilder.CreateSphere("emperor-statue-head",{diameter:.78,segments:20},scene);
-  head.position.set(13,5.45,5);head.material=mats.gold;
-  for(let i=0;i<5;i++) {
-    const spike=MeshBuilder.CreateCylinder("crown-point",{diameterTop:0,diameterBottom:.22,height:.75,tessellation:8},scene);
-    spike.position.set(12.55+i*.22,5.95+(i===2?.18:0),5);spike.material=mats.gold;
+  // Grand civic fountain: carved limestone tiers, broad water basins and a welcoming stone gathering plaza.
+  const fountainStone=texturedMat(scene,"fountain-honed-limestone",new Color3(.72,.68,.59),"#b8ad98","#655b4c",.88);
+  const fountainEdge=mat(scene,"fountain-edge-highlight",new Color3(.84,.79,.68),.78);
+  const fountainShadow=mat(scene,"fountain-recess-shadow",new Color3(.29,.27,.23),.96);
+  const fountainWater=mat(scene,"clear-fountain-water",new Color3(.18,.48,.56),.12,.18);
+  fountainWater.alpha=.92;
+  const fountainMetal=mat(scene,"fountain-aged-bronze",new Color3(.48,.34,.18),.38,.68);
+  // Wide octagonal-looking stepped foundation, large enough to feel like a true town landmark.
+  cylinder(scene,"fountain-square-foundation",[13,.18,5],17.4,.42,fountainStone,12);
+  cylinder(scene,"fountain-foundation-upper",[13,.43,5],16.2,.24,fountainEdge,12);
+  cylinder(scene,"fountain-foundation-shadowline",[13,.57,5],15.6,.10,fountainShadow,12);
+  cylinder(scene,"fountain-outer-basin-foot",[13,.82,5],15.2,.48,fountainStone,64);
+  cylinder(scene,"fountain-outer-basin-wall",[13,1.42,5],14.4,.92,fountainStone,64);
+  cylinder(scene,"fountain-basin-inner-recess",[13,1.91,5],12.9,.10,fountainShadow,64);
+  cylinder(scene,"fountain-water-lower",[13,1.98,5],12.55,.12,fountainWater,64);
+  cylinder(scene,"fountain-rim-lower",[13,1.94,5],14.75,.22,fountainEdge,64);
+  cylinder(scene,"fountain-rim-inlay",[13,2.075,5],13.7,.045,fountainMetal,64);
+  // Repeated carved stone panels and small bronze rosettes around the basin.
+  for(let i=0;i<24;i++) {
+    const a=i*Math.PI/12, r=7.12;
+    const panel=box(scene,"fountain-carved-panel",[13+Math.cos(a)*r,1.42,5+Math.sin(a)*r],[.82,.48,.10],fountainEdge);
+    panel.rotation.y=-a;
+    const rosette=MeshBuilder.CreateSphere("fountain-bronze-rosette",{diameter:.16,segments:10},scene);
+    rosette.position.set(13+Math.cos(a)*7.2,1.48,5+Math.sin(a)*7.2);
+    rosette.material=fountainMetal;
   }
+  // Central monumental column and a smaller upper bowl create a recognisable tiered fountain silhouette.
+  cylinder(scene,"fountain-central-pedestal-foot",[13,2.28,5],4.1,.38,fountainStone,12);
+  cylinder(scene,"fountain-central-pedestal",[13,3.12,5],3.0,1.55,fountainStone,16);
+  cylinder(scene,"fountain-pedestal-cap",[13,3.98,5],3.8,.32,fountainEdge,16);
+  cylinder(scene,"fountain-upper-bowl-base",[13,4.22,5],2.8,.38,fountainStone,48);
+  cylinder(scene,"fountain-upper-bowl",[13,4.58,5],4.8,.48,fountainStone,48);
+  cylinder(scene,"fountain-upper-water",[13,4.84,5],4.15,.10,fountainWater,48);
+  const upperRim=MeshBuilder.CreateTorus("fountain-upper-rim",{diameter:4.8,thickness:.16,tessellation:48},scene);
+  upperRim.position.set(13,4.83,5);upperRim.material=fountainEdge;
+  const lowerRipple=MeshBuilder.CreateTorus("fountain-lower-ripple",{diameter:8.4,thickness:.045,tessellation:64},scene);
+  lowerRipple.position.set(13,2.07,5);lowerRipple.material=mat(scene,"fountain-water-glint",new Color3(.65,.84,.86),.12,.18);
+  // A dignified stone guardian, rather than a plain gold mannequin, crowns the fountain.
+  cylinder(scene,"guardian-footing",[13,5.12,5],2.0,.35,fountainMetal,16);
+  const statue=MeshBuilder.CreateSphere("emperor-statue-torso",{diameter:1.55,segments:24},scene);
+  statue.position.set(13,6.15,5);statue.scaling.set(1.05,1.55,.78);statue.material=fountainStone;
+  const head=MeshBuilder.CreateSphere("emperor-statue-head",{diameter:.72,segments:20},scene);
+  head.position.set(13,7.38,5);head.material=fountainStone;
+  const cloak=MeshBuilder.CreateCylinder("guardian-cloak",{diameterTop:1.15,diameterBottom:2.0,height:1.45,tessellation:12},scene);
+  cloak.position.set(13,5.65,5);cloak.material=fountainStone;
+  const scepter=MeshBuilder.CreateCylinder("guardian-scepter",{diameter:.10,height:2.2,tessellation:10},scene);
+  scepter.position.set(14.05,6.2,5);scepter.rotation.z=-.12;scepter.material=fountainMetal;
+  const crown=MeshBuilder.CreateCylinder("guardian-crown",{diameterTop:.55,diameterBottom:.82,height:.32,tessellation:8},scene);
+  crown.position.set(13,7.82,5);crown.material=fountainMetal;
+  // Gentle arcing water streams from the upper bowl into the broad lower basin.
+  for(let i=0;i<8;i++) {
+    const a=i*Math.PI/4;
+    const jet=MeshBuilder.CreateCylinder("fountain-water-jet",{diameterTop:.025,diameterBottom:.075,height:1.75,tessellation:10},scene);
+    jet.position.set(13+Math.cos(a)*2.0,3.55,5+Math.sin(a)*2.0);
+    jet.rotation.z=Math.cos(a)*-.42;jet.rotation.x=Math.sin(a)*.42;jet.material=fountainWater;
+  }
+  for(let i=0;i<16;i++) {
+    const a=i*Math.PI/8;
+    const nozzle=MeshBuilder.CreateCylinder("fountain-basin-nozzle",{diameterTop:.035,diameterBottom:.10,height:.38,tessellation:8},scene);
+    nozzle.position.set(13+Math.cos(a)*5.45,2.25,5+Math.sin(a)*5.45);
+    nozzle.rotation.z=Math.cos(a)*-.15;nozzle.rotation.x=Math.sin(a)*.15;nozzle.material=fountainMetal;
+  }
+  // Circular paving, benches and flower beds turn the fountain into a place to linger.
   for(let i=0;i<12;i++) {
     const a=i*Math.PI/6;
-    const jet=MeshBuilder.CreateCylinder("fountain-water-jet",{diameterTop:.04,diameterBottom:.12,height:1.15,tessellation:8},scene);
-    jet.position.set(13+Math.cos(a)*3.8,1.9,5+Math.sin(a)*3.8);
-    jet.rotation.z=Math.cos(a)*-.25;jet.rotation.x=Math.sin(a)*.25;jet.material=mats.glass;
+    const bench=box(scene,"plaza-curved-bench",[13+Math.cos(a)*11.2,.62,5+Math.sin(a)*11.2],[3.1,.24,.72],mats.woodLight);
+    bench.rotation.y=-a;
+    const back=box(scene,"plaza-bench-back",[13+Math.cos(a)*11.2,1.12,5+Math.sin(a)*11.2],[3.1,.82,.18],fountainStone);
+    back.rotation.y=-a;
+    const planter=box(scene,"plaza-stone-flower-trough",[13+Math.cos(a)*13.0,.42,5+Math.sin(a)*13.0],[2.2,.72,1.1],fountainStone);
+    planter.rotation.y=-a;
+    addObstacle(13+Math.cos(a)*11.2,5+Math.sin(a)*11.2,1.35);
+    for(let j=0;j<3;j++) {
+      const bloom=MeshBuilder.CreateSphere("plaza-flower",{diameter:.22,segments:8},scene);
+      bloom.position.set(13+Math.cos(a)*13.0+(Math.random()-.5)*1.1,.95,5+Math.sin(a)*13.0+(Math.random()-.5)*.55);
+      bloom.material=j%2?mats.flowers:mats.gold;
+    }
   }
-  const waterRing=MeshBuilder.CreateTorus("fountain-ripple",{diameter:7.6,thickness:.035,tessellation:64},scene);
-  waterRing.position.set(13,1.29,5);waterRing.material=mat(scene,"water-ripple",new Color3(.55,.82,.88),.15,.2);
+  const waterRing=lowerRipple;
 
   // Market stalls, cloth roofs, produce crates and baskets.
   for(let i=0;i<4;i++) {
@@ -508,7 +566,7 @@ export async function createRoyalCity(engine, canvas) {
       }
     }
     // Fountain basin, market counters, and castle cliff are solid.
-    if(Math.hypot(x-13,z-5)<6.1)return true;
+    if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
     if(z<-68 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
     return false;
@@ -518,7 +576,7 @@ export async function createRoyalCity(engine, canvas) {
     if(x<-12&&z>0)return "銅鹿亭 — Copper Stag Tavern";
     if(x<-12&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
-    if(Math.hypot(x-13,z-5)<9)return "皇帝の噴水広場";
+    if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
     if(z<-35)return "王城への大通り";
     return "王都エリンヴェイル";
   }
@@ -527,7 +585,7 @@ export async function createRoyalCity(engine, canvas) {
     let message="石畳の広場。遠くに王城と世界樹が見える。";
     if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
-    else if(Math.hypot(x-13,z-5)<10)message="皇帝の像を囲む噴水。水面が陽光を反射している。";
+    else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
     else if(z<-35)message="王城へ続く大門。崖の上に王城、その背後には世界樹がそびえる。";
     else if(x>10&&z<-5)message="市場の屋台。果物や旅の道具が並んでいる。";
     document.querySelector("#hint").textContent=message;
