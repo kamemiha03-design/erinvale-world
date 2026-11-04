@@ -195,8 +195,8 @@ function addBuilding(scene, cfg, mats, shadows, colliders) {
     box(scene,name+"-interior-left",[x-w/2+.12,h/2,z],[.2,h-.3,d],mats.wall);
     box(scene,name+"-interior-right",[x+w/2-.12,h/2,z],[.2,h-.3,d],mats.wall);
   }
-  colliders.push({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2,doorX:x,doorWidth:1.9,doorZ:front,interior});
-  return wall;
+  colliders.push({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2,doorX:x,doorWidth:1.9,doorZ:front,interior,passThrough:!!cfg.passThrough});
+  return null;
 }
 
 export async function createRoyalCity(engine, canvas) {
@@ -229,9 +229,9 @@ export async function createRoyalCity(engine, canvas) {
   // Cobblestone plaza with a repeating hand-laid pattern.
   const ground=MeshBuilder.CreateGround("plaza-ground",{width:150,height:150,subdivisions:2},scene);
   ground.position.y=-.12;ground.material=texturedMat(scene,"cobblestone",new Color3(.53,.50,.43),"#8c8475","#39362f");
-  for(let z=-42;z<=34;z+=3.2) for(let x=-42;x<=42;x+=3.2) {
-    const p=MeshBuilder.CreateBox("individual-cobble",{width:3.08,height:.075,depth:3.08},scene);
-    p.position.set(x,-.055,z);p.material=(Math.floor((x+42)/3.2+z/3.2)%5===0)?mats.trim:ground.material;
+  for(let z=-39;z<=33;z+=6) for(let x=-39;x<=39;x+=6) {
+    const p=MeshBuilder.CreateBox("individual-cobble",{width:5.78,height:.055,depth:5.78},scene);
+    p.position.set(x,-.055,z);p.material=(Math.floor((x+39)/6+z/6)%6===0)?mats.trim:ground.material;
   }
 
   const colliders=[];
@@ -300,7 +300,7 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   // Gatehouse and layered city approach.
-  addBuilding(scene,{x:0,z:-43,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE"},{...mats},shadow,colliders);
+  addBuilding(scene,{x:0,z:-43,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE",passThrough:true},{...mats},shadow,colliders);
   for(let side of [-1,1]) {
     const tower=cylinder(scene,"gatehouse-tower",[side*11,9,-43],5.4,18,mats.wall,16);
     const cap=MeshBuilder.CreateCylinder("gatehouse-turret-roof",{diameterTop:0,diameterBottom:6.4,height:4.8,tessellation:12},scene);
@@ -371,7 +371,8 @@ export async function createRoyalCity(engine, canvas) {
     for(const c of colliders) {
       if(x>c.minX-.5&&x<c.maxX+.5&&z>c.minZ-.5&&z<c.maxZ+.5) {
         const insideRoom=c.interior&&x>c.minX+.55&&x<c.maxX-.55&&z>c.minZ+.55&&z<c.maxZ-.55;
-        if(insideRoom)continue;
+        const gatePassage=c.passThrough&&Math.abs(x-c.doorX)<c.doorWidth/2;
+        if(insideRoom||gatePassage)continue;
         const inDoor=Math.abs(x-c.doorX)<c.doorWidth/2 && z<c.doorZ+.7 && z>c.doorZ-1.5;
         if(!inDoor)return true;
       }
