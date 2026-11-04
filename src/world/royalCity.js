@@ -902,6 +902,8 @@ export async function createRoyalCity(engine, canvas) {
     const chain=MeshBuilder.CreateCylinder("royal-hall-chandelier-chain",{diameter:.055,height:2.5,tessellation:8},scene);
     chain.position.set(Math.cos(a)*2.45,23.8,-82+Math.sin(a)*2.45);chain.material=castleGold;
   }
+  const wood=mat(scene,"palace-furniture-walnut",new Color3(.22,.105,.055),.78);
+  const cloth=mat(scene,"palace-furniture-velvet",new Color3(.34,.10,.16),.88);
   for(let side of [-1,1]) {
     box(scene,"royal-hall-visitor-bench",[side*4.8,9.25,-77.4],[2.7,.35,1.0],wood);
     box(scene,"royal-hall-visitor-bench-back",[side*4.8,10.0,-77.85],[2.7,1.1,.2],wood);
