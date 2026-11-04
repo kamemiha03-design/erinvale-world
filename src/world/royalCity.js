@@ -120,7 +120,7 @@ function addTree(scene, x, z, scale, trunk, leaves) {
 
 function addBanner(scene, x, y, z, wood, cloth, phase=0) {
   cylinder(scene,"banner-pole",[x,y/2,z],0.13,y,wood,12);
-  const flag=MeshBuilder.CreatePlane("royal-banner",{width:1.55,height:2.25,sideOrientation:MeshBuilder.DOUBLESIDE},scene);
+  const flag=MeshBuilder.CreatePlane("royal-banner",{width:1.55,height:2.25,sideOrientation:2},scene);
   flag.position.set(x+0.82,y-1.25,z);
   flag.material=cloth;
   flag.rotation.y=Math.PI/2;
@@ -405,7 +405,7 @@ export async function createRoyalCity(engine, canvas) {
   return {
     scene,
     setMovementSource(fn){moveSource=fn;},
-    turn(dx,dy){yaw+=dx;pitch=Scalar.Clamp(pitch+dy,-1.05,1.05);camera.rotation.y=Math.PI+yaw;camera.rotation.x=pitch;},
+    turn(dx,dy){yaw+=dx;pitch=Scalar.Clamp(pitch+dy,-1.05,1.05);camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;},
     interact,
     update(dt){
       const input=moveSource();
@@ -418,7 +418,7 @@ export async function createRoyalCity(engine, canvas) {
       if(!collides(nx,camera.position.z))camera.position.x=nx;
       if(!collides(camera.position.x,nz))camera.position.z=nz;
       camera.position.y=1.72;
-      camera.rotation.y=Math.PI+yaw;camera.rotation.x=pitch;
+      camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const time=performance.now()*.001;
       canopy.forEach(o=>{o.mesh.rotation.z=o.base+Math.sin(time*.35+o.phase)*.025;o.mesh.position.y=o.baseY+Math.sin(time*.35+o.phase)*.16;});
