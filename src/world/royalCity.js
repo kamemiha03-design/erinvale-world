@@ -936,7 +936,7 @@ export async function createRoyalCity(engine, canvas) {
       // Walk the player up the stepped approach instead of pinning the camera to flat ground.
       const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
-      const stairFloor=onRoyalStair?stairProgress*stairRise:0;
+      const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
       const onLanding=Math.abs(camera.position.x)<8.6 && camera.position.z<stairEndZ && camera.position.z>-102;
       camera.position.y=1.72+(onRoyalStair?stairFloor:(onLanding?stairRise:0));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
