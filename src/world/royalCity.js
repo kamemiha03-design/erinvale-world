@@ -972,16 +972,40 @@ export async function createRoyalCity(engine, canvas) {
       return null;
     }
   }
+
+  // Replace the tiny placeholder crowd with detailed, properly proportioned fantasy NPCs.
+  async function addDetailedNpc(assetId,x,y,z,heading=0,idlePattern=/idle/i) {
+    try {
+      const imported=await SceneLoader.ImportMeshAsync("","https://vibeassets.io/download/",assetId,scene,undefined,".glb");
+      const root=imported.meshes.find(m=>m.name==="__root__")||imported.meshes[0];
+      if(!root) return null;
+      root.position.set(x,y,z);root.rotation.y=heading;
+      root.computeWorldMatrix(true);
+      let bounds=root.getHierarchyBoundingVectors(true);
+      const height=Math.max(.01,bounds.max.y-bounds.min.y);
+      root.scaling.scaleInPlace(1.82/height);
+      root.computeWorldMatrix(true);
+      bounds=root.getHierarchyBoundingVectors(true);
+      root.position.y-=bounds.min.y-y;
+      root.computeWorldMatrix(true);
+      const idle=imported.animationGroups.find(g=>idlePattern.test(g.name));
+      if(idle) idle.start(true);
+      return root;
+    } catch(error) {
+      console.warn("Detailed fantasy NPC could not be loaded:",assetId,error);
+      return null;
+    }
+  }
   await Promise.all([
-    addTownsperson("PeasantMilitia",-5,12,true,1.1,.5),
-    addTownsperson("human013/CrownedPrincess",5,8,false,2.4,Math.PI),
-    addTownsperson("Scout",18,18,true,3.8,-.8),
-    addTownsperson("Footman",29,5,true,5.2,1.4),
-    addTownsperson("human013/Prince",-2,15,false,6.6,-.6),
-    addTownsperson("PeasantMilitia",7,-3,true,8.1,.2),
-    addTownsperson("human013/PalaceHalberdier",-5.1,-80.4,false,9.3,0,7.63),
-    addTownsperson("human013/PalaceHalberdier",5.1,-80.4,false,10.7,Math.PI,7.63)
+    // A bearded traveller with a patched tunic belongs outside the Copper Stag.
+    addDetailedNpc("fbd1hbd0su",-18.8,0,3.6,0,/idle/i),
+    // The hooded guild clerk waits just inside the guild entrance.
+    addDetailedNpc("r5fphmizn8",-23,0,-17,0,/idle/i),
+    // Matching, fully proportioned royal guards stand at the open palace gate.
+    addDetailedNpc("gmxn9fptt1",-5.1,7.63,-80.4,0,/idle/i),
+    addDetailedNpc("gmxn9fptt1",5.1,7.63,-80.4,0,/idle/i)
   ]);
+
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
   try {
