@@ -22,7 +22,11 @@ async function boot() {
   engine.setHardwareScalingLevel(Math.min(1.5,Math.max(1,window.devicePixelRatio||1)));
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
-  world.onMovement=(moving,position,location)=>audio.setMovement(moving,position,location.includes("市場")?"market":"town");
+  world.onMovement=(moving,position,location)=>{
+    const tavern=position.x>-27.8&&position.x<-14.2&&position.z>1.4&&position.z<10.6;
+    const guild=position.x>-27.8&&position.x<-14.2&&position.z>-20.4&&position.z<-11.6;
+    audio.setMovement(moving,position,tavern?"tavern":guild?"guild":location.includes("市場")?"market":"town");
+  };
   const isTouch=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
   attachMobileControls(world,audio);
   if(isTouch)mobileControls.classList.remove("hidden");
