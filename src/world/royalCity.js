@@ -235,6 +235,8 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   const colliders=[];
+  const obstacles=[];
+  const addObstacle=(x,z,r)=>obstacles.push({x,z,r});
   addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"THE COPPER STAG",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:-21,z:-16,w:14,d:9,h:9.5,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
@@ -379,6 +381,7 @@ export async function createRoyalCity(engine, canvas) {
     }
     // Fountain basin, market counters, and castle cliff are solid.
     if(Math.hypot(x-13,z-5)<6.1)return true;
+    for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
     if(z<-68 && Math.abs(x)<32)return true;
     return false;
   };
@@ -405,6 +408,7 @@ export async function createRoyalCity(engine, canvas) {
   return {
     scene,
     setMovementSource(fn){moveSource=fn;},
+    onMovement:null,
     turn(dx,dy){yaw+=dx;pitch=Scalar.Clamp(pitch+dy,-1.05,1.05);camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;},
     interact,
     update(dt){
@@ -420,6 +424,9 @@ export async function createRoyalCity(engine, canvas) {
       camera.position.y=1.72;
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
+      const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
+      camera._lastFootX=camera.position.x;camera._lastFootZ=camera.position.z;
+      if(this.onMovement)this.onMovement(moving,camera.position,getLocation(camera.position.x,camera.position.z));
       const time=performance.now()*.001;
       canopy.forEach(o=>{o.mesh.rotation.z=o.base+Math.sin(time*.35+o.phase)*.025;o.mesh.position.y=o.baseY+Math.sin(time*.35+o.phase)*.16;});
       waterRing.scaling.x=1+Math.sin(time*1.2)*.025;
