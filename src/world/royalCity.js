@@ -403,6 +403,42 @@ export async function createRoyalCity(engine, canvas) {
   }
   const waterRing=lowerRipple;
 
+  // Warm civic square details: radial stone paving, carved edging, lanterns and places to sit.
+  const plazaGold=mat(scene,"plaza-warm-brass",new Color3(.62,.43,.19),.38,.62);
+  const pavingLight=texturedMat(scene,"sun-warmed-paving",new Color3(.72,.67,.56),"#b7aa91","#6d6251",.94);
+  const pavingDark=mat(scene,"paving-joint-shadow",new Color3(.32,.30,.26),.98);
+  for(const radius of [17.2,19.0,22.5]) {
+    const ring=MeshBuilder.CreateTorus("plaza-stone-inlay",{diameter:radius*2,thickness:.12,tessellation:96},scene);
+    ring.position.set(13,.015,5);ring.material=radius===19?plazaGold:pavingLight;
+  }
+  // Radial flagstones make the square feel like a carefully laid public place, not an empty floor.
+  for(let i=0;i<32;i++) {
+    const a=i*Math.PI/16;
+    const tile=box(scene,"radial-plaza-flagstone",[13+Math.cos(a)*20.6,.012,5+Math.sin(a)*20.6],[3.65,.045,1.42],i%4===0?pavingLight:mats.trim);
+    tile.rotation.y=-a;
+  }
+  // Ornate stone lamp standards with warm glass lanterns.
+  for(let i=0;i<8;i++) {
+    const a=i*Math.PI/4,x=13+Math.cos(a)*23.5,z=5+Math.sin(a)*23.5;
+    cylinder(scene,"plaza-lamp-foot",[x,.34,z],.92,.55,fountainStone,12);
+    cylinder(scene,"plaza-lamp-column",[x,2.05,z],.32,3.0,fountainMetal,12);
+    cylinder(scene,"plaza-lamp-cap",[x,3.62,z],.72,.22,plazaGold,12);
+    const lantern=MeshBuilder.CreateBox("plaza-lantern-glass",{width:.58,height:.78,depth:.58},scene);
+    lantern.position.set(x,3.18,z);lantern.material=mats.lantern;
+    cylinder(scene,"plaza-lamp-crown",[x,3.68,z],.2,.35,fountainMetal,8);
+  }
+  // Carved stone drinking trough and little flower urns along the approach.
+  for(let side of [-1,1]) {
+    const x=13+side*27;
+    box(scene,"plaza-drinking-trough",[x,.58,5],[2.6,1.05,1.35],fountainStone);
+    box(scene,"plaza-trough-water",[x,.98,5],[2.05,.08,.82],fountainWater);
+    for(let j=0;j<3;j++) {
+      const urn=cylinder(scene,"plaza-flower-urn",[x+side*(j-1)*2.0,.72,8],.8,1.25,fountainStone,12);
+      const bloom=MeshBuilder.CreateSphere("plaza-urn-flowers",{diameter:1.1,segments:10},scene);
+      bloom.position.set(x+side*(j-1)*2.0,1.45,8);bloom.material=j%2?mats.flowers:mats.green;
+    }
+  }
+
   // Market stalls, cloth roofs, produce crates and baskets.
   for(let i=0;i<4;i++) {
     const x=14+i*4.5,z=-10-(i%2)*3;
@@ -435,21 +471,86 @@ export async function createRoyalCity(engine, canvas) {
     const roof=MeshBuilder.CreateCylinder("distant-roof",{diameterTop:0,diameterBottom:7,height:3,tessellation:4},scene);
     roof.position.set(house.position.x,house.position.y+5,house.position.z);roof.material=mats.roof;
   }
-  // Cliff, castle towers and distant waterfall.
-  const cliffMat=mat(scene,"cliff-rock",new Color3(.34,.36,.35));
-  // Split the cliff into two shoulders and leave a broad central road to the World Tree.
+  // The royal citadel: a layered limestone fortress with a proper keep, curtain walls,
+  // crenellations, arched windows, buttresses, rooflines and royal banners.
+  const cliffMat=texturedMat(scene,"castle-cliff-rock",new Color3(.34,.36,.35),"#555750","#292b28",.98);
+  const castleStone=texturedMat(scene,"castle-cut-limestone",new Color3(.73,.68,.57),"#b5a88e","#5b5142",.9);
+  const castleShadow=mat(scene,"castle-window-depth",new Color3(.12,.13,.13),.98);
+  const castleRoof=texturedMat(scene,"castle-blue-slate",new Color3(.17,.21,.23),"#454d50","#171d20",.82);
+  const castleGold=mat(scene,"castle-aged-gold",new Color3(.72,.52,.23),.34,.68);
+  // Split the cliff into shoulders, retaining the broad central approach to the World Tree.
   for(const side of [-1,1]) {
     const cliff=MeshBuilder.CreateBox("castle-cliff-shoulder",{width:24,height:17,depth:17},scene);
     cliff.position.set(side*20,7.5,-77);cliff.material=cliffMat;
   }
   const approach=MeshBuilder.CreateGround("world-tree-approach",{width:15,height:68,subdivisions:1},scene);
-  approach.position.set(0,-.08,-88);
-  approach.material=mats.floor;
+  approach.position.set(0,-.08,-88);approach.material=mats.floor;
+  // Main curtain wall and its raised central gatehouse.
+  box(scene,"citadel-front-wall",[0,17,-77],[53,17,3.2],castleStone);
+  box(scene,"citadel-wall-base-course",[0,9.1,-75.25],[54,1.0,.75],mats.trim);
+  box(scene,"citadel-wall-cornice",[0,25.45,-75.15],[54,.62,3.7],castleGold);
+  for(let i=0;i<27;i++) {
+    const x=-25.5+i*1.96;
+    box(scene,"citadel-merlon",[x,26.55,-77],[1.15,1.65,3.25],castleStone);
+    if(i%2===0) box(scene,"citadel-arrow-slit",[x,18.8,-75.28],[.22,2.0,.08],castleShadow);
+  }
+  // Central keep rises behind the gate, with layered roofs and a readable silhouette.
+  box(scene,"royal-keep-main",[0,27,-82],[21,25,15],castleStone);
+  box(scene,"royal-keep-upper",[0,40.2,-82],[16.8,7.5,12.2],mats.trim);
+  box(scene,"royal-keep-roof-base",[0,44.3,-82],[18.5,.65,13.8],castleGold);
+  const keepRoof=MeshBuilder.CreateCylinder("royal-keep-pitched-roof",{diameterTop:0,diameterBottom:18.5,height:8.5,tessellation:4},scene);
+  keepRoof.position.set(0,48.6,-82);keepRoof.rotation.y=Math.PI/4;keepRoof.material=castleRoof;
+  // Tall arched windows, inset dark glass, stone frames and carved horizontal courses.
+  for(let floor=0;floor<3;floor++) for(let col=-2;col<=2;col++) {
+    const x=col*3.45,y=20+floor*8.2;
+    box(scene,"keep-window-recess",[x,y,-74.35],[1.45,3.0,.12],castleShadow);
+    box(scene,"keep-window-glass",[x,y,-74.27],[.82,2.15,.08],mats.glass);
+    box(scene,"keep-window-mullion",[x,y,-74.18],[.10,2.2,.08],castleGold);
+    box(scene,"keep-window-sill",[x,y-1.58,-74.18],[1.8,.22,.32],mats.trim);
+    const arch=MeshBuilder.CreateTorus("keep-window-arch",{diameter:1.1,thickness:.16,tessellation:16},scene);
+    arch.scaling.y=1.1;arch.position.set(x,y+1.05,-74.17);arch.material=mats.trim;
+  }
+  for(let y of [15.2,23.2,31.2,39.1]) box(scene,"keep-stone-stringcourse",[0,y,-74.25],[21.6,.28,.42],castleGold);
+  // Flanking towers: stepped bases, ring courses, machicolations and conical slate roofs.
   for(let i=0;i<7;i++) {
-    const tower=MeshBuilder.CreateCylinder("castle-tower",{diameter:5.5,height:17+(i%3)*4,tessellation:16},scene);
-    tower.position.set(-23+i*7.5,19+(i%2)*1.5,-77);tower.material=mats.trim;
-    const roof=MeshBuilder.CreateCylinder("castle-spire",{diameterTop:0,diameterBottom:6.5,height:7,tessellation:12},scene);
-    roof.position.set(tower.position.x,31+(i%3)*2,-77);roof.material=mats.roof;
+    const x=-23+i*7.5, height=19+(i%3)*3.5, baseY=12+height/2;
+    const tower=MeshBuilder.CreateCylinder("castle-tower",{diameter:6.2,height,tessellation:24},scene);
+    tower.position.set(x,baseY,-77);tower.material=castleStone;
+    for(let ringY of [baseY-height*.36,baseY,baseY+height*.37]) {
+      const ring=MeshBuilder.CreateTorus("castle-tower-course",{diameter:6.3,thickness:.22,tessellation:24},scene);
+      ring.position.set(x,ringY,-77);ring.material=castleGold;
+    }
+    cylinder(scene,"castle-tower-foot",[x,12.5,-77],7.1,.9,mats.trim,16);
+    const roof=MeshBuilder.CreateCylinder("castle-spire",{diameterTop:0,diameterBottom:7.2,height:8,tessellation:16},scene);
+    roof.position.set(x,baseY+height/2+4,-77);roof.material=castleRoof;
+    for(let j=0;j<4;j++) {
+      const slit=box(scene,"castle-tower-arrow-slit",[x-1.15+j*.75,baseY+1,-73.82],[.16,1.8,.08],castleShadow);
+    }
+    const finial=cylinder(scene,"castle-roof-finial",[x,baseY+height/2+8.35,-77],.18,.8,castleGold,8);
+  }
+  // A monumental gate arch with recessed portcullis, voussoirs and a carved royal crest.
+  box(scene,"gate-shadow",[0,14,-74.9],[8.4,11,.2],castleShadow);
+  box(scene,"gate-portcullis",[0,13.6,-74.55],[6.8,8.8,.18],mats.wood);
+  for(let x=-3;x<=3;x+=.85) box(scene,"gate-portcullis-bars",[x,13.6,-74.35],[.12,8.8,.12],castleGold);
+  for(let y=9.4;y<=17.8;y+=1.0) box(scene,"gate-portcullis-crossbar",[0,y,-74.32],[6.8,.12,.12],castleGold);
+  for(let side of [-1,1]) {
+    box(scene,"gate-pier",[side*5,16,-74.7],[1.8,15,2.2],castleStone);
+    for(let row=0;row<9;row++) {
+      const block=box(scene,"gate-arch-stone",[side*(4.1+row*.48),21.2-row*.72,-74.5],[1.0,.82,1.0],mats.trim);
+      block.rotation.z=side*.08;
+    }
+    addBanner(scene,side*8,18,-73.8,castleGold,mats.banner,side);
+  }
+  const crest=MeshBuilder.CreateCylinder("royal-crest-medallion",{diameter:2.2,height:.22,tessellation:12},scene);
+  crest.position.set(0,23.3,-74.6);crest.rotation.x=Math.PI/2;crest.material=castleGold;
+  // Corner turrets and rooftop details break up the large keep silhouette.
+  for(let side of [-1,1]) {
+    const turret=cylinder(scene,"keep-corner-turret",[side*8.2,44,-82],3.1,11,castleStone,20);
+    const cap=MeshBuilder.CreateCylinder("keep-corner-roof",{diameterTop:0,diameterBottom:4.0,height:5.5,tessellation:12},scene);
+    cap.position.set(side*8.2,52.1,-82);cap.material=castleRoof;
+    for(let j=0;j<4;j++) {
+      const slit=box(scene,"keep-turret-window",[side*8.2,43,-80.35+j*.0],[.42,1.6,.08],castleShadow);
+    }
   }
   const waterfall=MeshBuilder.CreatePlane("distant-waterfall",{width:7,height:15},scene);
   waterfall.position.set(27,7,-68);waterfall.material=new StandardMaterial("waterfall-material",scene);
