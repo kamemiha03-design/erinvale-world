@@ -573,7 +573,7 @@ export async function createRoyalCity(engine, canvas) {
   }
   // A layered entrance stair and broad landing make the approach feel monumental.
   for(let step=0;step<7;step++) {
-    const stair=box(scene,"castle-approach-step",[0,1.0+step*.48,-61-step*1.05],[17+step*.65,.42,1.25],castleStone);
+    const stair=box(scene,"castle-approach-step",[0,.25+step*.48,-61-step*1.05],[17+step*.65,.50,1.25],castleStone);
     stair.receiveShadows=true;
   }
   for(let side of [-1,1]) {
