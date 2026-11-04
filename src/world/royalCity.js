@@ -128,7 +128,7 @@ function addBanner(scene, x, y, z, wood, cloth, phase=0) {
   return flag;
 }
 
-function addBuilding(scene, cfg, mats, shadows, colliders) {
+function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   const {x,z,w,d,h,name,sign,interior=false} = cfg;
   const front=z-d/2;
   // Split the front wall around the entrance so the doorway is physically walkable.
@@ -235,9 +235,9 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   const colliders=[];
-  addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"THE COPPER STAG",interior:true},{...mats},shadow,colliders);
-  addBuilding(scene,{x:-21,z:-16,w:14,d:9,h:9.5,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders);
-  addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders);
+  addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"THE COPPER STAG",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:-21,z:-16,w:14,d:9,h:9.5,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
 
   // Tavern outdoor terrace: benches, tables, barrels, flower boxes and striped awning.
   for(let i=0;i<3;i++) {
@@ -300,7 +300,7 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   // Gatehouse and layered city approach.
-  addBuilding(scene,{x:0,z:-43,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE",passThrough:true},{...mats},shadow,colliders);
+  addBuilding(scene,{x:0,z:-43,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE",passThrough:true},{...mats},shadow,colliders,obstacles);
   for(let side of [-1,1]) {
     const tower=cylinder(scene,"gatehouse-tower",[side*11,9,-43],5.4,18,mats.wall,16);
     const cap=MeshBuilder.CreateCylinder("gatehouse-turret-roof",{diameterTop:0,diameterBottom:6.4,height:4.8,tessellation:12},scene);
