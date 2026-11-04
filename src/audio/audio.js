@@ -4,6 +4,7 @@ const SOURCES = {
   stream: "https://sfxmint.com/dl/village-ambience-08.mp3",
   steps: "https://sfxmint.com/dl/footsteps-stone-01.mp3",
   tavern: "https://sfxmint.com/dl/cafe-interior-ambience-01.mp3",
+  fire: "https://sfxmint.com/dl/roaring-fireplace-sound-effect-01.mp3",
   indoorSteps: "https://sfxmint.com/dl/footsteps-wood-05.mp3",
 };
 
@@ -12,7 +13,8 @@ export function createWorldAudio() {
   const market = new Audio(SOURCES.market);
   const stream = new Audio(SOURCES.stream);
   const tavern = new Audio(SOURCES.tavern);
-  for (const audio of [town, market, stream, tavern]) {
+  const fire = new Audio(SOURCES.fire);
+  for (const audio of [town, market, stream, tavern, fire]) {
     audio.loop = true;
     audio.preload = "auto";
     audio.volume = 0;
@@ -34,6 +36,7 @@ export function createWorldAudio() {
     safePlay(market);
     safePlay(stream);
     safePlay(tavern);
+    safePlay(fire);
   }
   function setMovement(active, position, location) {
     walking = active;
@@ -46,8 +49,9 @@ export function createWorldAudio() {
     town.volume = inMarket ? 0.11 : 0.27;
     market.volume = inMarket ? 0.34 : 0;
     stream.volume = nearWater ? 0.19 : 0;
-    tavern.volume = inTavern ? 0.36 : 0;
-    if (walking && now - lastStep > 510) {
+    tavern.volume = inTavern ? 0.32 : 0;
+    fire.volume = inTavern ? 0.13 : 0;
+    if (walking && now - lastStep > (inside ? 3600 : 2600)) {
       lastStep = now;
       const inside = currentLocation === "tavern" || currentLocation === "guild";
       const step = new Audio(inside ? SOURCES.indoorSteps : SOURCES.steps);
