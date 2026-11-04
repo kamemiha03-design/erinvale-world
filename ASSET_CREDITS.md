@@ -31,8 +31,11 @@ The following optional models are loaded at runtime from the public glTF reposit
 - Asset pack: J-Ponzo, glTF Medieval Village MegaKit (standard GLTF subset)
 - Source: https://github.com/J-Ponzo/gltf-medieval-village-megakit
 - License: CC0 1.0 (see repository LICENSE)
-- Models currently used: `Prop_Vine1.gltf` (tavern facade ivy), `Prop_Vine2.gltf` (guild facade ivy), `Roof_RoundTiles_6x8.gltf` (tiled roof layers on the tavern, guild and market hall), `Prop_Wagon.gltf` (market merchant wagon)
+- Models currently used: `Prop_Vine1.gltf`, `Prop_Vine2.gltf`, `Prop_Vine4.gltf`, `Prop_Vine5.gltf` (facade ivy), `Roof_RoundTiles_6x8.gltf` (tiled roof layers), `Roof_Dormer_RoundTile.gltf` (dormers), `Prop_Crate.gltf` (market crates), `Prop_Wagon.gltf` (merchant wagon)
 - Runtime asset base: https://raw.githubusercontent.com/J-Ponzo/gltf-medieval-village-megakit/main/glTF/
 - Local file path: remote runtime assets (not bundled in this repository)
 
 These are stylized modular assets, not photorealistic scans. They are a first asset-driven pass and do not yet replace the main building, castle, or world-tree geometry.
+
+
+The same CC0 pack provides the following runtime PBR texture maps: `T_Plaster_BaseColor.png`, `T_Plaster_Normal.png`, `T_WoodTrim_BaseColor.png`, `T_RoundTiles_BaseColor.png`, `T_RoundTiles_Normal.png`, `T_UnevenBrick_BaseColor.png`, and `T_UnevenBrick_Normal.png`.
