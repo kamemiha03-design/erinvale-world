@@ -48,7 +48,7 @@ export function createWorldAudio() {
     const inMarket = currentLocation === "market";
     const inTavern = currentLocation === "tavern";
     const nearWater = Math.hypot(position.x - 13, position.z - 5) < 15;
-    town.volume = inMarket ? 0.11 : 0.27;
+    town.volume = inTavern ? 0.055 : inMarket ? 0.11 : 0.27;
     market.volume = inMarket ? 0.34 : 0;
     stream.volume = nearWater ? 0.19 : 0;
     tavern.volume = inTavern ? 0.32 : 0;
