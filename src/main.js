@@ -25,7 +25,7 @@ async function boot() {
   world.onMovement=(moving,position,location)=>{
     const tavern=position.x>-27.8&&position.x<-14.2&&position.z>1.4&&position.z<10.6;
     const guild=position.x>-27.8&&position.x<-14.2&&position.z>-20.4&&position.z<-11.6;
-    const palace=position.z<-62;
+    const palace=position.z<-72;
     audio.setMovement(moving,position,palace?"palace":tavern?"tavern":guild?"guild":location.includes("市場")?"market":"town");
   };
   const isTouch=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
