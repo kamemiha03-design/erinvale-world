@@ -412,6 +412,11 @@ export async function createRoyalCity(engine, canvas) {
     document.querySelector("#hint").textContent=message;
   }
 
+  const shadowNames = /facade-|side-wall-|rear-wall|roof-|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-trunk|world-tree-branch|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
+  for (const mesh of scene.meshes) {
+    if (shadowNames.test(mesh.name)) shadow.addShadowCaster(mesh, false);
+  }
+
   return {
     scene,
     setMovementSource(fn){moveSource=fn;},
