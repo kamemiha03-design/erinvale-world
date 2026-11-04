@@ -211,26 +211,93 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   // Interior is deliberately furnished and open through the front doorway.
   if(interior) {
     box(scene,name+"-inside-floor",[x,.08,z],[w-.5,.12,d-.5],mats.floor);
-    for(let i=0;i<3;i++) {
-      box(scene,name+"-interior-table",[x-3+i*3,.95,z+1],[1.6,.18,1.2],mats.wood);
-      for(const dx of [-.6,.6]) for(const dz of [-.4,.4])
-        box(scene,name+"-table-leg",[x-3+i*3+dx,.48,z+1+dz],[.13,.8,.13],mats.wood);
+    // Interior architecture: visible ceiling structure, carved beams, wall lamps and real furniture silhouettes.
+    box(scene,name+"-interior-plinth",[x,.18,z],[w-.65,.22,d-.65],mats.trim);
+    for(const side of [-1,1]) {
+      for(let zz=z-d*.34;zz<=z+d*.34;zz+=d*.34) {
+        box(scene,name+"-interior-pier",[x+side*(w/2-.65),h*.43,zz],[.42,h*.86,.48],mats.woodLight);
+        box(scene,name+"-interior-pier-cap",[x+side*(w/2-.65),h*.83,zz],[.72,.22,.72],mats.gold);
+      }
+      box(scene,name+"-interior-wall-wainscot",[x+side*(w/2-.38),2.0,z],[.18,2.7,d-.7],mats.wood);
     }
-    box(scene,name+"-counter",[x+3,1.25,z+1.6],[2.8,1.5,.85],mats.woodLight);
-    obstacles.push({x:x+3,z:z+1.6,r:1.55});
-    for(let i=0;i<3;i++) obstacles.push({x:x-3+i*3,z:z+1,r:1.05});
-    for(let i=0;i<4;i++) box(scene,name+"-shelf",[x+2.6+i*.18,3.2,z+d*.18],[.12,2.3,.55],mats.wood);
-    if(name==="The Copper Stag Tavern") {
-      // Hearth, firelight and ale mugs make the interior unmistakably a tavern.
-      box(scene,"tavern-hearth-stone",[x-5,.72,z-d/2+.72],[3.2,1.35,.62],mats.trim);
-      box(scene,"tavern-hearth-opening",[x-5,1.0,z-d/2+.38],[1.75,.95,.08],mats.dark);
-      const ember=mat(scene,"tavern-ember-glow",new Color3(1,.24,.035),.35);
+    for(let zz=z-d*.34;zz<=z+d*.34;zz+=d*.34) {
+      const beam=box(scene,name+"-exposed-ceiling-beam",[x,h-.18,zz],[w-.4,.32,.42],mats.wood);
+      beam.receiveShadows=true;
+    }
+    for(let i=0;i<4;i++) {
+      const tx=x-4.5+i*3;
+      box(scene,name+"-interior-table",[tx,.98,z+1.25],[1.85,.20,1.35],mats.woodLight);
+      for(const dx of [-.72,.72]) for(const dz of [-.48,.48])
+        box(scene,name+"-table-leg",[tx+dx,.50,z+1.25+dz],[.14,.86,.14],mats.wood);
+      for(const side of [-1,1]) {
+        box(scene,name+"-dining-stool-seat",[tx+side*1.25,.66,z+1.25],[.72,.16,.72],mats.wood);
+        cylinder(scene,name+"-stool-foot",[tx+side*1.25,.34,z+1.25],.12,.62,mats.wood,8);
+      }
+      cylinder(scene,name+"-table-tankard",[tx,.12+1.12,z+1.25],.22,.38,mats.gold,12);
+    }
+    box(scene,name+"-counter",[x+3,1.25,z+1.6],[3.5,1.5,.95],mats.woodLight);
+    box(scene,name+"-counter-front-inlay",[x+3,1.25,z+1.105],[2.9,.78,.06],mats.gold);
+    obstacles.push({x:x+3,z:z+1.6,r:1.7});
+    for(let i=0;i<5;i++) {
+      box(scene,name+"-backbar-shelf",[x+1.6+i*.62,3.1,z+d*.18],[.52,.13,.72],mats.woodLight);
+      cylinder(scene,name+"-bottle",[x+1.6+i*.62,3.48,z+d*.18],.22,.58,i%2?mats.green:mats.gold,10);
+    }
+    for(let i=0;i<3;i++) {
+      box(scene,name+"-wall-shelf",[x+2.6+i*.18,4.2,z+d*.18],[.12,2.3,.55],mats.wood);
+      box(scene,name+"-shelf-bracket",[x+2.45+i*.18,4.2,z+d*.18],[.18,2.45,.18],mats.gold);
+    }
+    // A wrought-iron chandelier hangs over the central aisle.
+    cylinder(scene,name+"-chandelier-ring",[x,h-1.1,z],1.35,.13,mats.gold,20);
+    cylinder(scene,name+"-chandelier-chain",[x,h-.48,z],.08,1.1,mats.wood,10);
+    for(let i=0;i<6;i++) {
+      const a=i*Math.PI/3;
+      const candle=MeshBuilder.CreateSphere(name+"-chandelier-candle",{diameter:.22,segments:8},scene);
+      candle.position.set(x+Math.cos(a)*1.18,h-1.0,z+Math.sin(a)*1.18);candle.material=mats.lantern;
+    }
+    if(name==="The Copper Stag Tavern" || name==="The Lantern and Lark" || name==="The Fox and Fir") {
+      // Tavern-specific hearth, chimney breast, glowing embers and beer service details.
+      const hx=x-w*.30, hz=z-d/2+.95;
+      box(scene,name+"-massive-hearth-surround",[hx,.95,hz],[3.8,1.9,.72],mats.trim);
+      box(scene,name+"-hearth-black-opening",[hx,1.02,hz-.39],[2.35,1.12,.08],mats.dark);
+      box(scene,name+"-hearth-mantel",[hx,2.05,hz-.45],[4.2,.22,.85],mats.woodLight);
+      box(scene,name+"-chimney-breast",[hx,4.0,hz+.20],[3.5,3.8,.52],mats.wall);
+      const ember=mat(scene,name+"-ember-glow",new Color3(1,.24,.035),.35);
       ember.emissiveColor=new Color3(.95,.16,.015);
-      const flame=MeshBuilder.CreateSphere("tavern-hearth-fire",{diameter:1,segments:12},scene);
-      flame.position.set(x-5,1.12,z-d/2+.27);flame.scaling.set(.72,.85,.18);flame.material=ember;
+      const flame=MeshBuilder.CreateSphere(name+"-hearth-fire",{diameter:1,segments:12},scene);
+      flame.position.set(hx,1.05,hz-.48);flame.scaling.set(.82,.9,.18);flame.material=ember;
+      for(let j=0;j<4;j++) {
+        cylinder(scene,name+"-ale-mug",[x-4+j*1.25,1.22,z+1.25],.25,.42,mats.gold,12);
+        box(scene,name+"-mug-handle",[x-4.17+j*1.25,1.25,z+1.25],[.12,.25,.12],mats.gold);
+      }
+      // Round ale casks behind the bar and a hanging inn emblem.
       for(let j=0;j<3;j++) {
-        cylinder(scene,"tavern-ale-mug",[x-3+j*1.5,1.12,z+1],.25,.42,mats.gold,12);
-        box(scene,"tavern-mug-handle",[x-3.17+j*1.5,1.15,z+1],[.12,.25,.12],mats.gold);
+        cylinder(scene,name+"-ale-cask",[x+4.2,0.95,z-2+j*1.45],.78,1.75,mats.wood,16);
+        cylinder(scene,name+"-ale-cask-hoop",[x+4.2,1.25,z-2+j*1.45],.82,.09,mats.gold,20);
+      }
+      box(scene,name+"-inn-sign-interior",[x,5.2,z-d/2+.55],[3.8,1.15,.18],mats.wood);
+      const plaque=MeshBuilder.CreateCylinder(name+"-stag-crest",{diameter:1.05,height:.18,tessellation:6},scene);
+      plaque.position.set(x,5.3,z-d/2+.38);plaque.rotation.x=Math.PI/2;plaque.material=mats.gold;
+    } else if(name==="Adventurers Guild") {
+      // Guild hall interior: mission counter, trophy wall, weapon rack, map table and banners.
+      box(scene,"guild-reception-counter",[x,1.25,z-d/2+2.2],[6.8,1.55,1.0],mats.woodLight);
+      obstacles.push({x,z:z-d/2+2.2,r:2.8});
+      box(scene,"guild-counter-front-panel",[x,1.3,z-d/2+1.68],[5.8,.85,.08],mats.gold);
+      box(scene,"guild-map-table",[x-5,.95,z+1.2],[3.0,.22,2.0],mats.wood);
+      box(scene,"guild-map-table-map",[x-5,1.09,z+1.2],[2.55,.035,1.55],mats.banner);
+      // A large mission board and framed maps on the rear wall.
+      box(scene,"guild-interior-mission-board",[x,5.5,z-d/2+.38],[5.2,3.4,.22],mats.wood);
+      for(let i=0;i<3;i++) {
+        box(scene,"guild-mission-paper",[x-1.55+i*1.55,5.5,z-d/2+.22],[1.25,2.45,.05],mats.trim);
+        box(scene,"guild-mission-red-seal",[x-1.55+i*1.55,4.55,z-d/2+.15],[.28,.28,.08],mats.flowers);
+      }
+      for(let side of [-1,1]) {
+        box(scene,"guild-weapon-rack",[x+side*7.0,2.4,z],[.3,3.3,.35],mats.wood);
+        for(let j=0;j<3;j++) {
+          const blade=box(scene,"guild-display-sword",[x+side*7.0,2.3,z-1+j],[.10,2.2,.12],mats.gold);
+          blade.rotation.z=(j-1)*.13;
+          box(scene,"guild-sword-crossguard",[x+side*7.0,2.0,z-1+j],[.7,.12,.2],mats.woodLight);
+        }
+        box(scene,"guild-hall-banner",[x+side*7.8,6.3,z],[1.1,3.4,.12],mats.banner);
       }
     }
     for(let zz=z-d/2+.7;zz<=z+d/2-.7;zz+=1.35) {
@@ -996,6 +1063,19 @@ export async function createRoyalCity(engine, canvas) {
       return null;
     }
   }
+  await Promise.all([
+    // The square should feel inhabited: merchants, townsfolk, guards and visitors around the fountain.
+    addTownsperson("PeasantMilitia",-5,24,true,1.2,.4),
+    addTownsperson("Scout",3,25,true,2.1,-.6),
+    addTownsperson("Footman",31,4,true,3.3,1.2),
+    addTownsperson("PeasantMilitia",29,22,false,4.4,Math.PI),
+    addTownsperson("human013/CrownedPrincess",4,-17,false,5.6,Math.PI/2),
+    addTownsperson("human013/Prince",29,-20,true,6.8,-1.1),
+    addTownsperson("Scout",-34,1,true,8.0,.8),
+    addTownsperson("PeasantMilitia",-2,-29,false,9.2,Math.PI),
+    addTownsperson("Footman",35,12,true,10.4,2.2),
+    addTownsperson("PeasantMilitia",6,31,true,11.6,-.3)
+  ]);
   await Promise.all([
     // A bearded traveller with a patched tunic belongs outside the Copper Stag.
     addDetailedNpc("fbd1hbd0su",-18.8,0,3.6,0,/idle/i),
