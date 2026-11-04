@@ -1,7 +1,7 @@
 import "@babylonjs/loaders";
 import { Engine } from "@babylonjs/core/Engines/engine.js";
 import { createRoyalCity } from "./world/royalCity.js";
-import { attachMobileControls } from "./player/controls.js";
+import { attachMobileControls } from "./player/controls.js";\nimport { createWorldAudio } from "./audio/audio.js";
 import "./style.css";
 
 const canvas=document.querySelector("#renderCanvas");
@@ -19,9 +19,9 @@ async function boot() {
     adaptToDeviceRatio:true,
   });
   engine.setHardwareScalingLevel(Math.min(1.5,Math.max(1,window.devicePixelRatio||1)));
-  const world=await createRoyalCity(engine,canvas);
+  const world=await createRoyalCity(engine,canvas);\n  const audio=createWorldAudio();\n  world.onMovement=(moving,position,location)=>audio.setMovement(moving,position,location.includes("市場")?"market":"town");
   const isTouch=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
-  attachMobileControls(world);
+  attachMobileControls(world,audio);
   if(isTouch)mobileControls.classList.remove("hidden");
   else desktopHint.classList.remove("hidden");
 
