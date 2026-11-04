@@ -408,11 +408,11 @@ export async function createRoyalCity(engine, canvas) {
   addObstacle(-29,11,.68);addObstacle(-13,11,.68);
 
   // A readable quest board stands beside the guild, close to the main square.
-  box(scene,"quest-board-post-left",[-25.1,2.25,-12.45],[.26,4.5,.34],mats.wood);
-  box(scene,"quest-board-post-right",[-20.9,2.25,-12.45],[.26,4.5,.34],mats.wood);
-  box(scene,"quest-board-frame",[-23,3.15,-12.45],[4.65,3.65,.48],mats.wood);
-  addObstacle(-23,-12.45,1.85);
-  box(scene,"quest-board-face",[-23,3.15,-12.72],[4.25,3.25,.06],mats.woodLight);
+  box(scene,"quest-board-post-left",[-11.6,2.25,-12.45],[.26,4.5,.34],mats.wood);
+  box(scene,"quest-board-post-right",[-7.4,2.25,-12.45],[.26,4.5,.34],mats.wood);
+  box(scene,"quest-board-frame",[-9.5,3.15,-12.45],[4.65,3.65,.48],mats.wood);
+  addObstacle(-9.5,-12.45,1.85);
+  box(scene,"quest-board-face",[-9.5,3.15,-12.72],[4.25,3.25,.06],mats.woodLight);
   const questTexture=new DynamicTexture("guild-quest-board-lettering",{width:768,height:512},scene,false);
   const questCtx=questTexture.getContext();
   questCtx.fillStyle="#34251b";questCtx.fillRect(0,0,768,512);
