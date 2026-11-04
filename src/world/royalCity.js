@@ -611,7 +611,7 @@ export async function createRoyalCity(engine, canvas) {
 
   // Yggdrasil stands distinctly LEFT of the keep, framed against the open sky.
   // Its sacred silhouette is intentionally separated from every castle roof and tower.
-  const treeX=-57,treeZ=-101;
+  const treeX=57,treeZ=-101;
   const bark=mat(scene,"world-tree-bark",new Color3(.18,.115,.065),.96);
   const barkLight=mat(scene,"world-tree-bark-ridge",new Color3(.39,.27,.14),.9);
   cylinder(scene,"world-tree-trunk",[treeX,24,treeZ],7.2,48,bark,32);
