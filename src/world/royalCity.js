@@ -174,7 +174,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders) {
   signTex.update();
   const signMat=new StandardMaterial(name+"-sign-material",scene);signMat.diffuseTexture=signTex;signMat.emissiveColor=new Color3(.18,.12,.06);
   const signFace=MeshBuilder.CreatePlane(name+"-sign-face",{width:2.0,height:1.0},scene);
-  signFace.position.set(x+w*.28,h*.9-.65,front-.98);signFace.material=signMat;
+  signFace.position.set(x+w*.28,h*.9-.65,front-.98);signFace.rotation.y=Math.PI;signFace.material=signMat;
   addLantern(scene,x-w*.34,3.9,front-.7,mats.gold,mats.lantern);
   addLantern(scene,x+w*.34,3.9,front-.7,mats.gold,mats.lantern);
   // Small upper-storey dormers and chimney silhouettes.
@@ -338,7 +338,7 @@ export async function createRoyalCity(engine, canvas) {
   for(let i=0;i<32;i++) {
     const leaf=MeshBuilder.CreateSphere("world-tree-crown",{diameter:9+Math.random()*5,segments:12},scene);
     leaf.position.set((Math.random()-.5)*26,30+Math.random()*20,-93+(Math.random()-.5)*10);
-    leaf.scaling.y=.72+Math.random()*.5;leaf.material=canopyMats[i%3];canopy.push({mesh:leaf,phase:Math.random()*Math.PI*2,base:leaf.rotation.z});
+    leaf.scaling.y=.72+Math.random()*.5;leaf.material=canopyMats[i%3];canopy.push({mesh:leaf,phase:Math.random()*Math.PI*2,base:leaf.rotation.z,baseY:leaf.position.y});
   }
 
   // Old trees, clipped hedges and flower planters around the outer square.
@@ -420,7 +420,7 @@ export async function createRoyalCity(engine, canvas) {
       camera.rotation.y=Math.PI+yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const time=performance.now()*.001;
-      canopy.forEach(o=>{o.mesh.rotation.z=o.base+Math.sin(time*.35+o.phase)*.025;o.mesh.position.y+=Math.sin(time*.35+o.phase)*.0007;});
+      canopy.forEach(o=>{o.mesh.rotation.z=o.base+Math.sin(time*.35+o.phase)*.025;o.mesh.position.y=o.baseY+Math.sin(time*.35+o.phase)*.16;});
       waterRing.scaling.x=1+Math.sin(time*1.2)*.025;
       inner.position.y=1.17+Math.sin(time*1.6)*.018;
     }
