@@ -760,7 +760,7 @@ export async function createRoyalCity(engine, canvas) {
     const cx=side*17.25, innerX=side*10.45, outerX=side*24.05;
     // Continuous walkable floor and upper cornice define the east and west wings.
     box(scene,"palace-wing-floor",[cx,8.58,-82],[13.6,.24,15.0],wingFloor);
-    box(scene,"palace-wing-ceiling",[cx,25.9,-82],[13.6,.42,15.0],castleStone);
+    box(scene,"palace-wing-ceiling",[cx,31.0,-82],[13.6,.42,15.0],castleStone);
     // Steep blue-slate roofs make the two palace wings visible as real exterior volumes.
     const innerRoof=box(scene,"palace-wing-inner-roof",[cx-side*3.2,27.45,-82],[7.8,.62,17.2],castleRoof);
     innerRoof.rotation.z=-side*.36;
@@ -768,7 +768,7 @@ export async function createRoyalCity(engine, canvas) {
     outerRoof.rotation.z=side*.36;
     box(scene,"palace-wing-gold-ridge",[cx,29.0,-82],[.48,.38,17.5],castleGold);
     // Outer wall, with tall inset windows facing the gardens.
-    box(scene,"palace-wing-outer-wall",[outerX,17,-82],[.9,17,15.0],wingWall);
+    box(scene,"palace-wing-outer-wall",[outerX,20.5,-82],[.9,24,15.0],wingWall);
     for(const z of [-86.2,-82,-77.8]) {
       box(scene,"palace-wing-window-recess",[outerX-side*.48,18.1,z],[.12,4.1,1.7],castleShadow);
       box(scene,"palace-wing-window-glass",[outerX-side*.39,18.1,z],[.08,3.3,1.1],mats.glass);
@@ -778,10 +778,10 @@ export async function createRoyalCity(engine, canvas) {
       arch.scaling.y=1.35;arch.position.set(outerX-side*.3,20.0,z);arch.rotation.y=Math.PI/2;arch.material=mats.trim;
     }
     // The inner wall has a broad doorway into the throne hall.
-    for(const z of [-77.55,-87.0]) box(scene,"palace-wing-inner-wall",[innerX,17,z],[.9,17,5.0],wingWall);
+    for(const z of [-77.55,-87.0]) box(scene,"palace-wing-inner-wall",[innerX,20.5,z],[.9,24,5.0],wingWall);
     // Front and rear walls close the wing while leaving the central hall-facing door open.
-    box(scene,"palace-wing-front-wall",[cx,17,-74.55],[13.6,17,.9],wingWall);
-    box(scene,"palace-wing-rear-wall",[cx,17,-89.45],[13.6,17,.9],wingWall);
+    box(scene,"palace-wing-front-wall",[cx,20.5,-74.55],[13.6,24,.9],wingWall);
+    box(scene,"palace-wing-rear-wall",[cx,20.5,-89.45],[13.6,24,.9],wingWall);
     // A partition separates two rooms; its central opening keeps both rooms connected.
     box(scene,"palace-wing-partition-front",[cx+side*.1,17,-84.85],[12.7,17,.75],castleStone);
     box(scene,"palace-wing-partition-rear",[cx+side*.1,17,-79.15],[12.7,17,.75],castleStone);
@@ -880,8 +880,8 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"royal-hall-carpet",[0,8.78,-82],[4.2,.06,12.5],mats.banner);
   for(let side of [-1,1]) for(let z=-87;z<=-77;z+=3.3) {
     cylinder(scene,"royal-hall-column-base",[side*6.2,9.05,z],1.25,.48,castleGold,16);
-    const col=cylinder(scene,"royal-hall-column",[side*6.2,14.0,z],.62,9.5,mats.trim,20);
-    cylinder(scene,"royal-hall-column-capital",[side*6.2,18.9,z],1.15,.55,castleGold,16);
+    const col=cylinder(scene,"royal-hall-column",[side*6.2,16.5,z],.62,14.5,mats.trim,20);
+    cylinder(scene,"royal-hall-column-capital",[side*6.2,24.0,z],1.15,.55,castleGold,16);
   }
   const throne=box(scene,"royal-throne-seat",[0,10.2,-87.6],[3.4,.55,2.0],castleGold);
   box(scene,"royal-throne-back",[0,12.1,-88.4],[3.3,4.0,.55],castleStone);
@@ -892,27 +892,27 @@ export async function createRoyalCity(engine, canvas) {
   }
   // A grand suspended chandelier, paired royal standards and visitor benches.
   const chandelier=MeshBuilder.CreateCylinder("royal-hall-chandelier-ring",{diameter:5.8,height:.22,tessellation:32},scene);
-  chandelier.position.set(0,21.8,-82);chandelier.material=castleGold;
+  chandelier.position.set(0,29.0,-82);chandelier.material=castleGold;
   for(let i=0;i<10;i++) {
     const a=i*Math.PI*2/10;
     const candle=MeshBuilder.CreateCylinder("royal-hall-chandelier-candle",{diameter:.16,height:.85,tessellation:10},scene);
-    candle.position.set(Math.cos(a)*2.45,22.35,-82+Math.sin(a)*2.45);candle.material=mats.trim;
+    candle.position.set(Math.cos(a)*2.45,29.55,-82+Math.sin(a)*2.45);candle.material=mats.trim;
     const flame=MeshBuilder.CreateSphere("royal-hall-chandelier-flame",{diameter:.22,segments:8},scene);
-    flame.position.set(Math.cos(a)*2.45,22.9,-82+Math.sin(a)*2.45);flame.material=mats.lantern;
+    flame.position.set(Math.cos(a)*2.45,30.1,-82+Math.sin(a)*2.45);flame.material=mats.lantern;
     const chain=MeshBuilder.CreateCylinder("royal-hall-chandelier-chain",{diameter:.055,height:2.5,tessellation:8},scene);
-    chain.position.set(Math.cos(a)*2.45,23.8,-82+Math.sin(a)*2.45);chain.material=castleGold;
+    chain.position.set(Math.cos(a)*2.45,26.9,-82+Math.sin(a)*2.45);chain.material=castleGold;
   }
   const wood=mat(scene,"palace-furniture-walnut",new Color3(.22,.105,.055),.78);
   const cloth=mat(scene,"palace-furniture-velvet",new Color3(.34,.10,.16),.88);
   for(let side of [-1,1]) {
     box(scene,"royal-hall-visitor-bench",[side*4.8,9.25,-77.4],[2.7,.35,1.0],wood);
     box(scene,"royal-hall-visitor-bench-back",[side*4.8,10.0,-77.85],[2.7,1.1,.2],wood);
-    box(scene,"royal-hall-royal-standard",[side*7.0,17.0,-86.7],[.9,5.8,.12],mats.banner);
-    box(scene,"royal-hall-standard-crest",[side*7.0,17.1,-86.58],[.48,.8,.08],castleGold);
+    box(scene,"royal-hall-royal-standard",[side*7.0,20.5,-86.7],[.9,8.0,.12],mats.banner);
+    box(scene,"royal-hall-standard-crest",[side*7.0,20.5,-86.58],[.48,.8,.08],castleGold);
   }
   // Tall jewel-toned stained-glass panels glow behind the throne.
   for(let i=0;i<5;i++) {
-    const pane=box(scene,"royal-hall-stained-glass",[-4+i*2,16.2,-88.72],[1.1,4.8,.08],i%2?mats.banner:mats.glass);
+    const pane=box(scene,"royal-hall-stained-glass",[-4+i*2,20.5,-88.72],[1.1,8.0,.08],i%2?mats.banner:mats.glass);
     pane.material.emissiveColor=new Color3(.08,.12,.18);
   }
   box(scene,"royal-keep-roof-base",[0,44.3,-82],[18.5,.65,13.8],castleGold);
@@ -921,9 +921,9 @@ export async function createRoyalCity(engine, canvas) {
   // A second walkable palace suite continues directly beyond the throne hall.
   const suiteZ=-109.5;
   box(scene,"royal-suite-floor",[0,8.62,suiteZ],[18,.24,20],wingFloor);
-  box(scene,"royal-suite-ceiling",[0,25.2,suiteZ],[18,.38,20],castleStone);
+  box(scene,"royal-suite-ceiling",[0,31.0,suiteZ],[18,.38,20],castleStone);
   for(const side of [-1,1]) {
-    box(scene,"royal-suite-side-wall",[side*9,17,suiteZ],[.8,17,20],castleStone);
+    box(scene,"royal-suite-side-wall",[side*9,20.5,suiteZ],[.8,24,20],castleStone);
     for(const z of [-105,-109.5,-114]) {
       box(scene,"royal-suite-window-recess",[side*8.55,17.5,z],[.12,4.5,2.0],castleShadow);
       box(scene,"royal-suite-window-glass",[side*8.48,17.5,z],[.08,3.7,1.35],mats.glass);
@@ -935,7 +935,7 @@ export async function createRoyalCity(engine, canvas) {
       cylinder(scene,"royal-suite-column-cap",[side*7.5,24.5,z],.95,.4,castleGold,16);
     }
   }
-  box(scene,"royal-suite-back-wall",[0,17,suiteZ-10],[18,17,.8],castleStone);
+  box(scene,"royal-suite-back-wall",[0,20.5,suiteZ-10],[18,24,.8],castleStone);
   // Canopied royal bed, embroidered curtains and a carved headboard.
   box(scene,"royal-suite-bed-frame",[0,9.45,suiteZ-5.8],[5.6,.55,4.0],mats.wood);
   box(scene,"royal-suite-mattress",[0,9.85,suiteZ-5.7],[5.1,.42,3.6],cloth);
