@@ -308,6 +308,32 @@ export async function createRoyalCity(engine, canvas) {
   addBuilding(scene,{x:-23,z:-20,w:20,d:14,h:12,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
 
+
+  // A compact inn quarter begins just beyond the eastern edge of the central square.
+  const pubLaneMat=texturedMat(scene,"pub-quarter-road",new Color3(.39,.36,.31),"#81796c","#39352f",.96);
+  const pubLane=MeshBuilder.CreateGround("pub-street-main-lane",{width:68,height:10,subdivisions:1},scene);
+  pubLane.position.set(69,-.035,21);pubLane.material=pubLaneMat;
+  const pubLink=MeshBuilder.CreateGround("pub-street-connector",{width:22,height:9,subdivisions:1},scene);
+  pubLink.position.set(39,-.03,15);pubLink.rotation.y=-.48;pubLink.material=pubLaneMat;
+  addBuilding(scene,{x:57,z:5,w:18,d:14,h:10,name:"The Lantern and Lark",sign:"THE LANTERN & LARK",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:80,z:5,w:18,d:14,h:10.5,name:"The Fox and Fir",sign:"THE FOX & FIR",interior:true},{...mats},shadow,colliders,obstacles);
+  for(const [x,z] of [[48,18],[66,18],[89,18]]) {
+    cylinder(scene,"pub-quarter-lamp-post",[x,2.15,z],.16,4.3,mats.wood,12);
+    box(scene,"pub-quarter-lamp-cap",[x,4.25,z],[.85,.18,.85],mats.gold);
+    const glow=MeshBuilder.CreateSphere("pub-quarter-lamp-glow",{diameter:.34,segments:10},scene);
+    glow.position.set(x,3.78,z);glow.material=mats.lantern;
+    addObstacle(x,z,.48);
+  }
+  for(const [x,z] of [[49,10],[68,10],[91,10],[53,27],[75,27]]) {
+    addBarrel(scene,x,z,mats.wood,mats.gold);
+    addObstacle(x,z,.68);
+  }
+  for(const x of [53,61,76,84]) {
+    box(scene,"pub-quarter-terrace-table",[x,.88,18.4],[1.55,.18,1.15],mats.woodLight);
+    box(scene,"pub-quarter-terrace-bench",[x,.5,20.0],[1.8,.2,.38],mats.wood);
+    addObstacle(x,18.4,.95);
+  }
+
   // Tavern outdoor terrace: benches, tables, barrels, flower boxes and striped awning.
   for(let i=0;i<3;i++) {
     addObstacle(-27+i*4,-1,1.0);
