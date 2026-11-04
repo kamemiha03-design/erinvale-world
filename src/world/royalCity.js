@@ -880,10 +880,38 @@ export async function createRoyalCity(engine, canvas) {
       horseRoot.computeWorldMatrix(true);
       let bounds=horseRoot.getHierarchyBoundingVectors(true);
       const height=Math.max(.01,bounds.max.y-bounds.min.y);
-      horseRoot.scaling.scaleInPlace(2.05/height);
+      const horseScale=2.05/height;
+      horseRoot.scaling.scaleInPlace(horseScale);
       horseRoot.computeWorldMatrix(true);
       bounds=horseRoot.getHierarchyBoundingVectors(true);
       horseRoot.position.y-=bounds.min.y;horseRoot.computeWorldMatrix(true);
+      // Leather tack and a groomed mane give the mount a lived-in stable-yard silhouette.
+      const tackRoot=new TransformNode("palomino-tack",scene);tackRoot.parent=horseRoot;tackRoot.scaling.setAll(1/horseScale);
+      const leather=new StandardMaterial("horse-oiled-leather",scene);leather.diffuseColor=new Color3(.19,.075,.035);
+      const brass=new StandardMaterial("horse-brass",scene);brass.diffuseColor=new Color3(.65,.43,.16);brass.metallic=.72;
+      const mane=new StandardMaterial("horse-mane",scene);mane.diffuseColor=new Color3(.28,.15,.07);
+      const saddle=MeshBuilder.CreateBox("horse-saddle",{width:.82,height:.16,depth:1.0},scene);
+      saddle.parent=tackRoot;saddle.position.set(0,1.15,-.05);saddle.material=leather;
+      const saddlePad=MeshBuilder.CreateBox("horse-saddle-cloth",{width:1.02,height:.08,depth:1.15},scene);
+      saddlePad.parent=tackRoot;saddlePad.position.set(0,1.08,-.05);saddlePad.material=mats.banner;
+      for(const side of [-1,1]) {
+        const stirrup=MeshBuilder.CreateTorus("horse-stirrup",{diameter:.32,thickness:.055,tessellation:12},scene);
+        stirrup.parent=tackRoot;stirrup.position.set(side*.52,.72,-.12);stirrup.rotation.x=Math.PI/2;stirrup.material=brass;
+        const eye=MeshBuilder.CreateSphere("horse-eye",{diameter:.11,segments:12},scene);
+        eye.parent=tackRoot;eye.position.set(side*.22,1.53,.78);eye.material=leather;
+        const cheek=MeshBuilder.CreateTube("horse-bridle-cheek",{path:[new Vector3(side*.23,1.65,.48),new Vector3(side*.27,1.48,.73),new Vector3(side*.2,1.32,.88)],radius:.035,tessellation:8},scene);
+        cheek.parent=tackRoot;cheek.material=leather;
+      }
+      const brow=MeshBuilder.CreateTube("horse-bridle-brow",{path:[new Vector3(-.23,1.67,.49),new Vector3(0,1.7,.55),new Vector3(.23,1.67,.49)],radius:.035},scene);
+      brow.parent=tackRoot;brow.material=brass;
+      const maneLine=MeshBuilder.CreateTube("horse-mane-line",{path:[new Vector3(0,1.68,.25),new Vector3(0,1.84,.48),new Vector3(0,1.78,.72),new Vector3(0,1.55,.93)],radius:.095,tessellation:8},scene);
+      maneLine.parent=tackRoot;maneLine.material=mane;
+      for(let i=0;i<5;i++) {
+        const lock=MeshBuilder.CreateSphere("horse-mane-lock",{diameter:.22,segments:8},scene);
+        lock.parent=tackRoot;lock.position.set((i%2?-.07:.07),1.78-i*.045,.3+i*.12);lock.scaling.set(.75,1.35,.8);lock.material=mane;
+      }
+      const reins=MeshBuilder.CreateTube("horse-reins",{path:[new Vector3(-.25,1.35,.82),new Vector3(-.42,1.15,.25),new Vector3(-.46,1.15,-.12)],radius:.022,tessellation:6},scene);
+      reins.parent=tackRoot;reins.material=leather;
       const gait=horse.animationGroups.find(g=>g.name.toLowerCase()==="idle")
         ||horse.animationGroups.find(g=>g.name.toLowerCase().includes("idle"));
       if(gait) gait.start(true);
