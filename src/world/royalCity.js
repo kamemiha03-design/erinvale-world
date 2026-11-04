@@ -800,7 +800,7 @@ export async function createRoyalCity(engine, canvas) {
       root.scaling.scaleInPlace(1.78/height);
       root.computeWorldMatrix(true);
       bounds=root.getHierarchyBoundingVectors(true);
-      root.position.y-=bounds.min.y;
+      root.position.y-=bounds.min.y-groundY;
       root.computeWorldMatrix(true);
       const wanted=walking?"walk":"idle";
       const group=imported.animationGroups.find(g=>g.name.toLowerCase()===wanted)
@@ -820,8 +820,8 @@ export async function createRoyalCity(engine, canvas) {
     addTownsperson("Footman",29,5,true,5.2,1.4),
     addTownsperson("King",-2,15,false,6.6,-.6),
     addTownsperson("PeasantMilitia",7,-3,true,8.1,.2),
-    addTownsperson("Footman",-5.1,-70.4,false,9.3,0,8.25),
-    addTownsperson("Footman",5.1,-70.4,false,10.7,Math.PI,8.25)
+    addTownsperson("Footman",-5.1,-70.4,false,9.3,0,7.63),
+    addTownsperson("Footman",5.1,-70.4,false,10.7,Math.PI,7.63)
   ]);
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
