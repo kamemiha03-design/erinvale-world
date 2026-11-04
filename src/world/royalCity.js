@@ -3,6 +3,7 @@ import {
   MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial, TransformNode,
   DynamicTexture, Texture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
 } from "@babylonjs/core";
+import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader.js";
 
 const ASSET_ROOT = "https://raw.githubusercontent.com/J-Ponzo/gltf-medieval-village-megakit/main/glTF/";
@@ -1306,6 +1307,16 @@ export async function createRoyalCity(engine, canvas) {
     // Camera, collision and interaction.
   const camera=new UniversalCamera("first-person-explorer",new Vector3(0,1.72,27),scene);
   camera.minZ=.08;camera.fov=.92;camera.inputs.clear();camera.rotation.y=Math.PI;
+  // A restrained cinematic pass: soft highlight bloom and edge smoothing.
+  // Kept deliberately light so Safari on recent iPhones can sustain the frame rate.
+  const cinematic=new DefaultRenderingPipeline("erinvale-cinematic",true,scene,[camera]);
+  cinematic.samples=2;
+  cinematic.fxaaEnabled=true;
+  cinematic.bloomEnabled=true;
+  cinematic.bloomThreshold=.88;
+  cinematic.bloomWeight=.12;
+  cinematic.bloomKernel=64;
+  cinematic.imageProcessingEnabled=false;
   let yaw=0,pitch=0,moveSource=()=>Vector3.Zero();
   const velocity=new Vector3();
   const collides=(x,z)=>{
