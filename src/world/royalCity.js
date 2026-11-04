@@ -681,6 +681,87 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"royal-keep-over-door",[0,23.0,-82],[10.2,5.0,15],castleStone);
   box(scene,"royal-keep-back-wall",[0,17.0,-89.35],[21,17,1.0],castleStone);
   box(scene,"royal-keep-upper",[0,40.2,-82],[16.8,7.5,12.2],mats.trim);
+  // Four connected palace apartments extend from the central throne hall.
+  // The side-wing walls are split around real door openings so the rooms can be explored.
+  const wingFloor=mat(scene,"palace-wing-floor",new Color3(.73,.70,.62),.92);
+  const wingWall=castleStone;
+  for(const side of [-1,1]) {
+    const cx=side*17.25, innerX=side*10.45, outerX=side*24.05;
+    // Continuous walkable floor and upper cornice define the east and west wings.
+    box(scene,"palace-wing-floor",[cx,8.58,-82],[13.6,.24,15.0],wingFloor);
+    box(scene,"palace-wing-ceiling",[cx,25.9,-82],[13.6,.42,15.0],castleStone);
+    // Outer wall, with tall inset windows facing the gardens.
+    box(scene,"palace-wing-outer-wall",[outerX,17,-82],[.9,17,15.0],wingWall);
+    for(const z of [-86.2,-82,-77.8]) {
+      box(scene,"palace-wing-window-recess",[outerX-side*.48,18.1,z],[.12,4.1,1.7],castleShadow);
+      box(scene,"palace-wing-window-glass",[outerX-side*.39,18.1,z],[.08,3.3,1.1],mats.glass);
+      box(scene,"palace-wing-window-mullion",[outerX-side*.32,18.1,z],[.08,3.35,.10],castleGold);
+      box(scene,"palace-wing-window-sill",[outerX-side*.30,15.95,z],[.38,.22,2.0],mats.trim);
+      const arch=MeshBuilder.CreateTorus("palace-wing-window-arch",{diameter:1.25,thickness:.13,tessellation:16},scene);
+      arch.scaling.y=1.35;arch.position.set(outerX-side*.3,20.0,z);arch.rotation.y=Math.PI/2;arch.material=mats.trim;
+    }
+    // The inner wall has a broad doorway into the throne hall.
+    for(const z of [-77.55,-87.0]) box(scene,"palace-wing-inner-wall",[innerX,17,z],[.9,17,5.0],wingWall);
+    // Front and rear walls close the wing while leaving the central hall-facing door open.
+    box(scene,"palace-wing-front-wall",[cx,17,-74.55],[13.6,17,.9],wingWall);
+    box(scene,"palace-wing-rear-wall",[cx,17,-89.45],[13.6,17,.9],wingWall);
+    // A partition separates two rooms; its central opening keeps both rooms connected.
+    box(scene,"palace-wing-partition-front",[cx+side*.1,17,-84.85],[12.7,17,.75],castleStone);
+    box(scene,"palace-wing-partition-rear",[cx+side*.1,17,-79.15],[12.7,17,.75],castleStone);
+    // Door frames and gilded lintels make the openings legible.
+    for(const z of [-82,-82]) {
+      box(scene,"palace-wing-door-jamb",[innerX-side*.05,17,z-1.55],[.55,8.4,.42],mats.trim);
+      box(scene,"palace-wing-door-jamb",[innerX-side*.05,17,z+1.55],[.55,8.4,.42],mats.trim);
+      box(scene,"palace-wing-door-lintel",[innerX-side*.05,21.2,z],[.65,.5,3.5],castleGold);
+    }
+    // West wing: library and council chamber. East wing: royal dining room and private salon.
+    const roomA=side<0?"palace-library":"palace-banquet-room";
+    const roomB=side<0?"palace-council-room":"palace-royal-salon";
+    const wood=mat(scene,"palace-furniture-walnut",new Color3(.22,.105,.055),.78);
+    const cloth=mat(scene,"palace-furniture-velvet",new Color3(.34,.10,.16),.88);
+    // Front room furnishings.
+    box(scene,roomA+"-rug",[cx,8.76,-86.0],[7.4,.08,4.2],cloth);
+    box(scene,roomA+"-table",[cx,9.55,-86.0],[3.8,.35,1.55],wood);
+    for(const dx of [-1.35,1.35]) for(const dz of [-.95,.95]) {
+      box(scene,roomA+"-chair-seat",[cx+dx,9.15,-86+dz],[.85,.25,.85],wood);
+      box(scene,roomA+"-chair-back",[cx+dx,9.75,-86+dz*1.15],[.82,1.0,.18],wood);
+    }
+    // Rear room furnishings.
+    box(scene,roomB+"-rug",[cx,8.76,-78.0],[7.4,.08,4.2],cloth);
+    box(scene,roomB+"-table",[cx,9.55,-78.0],[4.2,.35,1.45],wood);
+    for(let i=0;i<5;i++) {
+      const candle=MeshBuilder.CreateCylinder(roomB+"-candle",{diameter:.12,height:.55,tessellation:8},scene);
+      candle.position.set(cx-1.5+i*.75,10.0,-78.0);candle.material=castleGold;
+    }
+    // Wall-mounted sconces, framed paintings and bookcases provide room identity.
+    for(const z of [-87.4,-76.6]) {
+      box(scene,"palace-wing-wall-sconce",[cx,16.8,z],[.45,1.0,.24],castleGold);
+      const light=MeshBuilder.CreateSphere("palace-wing-sconce-glow",{diameter:.28,segments:8},scene);
+      light.position.set(cx,17.35,z-.18);light.material=mats.lantern;
+    }
+    if(side<0) {
+      for(const x of [cx-5.3,cx+5.3]) {
+        box(scene,"palace-library-bookcase",[x,13.2,-86.0],[1.0,8.2,3.8],wood);
+        for(let level=0;level<4;level++) for(let b=0;b<5;b++) {
+          const book=box(scene,"palace-library-book",[x-0.34+b*.17,11.5+level*1.55,-84.25],[.12,1.05,.38],b%2?mats.banner:mats.gold);
+        }
+      }
+      box(scene,"palace-council-map-table",[cx,9.35,-78.0],[4.8,.28,2.6],wood);
+      box(scene,"palace-council-map",[cx,9.52,-78.0],[3.8,.035,1.8],mats.trim);
+    } else {
+      for(let i=0;i<6;i++) {
+        const plate=MeshBuilder.CreateCylinder("palace-banquet-plate",{diameter:.48,height:.06,tessellation:16},scene);
+        plate.position.set(cx-1.5+i*.6,9.76,-78.0);plate.material=mats.trim;
+      }
+      box(scene,"palace-salon-settee",[cx,9.25,-86.0],[4.0,.65,1.2],cloth);
+      box(scene,"palace-salon-back",[cx,10.05,-86.5],[4.0,1.25,.28],cloth);
+    }
+    // Gilded pilasters and a restrained blue-and-gold banner mark each wing entrance.
+    for(const z of [-88.6,-75.4]) {
+      box(scene,"palace-wing-pilaster",[cx,17,z],[.55,16,.55],mats.trim);
+      box(scene,"palace-wing-gilt-capital",[cx,24.9,z],[1.0,.38,.9],castleGold);
+    }
+  }
   // Palace hall floor, pale columns, crimson runner and a visible throne.
   box(scene,"royal-hall-floor",[0,8.62,-82],[15.2,.24,13.0],mats.trim);
   box(scene,"royal-hall-carpet",[0,8.78,-82],[4.2,.06,12.5],mats.banner);
