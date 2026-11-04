@@ -182,7 +182,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   for(let i=0;i<5;i++) box(scene,name+"-chimney-course",[x-w*.32,h+1.05+i*.35,z+d*.25],[.75,.08,.75],mats.dark);
   // Interior is deliberately furnished and open through the front doorway.
   if(interior) {
-    box(scene,name+"-inside-back-wall",[x,h/2,z+d*.32],[w-.5,h-.3,.2],mats.wall);
+    box(scene,name+"-inside-back-wall",[x,h/2,z-d/2+.12],[w-.5,h-.3,.24],mats.wall);
     box(scene,name+"-inside-floor",[x,.08,z],[w-.5,.12,d-.5],mats.floor);
     for(let i=0;i<3;i++) {
       box(scene,name+"-interior-table",[x-3+i*3,.95,z+1],[1.6,.18,1.2],mats.wood);
@@ -196,6 +196,12 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
     // Interior side walls leave a clear path through the doorway.
     box(scene,name+"-interior-left",[x-w/2+.12,h/2,z],[.2,h-.3,d],mats.wall);
     box(scene,name+"-interior-right",[x+w/2-.12,h/2,z],[.2,h-.3,d],mats.wall);
+    for(let zz=z-d/2+.7;zz<=z+d/2-.7;zz+=1.35) {
+      obstacles.push({x:x-w/2+.12,z:zz,r:.68});
+      obstacles.push({x:x+w/2-.12,z:zz,r:.68});
+    }
+    for(let xx=x-w/2+.85;xx<=x+w/2-.85;xx+=1.35) obstacles.push({x:xx,z:z-d/2+.12,r:.68});
+    for(let xx=x-w/2+.85;xx<=x+w/2-.85;xx+=1.35) if(Math.abs(xx-x)>1.5) obstacles.push({x:xx,z:z+d/2-.12,r:.68});
   }
   colliders.push({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2,doorX:x,doorWidth:1.9,doorZ:front,interior,passThrough:!!cfg.passThrough});
   return null;
@@ -416,7 +422,7 @@ export async function createRoyalCity(engine, canvas) {
     update(dt){
       const input=moveSource();
       const step=Math.min(dt,.045);
-      const speed=8.2;
+      const speed=4.4;
       const fx=Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=Math.sin(yaw);
       const dx=(fx*input.y+rx*input.x)*speed*step;
       const dz=(fz*input.y+rz*input.x)*speed*step;
