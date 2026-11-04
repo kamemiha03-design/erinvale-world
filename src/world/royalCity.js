@@ -202,7 +202,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   signTex.update();
   const signMat=new StandardMaterial(name+"-sign-material",scene);signMat.diffuseTexture=signTex;signMat.emissiveColor=new Color3(.18,.12,.06);
   const signFace=MeshBuilder.CreatePlane(name+"-sign-face",{width:2.0,height:1.0},scene);
-  signFace.position.set(x+w*.28,h*.9-.65,front-.98);signFace.rotation.y=Math.PI;signFace.material=signMat;
+  signFace.position.set(x+w*.28,h*.9-.65,front-.98);signFace.rotation.y=0;signFace.material=signMat;
   addLantern(scene,x-w*.34,3.9,front-.7,mats.gold,mats.lantern);
   addLantern(scene,x+w*.34,3.9,front-.7,mats.gold,mats.lantern);
   // Small upper-storey dormers and chimney silhouettes.
@@ -307,28 +307,82 @@ export async function createRoyalCity(engine, canvas) {
   addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"COPPER STAG • TAVERN",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:-23,z:-20,w:20,d:14,h:12,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
+  // Landmark dressing: make the tavern and guild unmistakable from the square.
+  // Copper Stag: oversized hanging sign, steep timber gable, warm windows and a beer emblem.
+  const tavernGold=mat(scene,"tavern-sign-gold",new Color3(.92,.68,.27),.38,.48);
+  const tavernGlow=mat(scene,"tavern-window-glow",new Color3(1,.48,.13),.28);
+  tavernGlow.emissiveColor=new Color3(.9,.26,.055);
+  for(const x of [-25.2,-16.8]) {
+    const glow=box(scene,"copper-stag-warm-window",[x,6.2,11.18],[2.15,2.5,.12],tavernGlow);
+    glow.material=tavernGlow;
+    box(scene,"copper-stag-window-cross",[x,6.2,11.05],[.14,2.35,.12],mats.wood);
+    box(scene,"copper-stag-window-crossbar",[x,6.2,11.03],[2.0,.14,.12],mats.wood);
+  }
+  // Tall timber gable and decorative braces break the generic house silhouette.
+  const tavernGable=MeshBuilder.CreateCylinder("copper-stag-gable-crest",{diameter:3.0,height:.38,tessellation:3},scene);
+  tavernGable.position.set(-21,10.9,11.0);tavernGable.rotation.z=Math.PI; tavernGable.rotation.x=Math.PI/2;tavernGable.material=mats.woodLight;
+  for(const side of [-1,1]) {
+    const brace=box(scene,"copper-stag-gable-brace",[-21+side*5.4,8.2,10.75],[.22,4.0,.28],mats.wood);
+    brace.rotation.z=side*.72;
+  }
+  box(scene,"copper-stag-sign-arm",[-13.2,8.0,10.4],[.18,.18,2.1],mats.wood);
+  box(scene,"copper-stag-sign-board",[-13.2,6.6,9.35],[4.8,2.35,.3],mats.wood);
+  const tavernSignTex=new DynamicTexture("copper-stag-big-sign",{width:768,height:384},scene,false);
+  const ts=tavernSignTex.getContext();
+  ts.fillStyle="#302018";ts.fillRect(0,0,768,384);ts.strokeStyle="#d6a64c";ts.lineWidth=18;ts.strokeRect(12,12,744,360);
+  ts.fillStyle="#f5d89b";ts.textAlign="center";ts.font="bold 76px Georgia";ts.fillText("THE COPPER STAG",384,150);
+  ts.font="bold 54px Georgia";ts.fillText("TAVERN  •  ALE  •  ROOMS",384,260);tavernSignTex.update();
+  const tavernSignMat=new StandardMaterial("copper-stag-big-sign-mat",scene);tavernSignMat.diffuseTexture=tavernSignTex;tavernSignMat.emissiveColor=new Color3(.22,.12,.035);
+  const tavernSignFace=MeshBuilder.CreatePlane("copper-stag-big-sign-face",{width:4.55,height:2.1},scene);
+  tavernSignFace.position.set(-13.2,6.6,9.17);tavernSignFace.material=tavernSignMat;
+  for(const x of [-15.4,-11.0]) addLantern(scene,x,7.5,10.0,mats.gold,mats.lantern);
+
+  // Adventurers' Guild: stone keep-like front, twin turrets, crossed-sword crest and banners.
+  const guildStone=mat(scene,"guild-cut-stone",new Color3(.55,.52,.45),.92);
+  const guildGold=mat(scene,"guild-heraldic-gold",new Color3(.86,.64,.27),.35,.62);
+  for(const side of [-1,1]) {
+    const tx=-23+side*9.1;
+    const turret=cylinder(scene,"guild-front-turret",[tx,10.0,-20],4.2,17.5,guildStone,20);
+    const turretCap=MeshBuilder.CreateCylinder("guild-turret-roof",{diameterTop:0,diameterBottom:5.3,height:5.5,tessellation:12},scene);
+    turretCap.position.set(tx,21.4,-20);turretCap.material=mats.roof;
+    cylinder(scene,"guild-turret-crown",[tx,18.7,-20],4.45,.35,guildGold,20);
+    addBanner(scene,tx,15.5,-12.7,mats.gold,mats.banner,side);
+    const slit=box(scene,"guild-turret-arrow-window",[tx,11.8,-12.82],[.65,2.7,.12],mats.dark);
+  }
+  box(scene,"guild-main-crest-plaque",[-23,9.2,-12.82],[5.4,3.2,.36],guildStone);
+  const shield=MeshBuilder.CreateCylinder("guild-heraldic-shield",{diameter:2.45,height:.3,tessellation:6},scene);
+  shield.position.set(-23,9.3,-13.08);shield.rotation.x=Math.PI/2;shield.material=guildGold;
+  const swordA=box(scene,"guild-crossed-sword-a",[-23,9.3,-13.30],[.20,2.8,.18],mats.trim);swordA.rotation.z=.65;
+  const swordB=box(scene,"guild-crossed-sword-b",[-23,9.3,-13.31],[.20,2.8,.18],mats.trim);swordB.rotation.z=-.65;
+  const guildSignTex=new DynamicTexture("guild-front-sign",{width:768,height:256},scene,false);
+  const gs=guildSignTex.getContext();gs.fillStyle="#202d32";gs.fillRect(0,0,768,256);gs.strokeStyle="#d7b56b";gs.lineWidth=16;gs.strokeRect(10,10,748,236);
+  gs.fillStyle="#f5e4bd";gs.textAlign="center";gs.font="bold 62px Georgia";gs.fillText("ADVENTURERS' GUILD",384,155);guildSignTex.update();
+  const guildSignMat=new StandardMaterial("guild-front-sign-mat",scene);guildSignMat.diffuseTexture=guildSignTex;guildSignMat.emissiveColor=new Color3(.13,.12,.08);
+  const guildSign=MeshBuilder.CreatePlane("guild-front-sign-face",{width:5.5,height:1.8},scene);
+  guildSign.position.set(-23,5.5,-12.78);guildSign.material=guildSignMat;
+
 
 
   // A compact inn quarter begins just beyond the eastern edge of the central square.
   const pubLaneMat=texturedMat(scene,"pub-quarter-road",new Color3(.39,.36,.31),"#81796c","#39352f",.96);
   const pubLane=MeshBuilder.CreateGround("pub-street-main-lane",{width:68,height:10,subdivisions:1},scene);
-  pubLane.position.set(69,-.035,21);pubLane.material=pubLaneMat;
+  pubLane.position.set(60,-.035,21);pubLane.material=pubLaneMat;
   const pubLink=MeshBuilder.CreateGround("pub-street-connector",{width:22,height:9,subdivisions:1},scene);
-  pubLink.position.set(39,-.03,15);pubLink.rotation.y=-.48;pubLink.material=pubLaneMat;
-  addBuilding(scene,{x:57,z:5,w:18,d:14,h:10,name:"The Lantern and Lark",sign:"THE LANTERN & LARK",interior:true},{...mats},shadow,colliders,obstacles);
-  addBuilding(scene,{x:80,z:5,w:18,d:14,h:10.5,name:"The Fox and Fir",sign:"THE FOX & FIR",interior:true},{...mats},shadow,colliders,obstacles);
-  for(const [x,z] of [[48,18],[66,18],[89,18]]) {
+  pubLink.position.set(35,-.03,15);pubLink.rotation.y=-.48;pubLink.material=pubLaneMat;
+  addBuilding(scene,{x:48,z:5,w:20,d:15,h:11,name:"The Lantern and Lark",sign:"THE LANTERN & LARK",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:72,z:5,w:20,d:15,h:11.5,name:"The Fox and Fir",sign:"THE FOX & FIR",interior:true},{...mats},shadow,colliders,obstacles);
+  for(const [x,z] of [[39,18],[59,18],[82,18]]) {
     cylinder(scene,"pub-quarter-lamp-post",[x,2.15,z],.16,4.3,mats.wood,12);
     box(scene,"pub-quarter-lamp-cap",[x,4.25,z],[.85,.18,.85],mats.gold);
     const glow=MeshBuilder.CreateSphere("pub-quarter-lamp-glow",{diameter:.34,segments:10},scene);
     glow.position.set(x,3.78,z);glow.material=mats.lantern;
     addObstacle(x,z,.48);
   }
-  for(const [x,z] of [[49,10],[68,10],[91,10],[53,27],[75,27]]) {
+  for(const [x,z] of [[40,10],[61,10],[83,10],[44,27],[68,27]]) {
     addBarrel(scene,x,z,mats.wood,mats.gold);
     addObstacle(x,z,.68);
   }
-  for(const x of [53,61,76,84]) {
+  for(const x of [44,53,68,77]) {
     box(scene,"pub-quarter-terrace-table",[x,.88,18.4],[1.55,.18,1.15],mats.woodLight);
     box(scene,"pub-quarter-terrace-bench",[x,.5,20.0],[1.8,.2,.38],mats.wood);
     addObstacle(x,18.4,.95);
@@ -354,11 +408,11 @@ export async function createRoyalCity(engine, canvas) {
   addObstacle(-29,11,.68);addObstacle(-13,11,.68);
 
   // A readable quest board stands beside the guild, close to the main square.
-  box(scene,"quest-board-post-left",[-10.1,1.9,-8.6],[.22,3.8,.28],mats.wood);
-  box(scene,"quest-board-post-right",[-5.9,1.9,-8.6],[.22,3.8,.28],mats.wood);
-  box(scene,"quest-board-frame",[-8,2.55,-8.6],[4.35,3.15,.42],mats.wood);
-  addObstacle(-8,-8.6,1.65);
-  box(scene,"quest-board-face",[-8,2.55,-8.85],[3.95,2.75,.06],mats.woodLight);
+  box(scene,"quest-board-post-left",[-25.1,2.25,-12.45],[.26,4.5,.34],mats.wood);
+  box(scene,"quest-board-post-right",[-20.9,2.25,-12.45],[.26,4.5,.34],mats.wood);
+  box(scene,"quest-board-frame",[-23,3.15,-12.45],[4.65,3.65,.48],mats.wood);
+  addObstacle(-23,-12.45,1.85);
+  box(scene,"quest-board-face",[-23,3.15,-12.72],[4.25,3.25,.06],mats.woodLight);
   const questTexture=new DynamicTexture("guild-quest-board-lettering",{width:768,height:512},scene,false);
   const questCtx=questTexture.getContext();
   questCtx.fillStyle="#34251b";questCtx.fillRect(0,0,768,512);
@@ -372,8 +426,8 @@ export async function createRoyalCity(engine, canvas) {
   questTexture.update();
   const questMat=new StandardMaterial("guild-quest-board-ink",scene);
   questMat.diffuseTexture=questTexture;questMat.emissiveColor=new Color3(.12,.085,.045);
-  const questFace=MeshBuilder.CreatePlane("guild-quest-board-readable-face",{width:3.9,height:2.65},scene);
-  questFace.position.set(-8,2.55,-8.90);questFace.rotation.y=Math.PI;questFace.material=questMat;
+  const questFace=MeshBuilder.CreatePlane("guild-quest-board-readable-face",{width:4.15,height:3.05},scene);
+  questFace.position.set(-23,3.15,-12.72);questFace.rotation.y=0;questFace.material=questMat;
 
   // Grand civic fountain: carved limestone tiers, broad water basins and a welcoming stone gathering plaza.
   const fountainStone=texturedMat(scene,"fountain-honed-limestone",new Color3(.72,.68,.59),"#b8ad98","#655b4c",.88);
@@ -931,7 +985,7 @@ export async function createRoyalCity(engine, canvas) {
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
   try {
-    const horse=await SceneLoader.ImportMeshAsync("","https://gobkit.com/freebies/animal012/","PalominoHorse.glb",scene);
+    const horse=await SceneLoader.ImportMeshAsync("","https://files.innerscene.com/library/standing-horse-01d8563f/0107d59ef4ff275f0158/","horse-original.glb",scene);
     horseRoot=horse.meshes.find(m=>m.name==="__root__")||horse.meshes[0];
     if(horseRoot) {
       // Harness the sole horse directly in front of the sole merchant wagon.
@@ -939,7 +993,7 @@ export async function createRoyalCity(engine, canvas) {
       horseRoot.computeWorldMatrix(true);
       let bounds=horseRoot.getHierarchyBoundingVectors(true);
       const height=Math.max(.01,bounds.max.y-bounds.min.y);
-      const horseScale=2.05/height;
+      const horseScale=0.95;
       horseRoot.scaling.scaleInPlace(horseScale);
       horseRoot.computeWorldMatrix(true);
       bounds=horseRoot.getHierarchyBoundingVectors(true);
@@ -1018,7 +1072,7 @@ export async function createRoyalCity(engine, canvas) {
     if(x<-12&&z>0)return "銅鹿亭 — Copper Stag Tavern";
     if(x<-12&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
-    if(x>43&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
+    if(x>34&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
     if(z<-72)return "王宮 — 王城の中庭";
     if(z<-45)return "王城への大通り";
     if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
@@ -1031,7 +1085,7 @@ export async function createRoyalCity(engine, canvas) {
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
     else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
     else if(z<-45)message="王城へ続く大門。街の喧騒が遠のき、王宮の静けさが近づいてくる。";
-    else if(x>43&&z>-3&&z<35)message="酒場通り。旅人や商人、冒険者たちが夜まで集う街の一角。";
+    else if(x>34&&z>-3&&z<35)message="酒場通り。旅人や商人、冒険者たちが夜まで集う街の一角。";
     else if(x>10&&z<-5)message="市場の屋台。果物や旅の道具が並んでいる。";
     document.querySelector("#hint").textContent=message;
   }
