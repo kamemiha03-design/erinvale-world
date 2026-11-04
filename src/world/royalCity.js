@@ -439,6 +439,54 @@ export async function createRoyalCity(engine, canvas) {
   pubLink.position.set(35,-.03,15);pubLink.rotation.y=-.48;pubLink.material=pubLaneMat;
   addBuilding(scene,{x:48,z:5,w:20,d:15,h:11,name:"The Lantern and Lark",sign:"THE LANTERN & LARK",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:72,z:5,w:20,d:15,h:11.5,name:"The Fox and Fir",sign:"THE FOX & FIR",interior:true},{...mats},shadow,colliders,obstacles);
+  // Dense lower-town frontage: projecting upper floors, timber braces, shutters, flower boxes and shop awnings.
+  const streetWood=mat(scene,"lower-town-dark-oak",new Color3(.22,.13,.075),.9);
+  const streetTrim=mat(scene,"lower-town-honey-oak",new Color3(.48,.31,.16),.82);
+  const flowerRed=mat(scene,"lower-town-geranium",new Color3(.72,.16,.20),.78);
+  const flowerPink=mat(scene,"lower-town-pink",new Color3(.88,.43,.48),.78);
+  for(const [bx,bz,frontW,frontZ,upperY] of [[48,5,20,12.62,7.7],[72,5,20,12.62,7.9]]) {
+    // Upper-storey overhang and heavy carved supporting brackets.
+    box(scene,"lower-town-jettied-upper-floor",[bx,upperY,frontZ],[frontW+1.3,.34,1.05],streetWood);
+    for(const side of [-1,1]) for(const dx of [-6.8,0,6.8]) {
+      const bracket=box(scene,"lower-town-jettied-bracket",[bx+dx,upperY-.72,frontZ-.12],[.22,1.25,.32],streetTrim);
+      bracket.rotation.z=side*.42;
+    }
+    // Shuttered upper windows with flower troughs.
+    for(const wx of [-6.3,0,6.3]) {
+      const y=upperY+1.2, z=frontZ-.28;
+      box(scene,"lower-town-window-recess",[bx+wx,y,z],[2.15,2.25,.18],streetWood);
+      box(scene,"lower-town-window-glass",[bx+wx,y,z-.12],[1.55,1.65,.07],mats.glass);
+      box(scene,"lower-town-window-mullion-v",[bx+wx,y,z-.18],[.10,1.72,.08],streetTrim);
+      box(scene,"lower-town-window-mullion-h",[bx+wx,y,z-.18],[1.62,.10,.08],streetTrim);
+      for(const side of [-1,1]) {
+        box(scene,"lower-town-window-shutter",[bx+wx+side*1.0,y,z-.19],[.34,1.85,.13],streetWood);
+        for(let k=0;k<4;k++) box(scene,"lower-town-shutter-slat",[bx+wx+side*1.0,y-.58+k*.38,z-.27],[.29,.07,.06],streetTrim);
+      }
+      box(scene,"lower-town-flower-box",[bx+wx,y-.98,z-.42],[1.9,.34,.52],streetWood);
+      for(let k=0;k<5;k++) {
+        const bloom=MeshBuilder.CreateSphere("lower-town-window-geranium",{diameter:.28,segments:8},scene);
+        bloom.position.set(bx+wx-.72+k*.36,y-.69,z-.48);bloom.material=k%2?flowerPink:flowerRed;
+      }
+    }
+    // Striped canvas awning over the shopfront and small hanging sign.
+    box(scene,"lower-town-awning-valance",[bx,4.8,frontZ-.95],[8.6,.18,.22],streetTrim);
+    for(let k=0;k<8;k++) {
+      const stripe=box(scene,"lower-town-awning-stripe",[bx-3.75+k*1.07,4.55,frontZ-1.15],[1.0,.12,1.65],k%2?mats.banner:mats.trim);
+      stripe.rotation.x=-.10;
+    }
+    box(scene,"lower-town-shop-sign-arm",[bx+7.1,6.2,frontZ-.75],[.16,.16,1.25],streetWood);
+    box(scene,"lower-town-shop-sign",[bx+7.1,5.45,frontZ-1.35],[1.45,1.45,.20],streetTrim);
+    addLantern(scene,bx-8.3,4.4,frontZ-.65,mats.gold,mats.lantern);
+    addLantern(scene,bx+8.3,4.4,frontZ-.65,mats.gold,mats.lantern);
+    // Roof dormer, ridge ornaments and a masonry chimney crown.
+    for(const dx of [-5.8,5.8]) {
+      box(scene,"lower-town-roof-dormer-front",[bx+dx,12.1,bz-.5],[2.0,2.0,.28],mats.wall);
+      const dormerRoof=box(scene,"lower-town-roof-dormer-cap",[bx+dx,13.15,bz-.5],[2.6,.22,1.9],streetWood);
+      dormerRoof.rotation.z=.08;
+    }
+    cylinder(scene,"lower-town-chimney-cap",[bx-7.0,13.0,bz+4.4],.95,.22,streetTrim,8);
+  }
+
   for(const [x,z] of [[39,18],[59,18],[82,18]]) {
     cylinder(scene,"pub-quarter-lamp-post",[x,2.15,z],.16,4.3,mats.wood,12);
     box(scene,"pub-quarter-lamp-cap",[x,4.25,z],[.85,.18,.85],mats.gold);
@@ -574,10 +622,50 @@ export async function createRoyalCity(engine, canvas) {
     nozzle.position.set(13+Math.cos(a)*5.45,2.25,5+Math.sin(a)*5.45);
     nozzle.rotation.z=Math.cos(a)*-.15;nozzle.rotation.x=Math.sin(a)*.15;nozzle.material=fountainMetal;
   }
+  // Fine artisan details: carved shell niches, bronze fish spouts, heraldic medallions and stone fluting.
+  for(let i=0;i<16;i++) {
+    const a=i*Math.PI/8, ca=Math.cos(a), sa=Math.sin(a);
+    const x=13+ca*7.22, z=5+sa*7.22;
+    const shield=MeshBuilder.CreateCylinder("fountain-heraldic-medallion",{diameter:1.02,height:.12,tessellation:6},scene);
+    shield.position.set(x,1.46,z);shield.rotation.x=Math.PI/2;shield.rotation.y=-a;shield.material=fountainMetal;
+    const inset=MeshBuilder.CreateSphere("fountain-medallion-center",{diameter:.34,segments:12},scene);
+    inset.position.set(13+ca*7.31,1.47,5+sa*7.31);inset.scaling.z=.22;inset.material=fountainEdge;
+    // Small bronze fish mouths form the lower-basin outlets; all remain attached to the basin.
+    const fish=MeshBuilder.CreateSphere("fountain-bronze-fish-spout",{diameter:.42,segments:12},scene);
+    fish.position.set(13+ca*6.45,2.18,5+sa*6.45);fish.scaling.set(1,.65,.55);fish.material=fountainMetal;
+    const mouth=MeshBuilder.CreateTorus("fountain-fish-mouth",{diameter:.16,thickness:.035,tessellation:12},scene);
+    mouth.position.set(13+ca*6.66,2.17,5+sa*6.66);mouth.rotation.y=-a;mouth.material=fountainEdge;
+    const stream=MeshBuilder.CreateCylinder("fountain-fish-waterfall",{diameterTop:.035,diameterBottom:.10,height:.48,tessellation:8},scene);
+    stream.position.set(13+ca*6.42,1.92,5+sa*6.42);stream.rotation.z=ca*.10;stream.rotation.x=sa*.10;stream.material=fountainWater;
+  }
+  // Vertical flutes and capitals make the central support read as carved stonework.
+  for(let i=0;i<12;i++) {
+    const a=i*Math.PI/6;
+    const flute=box(scene,"fountain-pedestal-flute",[13+Math.cos(a)*1.48,3.13,5+Math.sin(a)*1.48],[.13,1.12,.10],fountainEdge);
+    flute.rotation.y=-a;
+  }
+  for(let i=0;i<8;i++) {
+    const a=i*Math.PI/4;
+    const finial=MeshBuilder.CreateSphere("fountain-upper-bowl-finial",{diameter:.24,segments:10},scene);
+    finial.position.set(13+Math.cos(a)*2.25,4.96,5+Math.sin(a)*2.25);finial.material=fountainMetal;
+  }
+  // A narrow mosaic band gives the upper bowl a distinct decorative identity.
+  const mosaic=MeshBuilder.CreateTorus("fountain-upper-bowl-mosaic",{diameter:4.58,thickness:.055,tessellation:64},scene);
+  mosaic.position.set(13,4.48,5);mosaic.material=fountainMetal;
+  // Crown the statue with a detailed laurel wreath and a small raised crest.
+  for(let i=0;i<7;i++) {
+    const a=-Math.PI*.85+i*Math.PI*1.7/6;
+    const leaf=MeshBuilder.CreateSphere("guardian-laurel-leaf",{diameter:.22,segments:8},scene);
+    leaf.position.set(13+Math.cos(a)*.47,7.82+Math.sin(a)*.22,4.96);
+    leaf.scaling.set(1.45,.62,.42);leaf.material=fountainMetal;
+  }
+  const crest=MeshBuilder.CreateCylinder("guardian-crown-crest",{diameter:.34,height:.12,tessellation:4},scene);
+  crest.position.set(13,8.03,4.88);crest.rotation.x=Math.PI/2;crest.material=fountainEdge;
+
   // Leave a broad, unobstructed paved ring around the fountain for free movement.
   const fountainApron=MeshBuilder.CreateGround("fountain-open-apron",{width:34,height:34,subdivisions:1},scene);
   fountainApron.position.set(13,-.045,5);
-  fountainApron.material=pavingLight;
+  fountainApron.material=ground.material;
   const waterRing=lowerRipple;
 
   // Warm civic square details: radial stone paving, carved edging, lanterns and places to sit.
