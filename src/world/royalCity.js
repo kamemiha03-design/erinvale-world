@@ -384,6 +384,9 @@ export async function createRoyalCity(engine, canvas) {
     addCC0Model(scene,"Prop_Vine1",[-26.6,2.1,11.24],[1.35,1.35,1.35],0),
     addCC0Model(scene,"Prop_Vine1",[-15.4,2.0,11.24],[1.15,1.25,1.15],0),
     addCC0Model(scene,"Prop_Vine2",[-13.9,2.3,-11.1],[1.2,1.2,1.2],0),
+    addCC0Model(scene,"Roof_RoundTiles_6x8",[-21,9.35,6],[1.7,1.0,1.1],0),
+    addCC0Model(scene,"Roof_RoundTiles_6x8",[-21,9.85,-16],[1.6,1.0,1.0],0),
+    addCC0Model(scene,"Roof_RoundTiles_6x8",[22,8.95,-18],[1.7,1.0,1.0],0),
     addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-14.8],[1.25,1.25,1.25],Math.PI*.5),
   ];
   await Promise.all(modelJobs);
