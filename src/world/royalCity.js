@@ -15,6 +15,13 @@ async function addCC0Model(scene, file, position, scale, rotationY = 0) {
     root.position.set(position[0], position[1], position[2]);
     root.scaling.set(scale[0], scale[1], scale[2]);
     root.rotation.y = rotationY;
+    // Props whose origins are centered are lowered until their lowest vertex rests on the plaza.
+    if (file === "Prop_Crate" || file === "Prop_Wagon") {
+      root.computeWorldMatrix(true);
+      const bounds = root.getHierarchyBoundingVectors(true);
+      if (Number.isFinite(bounds.min.y)) root.position.y -= bounds.min.y;
+      root.computeWorldMatrix(true);
+    }
     return root;
   } catch (error) {
     console.warn("Optional CC0 model could not be loaded:", file, error);
@@ -453,9 +460,6 @@ export async function createRoyalCity(engine, canvas) {
     addCC0Model(scene,"Prop_Crate",[13.4,0.02,-7.4],[.85,.85,.85],.2),
     addCC0Model(scene,"Prop_Crate",[17.6,0.02,-14.2],[.85,.85,.85],-.15),
     addCC0Model(scene,"Prop_Crate",[26.8,0.02,-11.0],[.85,.85,.85],.3),
-    addCC0Model(scene,"Roof_RoundTiles_6x8",[-21,9.35,6],[1.7,1.0,1.1],0),
-    addCC0Model(scene,"Roof_RoundTiles_6x8",[-21,9.85,-16],[1.6,1.0,1.0],0),
-    addCC0Model(scene,"Roof_RoundTiles_6x8",[22,8.95,-18],[1.7,1.0,1.0],0),
     addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-14.8],[1.25,1.25,1.25],Math.PI*.5),
   ];
   await Promise.all(modelJobs);
