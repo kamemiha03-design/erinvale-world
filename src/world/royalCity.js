@@ -416,6 +416,9 @@ export async function createRoyalCity(engine, canvas) {
   ];
   await Promise.all(modelJobs);
   addObstacle(32.2,-14.8,1.8);
+  addObstacle(13.4,-7.4,.72);
+  addObstacle(17.6,-14.2,.72);
+  addObstacle(26.8,-11.0,.72);
 
   // Old trees, clipped hedges and flower planters around the outer square.
   for(const [x,z,s] of [[-37,20,1.8],[36,19,1.6],[-39,-20,1.5],[38,-28,1.7],[-8,27,1.1],[29,28,1.3]]) {
