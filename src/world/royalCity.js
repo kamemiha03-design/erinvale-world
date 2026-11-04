@@ -728,6 +728,23 @@ export async function createRoyalCity(engine, canvas) {
     addLantern(scene,side*7.0,11.2,-77.15,mats.gold,mats.lantern);
   }
 
+  // The royal citadel sits farther back beyond the city approach.
+  for(const mesh of scene.meshes) {
+    if(mesh.name.startsWith("citadel-") || mesh.name.startsWith("castle-cliff") ||
+       mesh.name.startsWith("castle-approach-") || mesh.name.startsWith("castle-step-") ||
+       mesh.name.startsWith("royal-gate-") || mesh.name.startsWith("gate-shadow") ||
+       mesh.name.startsWith("gate-pier") || mesh.name.startsWith("gate-arch-") ||
+       mesh.name.startsWith("gatehouse-side-") || mesh.name.startsWith("gatehouse-tower-") ||
+       mesh.name.startsWith("gatehouse-window-") || mesh.name.startsWith("gatehouse-balcony") ||
+       mesh.name.startsWith("gatehouse-baluster") || mesh.name.startsWith("royal-wall-") ||
+       mesh.name.startsWith("royal-keep") || mesh.name.startsWith("royal-hall") ||
+       mesh.name.startsWith("royal-throne") || mesh.name.startsWith("keep-") ||
+       mesh.name.startsWith("castle-tower") || mesh.name.startsWith("castle-spire") ||
+       mesh.name.startsWith("castle-roof") || mesh.name.startsWith("castle-stair-") ||
+       mesh.name.startsWith("royal-stair-") || mesh.name.startsWith("courtyard-") ||
+       mesh.name.startsWith("citadel-courtyard-")) mesh.position.z-=10;
+  }
+
   // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
   // It now floats on a vast suspended island, rather than growing out of the castle grounds.
   // The extra depth keeps its silhouette clear of the keep even on a narrow phone screen.
