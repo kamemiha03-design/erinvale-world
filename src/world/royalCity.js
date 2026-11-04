@@ -574,22 +574,10 @@ export async function createRoyalCity(engine, canvas) {
     nozzle.position.set(13+Math.cos(a)*5.45,2.25,5+Math.sin(a)*5.45);
     nozzle.rotation.z=Math.cos(a)*-.15;nozzle.rotation.x=Math.sin(a)*.15;nozzle.material=fountainMetal;
   }
-  // Circular paving, benches and flower beds turn the fountain into a place to linger.
-  for(let i=0;i<12;i++) {
-    const a=i*Math.PI/6;
-    const bench=box(scene,"plaza-curved-bench",[13+Math.cos(a)*11.2,.62,5+Math.sin(a)*11.2],[3.1,.24,.72],mats.woodLight);
-    bench.rotation.y=-a;
-    const back=box(scene,"plaza-bench-back",[13+Math.cos(a)*11.2,1.12,5+Math.sin(a)*11.2],[3.1,.82,.18],fountainStone);
-    back.rotation.y=-a;
-    const planter=box(scene,"plaza-stone-flower-trough",[13+Math.cos(a)*13.0,.42,5+Math.sin(a)*13.0],[2.2,.72,1.1],fountainStone);
-    planter.rotation.y=-a;
-    addObstacle(13+Math.cos(a)*11.2,5+Math.sin(a)*11.2,1.35);
-    for(let j=0;j<3;j++) {
-      const bloom=MeshBuilder.CreateSphere("plaza-flower",{diameter:.22,segments:8},scene);
-      bloom.position.set(13+Math.cos(a)*13.0+(Math.random()-.5)*1.1,.95,5+Math.sin(a)*13.0+(Math.random()-.5)*.55);
-      bloom.material=j%2?mats.flowers:mats.gold;
-    }
-  }
+  // Leave a broad, unobstructed paved ring around the fountain for free movement.
+  const fountainApron=MeshBuilder.CreateGround("fountain-open-apron",{width:34,height:34,subdivisions:1},scene);
+  fountainApron.position.set(13,-.045,5);
+  fountainApron.material=pavingLight;
   const waterRing=lowerRipple;
 
   // Warm civic square details: radial stone paving, carved edging, lanterns and places to sit.
@@ -607,17 +595,7 @@ export async function createRoyalCity(engine, canvas) {
     lantern.position.set(x,3.18,z);lantern.material=mats.lantern;
     cylinder(scene,"plaza-lamp-crown",[x,3.68,z],.2,.35,fountainMetal,8);
   }
-  // Carved stone drinking trough and little flower urns along the approach.
-  for(let side of [-1,1]) {
-    const x=13+side*27;
-    box(scene,"plaza-drinking-trough",[x,.58,5],[2.6,1.05,1.35],fountainStone);
-    box(scene,"plaza-trough-water",[x,.98,5],[2.05,.08,.82],fountainWater);
-    for(let j=0;j<3;j++) {
-      const urn=cylinder(scene,"plaza-flower-urn",[x+side*(j-1)*2.0,.72,8],.8,1.25,fountainStone,12);
-      const bloom=MeshBuilder.CreateSphere("plaza-urn-flowers",{diameter:1.1,segments:10},scene);
-      bloom.position.set(x+side*(j-1)*2.0,1.45,8);bloom.material=j%2?mats.flowers:mats.green;
-    }
-  }
+  // Decorative troughs and urns are omitted so the fountain approach stays clear.
 
   // Market stalls, cloth roofs, produce crates and baskets.
   for(let i=0;i<4;i++) {
