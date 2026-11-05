@@ -4121,7 +4121,7 @@ export async function createRoyalCity(engine, canvas) {
     const skin=phase%2?npcSkin:npcSkinLight;
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
     const part=(name,pos,size,material,kind="box")=>{
-      const mesh=sharedActorPrimitive(name,kind==="sphere"?"sphere":kind==="cylinder"?"cylinder":"box",kind==="sphere"?48:kind==="cylinder"?56:1);
+      const mesh=sharedActorPrimitive(name,kind==="sphere"?"sphere":kind==="cylinder"?"cylinder":"box",kind==="sphere"?(isTouchDevice?24:48):kind==="cylinder"?(isTouchDevice?24:56):1);
       mesh.position.set(pos[0],pos[1],pos[2]);mesh.scaling.set(size[0],size[1],size[2]);
       mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
     };
@@ -4395,7 +4395,7 @@ export async function createRoyalCity(engine, canvas) {
   // fully modeled residents in each landmark rather than primitive placeholder people.
   if(!isTouchDevice) populateResidents();
   else {
-    // Imperial baths: guests relaxing in the water and one treatment attendant.
+    // Compact, detailed mobile cast; full crowd remains enabled on desktop.
     makeBathGuest(27.0,.88,61.0,"soaking",-.25,0);
     makeBathGuest(32.8,.88,64.5,"soaking",Math.PI+.25,1);
     makeBathGuest(25.8,.88,64.4,"soaking",-Math.PI/2,3);
@@ -4403,60 +4403,33 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"imperial-bath-treatment-marble-bed",[34.0,.55,52.8],[1.72,.42,2.35],hammamIvory);
     box(scene,"imperial-bath-treatment-linen",[34.0,.79,52.76],[1.48,.12,2.08],bathTowel);
     box(scene,"imperial-bath-treatment-headrest",[34.0,.91,52.02],[.72,.16,.46],hammamTile);
-    cylinder(scene,"imperial-bath-treatment-oil-bowl",[32.88,.72,53.28],.38,.20,hammamGold,16);
+    cylinder(scene,"imperial-bath-treatment-oil-bowl",[32.88,.72,53.28],.38,.20,hammamGold,12);
     makeBathGuest(34.0,.38,52.8,"scrubbed",Math.PI/2,18);
     makeBathGuest(35.28,.10,52.88,"attendant",Math.PI/2,19);
-    // A second treatment scene and extra guests in the quieter side pool.
-    box(scene,"imperial-bath-treatment-marble-bed",[18.0,.55,52.8],[1.72,.42,2.35],hammamIvory);
-    box(scene,"imperial-bath-treatment-linen",[18.0,.79,52.76],[1.48,.12,2.08],bathTowel);
-    box(scene,"imperial-bath-treatment-headrest",[18.0,.91,52.02],[.72,.16,.46],hammamTile);
-    cylinder(scene,"imperial-bath-treatment-oil-bowl",[16.88,.72,53.28],.38,.20,hammamGold,16);
-    makeBathGuest(18.0,.38,52.8,"scrubbed",Math.PI/2,20);
-    makeBathGuest(19.28,.10,52.88,"attendant",Math.PI/2,21);
-    makeBathGuest(43.0,.79,63.4,"soaking",-Math.PI/2,22);
-    makeBathGuest(18.2,.79,63.1,"soaking",-Math.PI/2,23);
 
-    // Guild: receptionist, guards and visitors inside the hall.
+    // Guild: a clerk and a guard.
     makeTownsperson(-23.0,-26.0,"merchant",25.2,Math.PI,false);
     makeTownsperson(-31.0,-18.0,"guard",26.4,Math.PI/2,false);
-    makeTownsperson(-15.0,-18.5,"villager",27.6,-Math.PI/2,false);
 
-    // Public library: readers downstairs and a librarian on the upper gallery.
+    // Library: readers on both levels and a librarian.
     makeTownsperson(-49.2,-87.45,"villager",29.1,Math.PI,false);
     makeTownsperson(-45.2,-90.55,"merchant",30.2,0,false);
     makeTownsperson(-55.0,-93.0,"villager",31.3,Math.PI/2,false);
-    makeTownsperson(-58.0,-93.2,"merchant",32.4,Math.PI/2,false);
-    makeTownsperson(-50.5,-80.2,"villager",33.5,Math.PI,false);
-    makeTownsperson(-54.8,-76.8,"villager",34.6,0,false);
     makeTownsperson(-47.0,-82.0,"maid",35.7,Math.PI/2,false);
 
-    // Palace reception and throne-hall attendants.
+    // Palace attendants.
     makeTownsperson(-9.0,-126.0,"maid",21.1,-Math.PI/2,false);
     makeTownsperson(9.0,-126.0,"butler",22.4,Math.PI/2,false);
     makeTownsperson(-9.0,-139.0,"butler",23.7,-Math.PI/2,false);
     makeTownsperson(9.0,-139.0,"maid",24.8,Math.PI/2,false);
-    makeTownsperson(-15.0,-126.0,"maid",25.9,Math.PI/2,false);
-    makeTownsperson(15.0,-126.0,"butler",27.0,-Math.PI/2,false);
-    makeTownsperson(-15.0,-139.0,"butler",28.1,Math.PI/2,false);
-    makeTownsperson(15.0,-139.0,"maid",29.2,-Math.PI/2,false);
 
-    // Market stallkeepers and shoppers bring the open-air market to life.
-    for(let row=0;row<marketStallRows.length;row+=2) {
+    // Four stallkeepers and two shoppers.
+    for(let row=0;row<Math.min(2,marketStallRows.length);row++) {
       makeTownsperson(-6.65,marketStallRows[row],"merchant",40+row,-Math.PI/2,false);
       makeTownsperson(6.65,marketStallRows[row],"merchant",41+row,Math.PI/2,false);
     }
     makeTownsperson(-3.2,-13.0,"villager",47.1,.2,false);
     makeTownsperson(3.0,-29.0,"villager",48.2,Math.PI-.2,false);
-    makeTownsperson(10.5,-20.5,"villager",49.3,Math.PI/2,false);
-    makeTownsperson(-10.5,-30.0,"villager",50.4,-Math.PI/2,false);
-    makeTownsperson(-20.0,-22.0,"merchant",51.5,Math.PI,false);
-    makeTownsperson(-29.0,-25.0,"villager",52.6,0,false);
-
-    // A handful of pedestrians keep the market square from feeling deserted.
-    makeTownsperson(-5,24,"villager",1.2,.4,false);
-    makeTownsperson(3,25,"villager",2.1,-.6,false);
-    makeTownsperson(31,4,"guard",3.3,1.2,false);
-    makeTownsperson(29,22,"merchant",4.4,Math.PI,false);
   }
 
   // Small songbirds gather among the formal roses: some perch, others circle over the beds.
