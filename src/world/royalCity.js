@@ -685,8 +685,11 @@ export async function createRoyalCity(engine, canvas) {
   const sky=new HemisphericLight("sky-fill",new Vector3(0,1,0),scene);sky.intensity=.86;sky.groundColor=new Color3(.29,.25,.20);
   const sun=new DirectionalLight("golden-sun",new Vector3(-.45,-1,.3),scene);sun.position=new Vector3(45,70,-20);sun.intensity=2.0;
   const isTouchDevice=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
-  const shadow=new ShadowGenerator(2048,sun);
-  shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=24;
+  // Safari on iPhone has a tight GPU-memory budget. Keep the full world geometry,
+  // materials and textures, but use a smaller mobile shadow target to avoid a large
+  // transient GPU allocation during scene startup. Desktop retains the 2048 map.
+  const shadow=new ShadowGenerator(isTouchDevice?1024:2048,sun);
+  shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=isTouchDevice?12:24;
   shadow.setDarkness(.22);shadow.bias=.0005;shadow.normalBias=.025;
   scene.imageProcessingConfiguration.toneMappingEnabled=true;
   scene.imageProcessingConfiguration.toneMappingType=ImageProcessingConfiguration.TONEMAPPING_ACES;
