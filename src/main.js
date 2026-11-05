@@ -15,14 +15,14 @@ async function boot() {
   const isTouch=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
   const engine=new Engine(canvas,true,{
     preserveDrawingBuffer:false,
-    stencil:true,
-    antialias:true,
-    powerPreference:"high-performance",
-    adaptToDeviceRatio:true,
+    stencil:false,
+    antialias:!isTouch,
+    powerPreference:isTouch?"low-power":"high-performance",
+    adaptToDeviceRatio:!isTouch,
   });
-  // iPhone Safari can terminate a WebGL page when a large world renders at full
-  // device-pixel resolution. Render mobile at a deliberately lower resolution.
-  engine.setHardwareScalingLevel(1);
+  // Mobile uses a smaller drawing buffer to stay within Safari's WebGL memory budget.
+  // World geometry and texture assets remain full detail.
+  engine.setHardwareScalingLevel(isTouch?1.5:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   world.onMovement=(moving,position,location)=>{
