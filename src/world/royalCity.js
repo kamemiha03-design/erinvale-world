@@ -1188,7 +1188,7 @@ export async function createRoyalCity(engine, canvas) {
   for(const side of [-1,1]) {
     const px=side*9.5;
     cylinder(scene,"avenue-gate-pillar-foot",[px,.48,-53],2.8,.9,mats.trim,24);
-    box(scene,"avenue-gate-stone-pier",[px,4.45,-53],[2.0,8.0,2.0],castleStone);
+    box(scene,"avenue-gate-stone-pier",[px,4.45,-53],[2.0,8.0,2.0],mats.wall);
     box(scene,"avenue-gate-pier-cap",[px,8.65,-53],[2.7,.42,2.7],avenueGateGold);
     const finial=MeshBuilder.CreateSphere("avenue-gate-pier-finial",{diameter:.62,segments:20},scene);
     finial.position.set(px,9.15,-53);finial.material=avenueGateGold;
