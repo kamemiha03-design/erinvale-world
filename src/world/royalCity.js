@@ -3204,6 +3204,17 @@ export async function createRoyalCity(engine, canvas) {
   const velocity=new Vector3();
   const collides=(x,z)=>{
     if(Math.abs(x)>112||Math.abs(z)>116)return true;
+    // Inside the palace lobby, ignore legacy town/building obstacle volumes.
+    // Keep the lobby's own perimeter walls and columns solid with direct bounds.
+    if(x>-21.0&&x<21.0&&z>-174.0&&z<-112.0) {
+      if(Math.abs(x)>20.2)return true;
+      if(z<-173.0)return true;
+      if(Math.abs(z+120.0)<1.05&&Math.abs(x)>7.0)return true;
+      for(const columnX of [-18.8,18.8]) for(const columnZ of [-165,-151,-137]) {
+        if(Math.hypot(x-columnX,z-columnZ)<1.25)return true;
+      }
+      return false;
+    }
     for(const c of colliders) {
       if(x>c.minX-.5&&x<c.maxX+.5&&z>c.minZ-.5&&z<c.maxZ+.5) {
         const insideRoom=c.interior&&x>c.minX+.55&&x<c.maxX-.55&&z>c.minZ+.55&&z<c.maxZ-.55;
