@@ -3089,6 +3089,7 @@ export async function createRoyalCity(engine, canvas) {
   // Imperial public baths: a Roman thermae and a warm, intimate hammam.
   // Set behind the initial arrival point, on the western side of the royal approach.
   const hammamMeshStart=scene.meshes.length;
+  const hammamObstacleStart=obstacles.length,hammamColliderIndex=colliders.length;
   const hammamX=-92,hammamZ=-58,hammamFront=-41,hammamBack=-75;
   const hammamStone=texturedMat(scene,"imperial-hammam-pale-travertine",new Color3(.78,.73,.63),"#d7cdb9","#8f8069",.88);
   const hammamIvory=mat(scene,"imperial-hammam-ivory-marble",new Color3(.91,.87,.77),.28,.08);
@@ -3288,8 +3289,7 @@ export async function createRoyalCity(engine, canvas) {
     const face=MeshBuilder.CreatePlane("imperial-hammam-wayfinding-lettering",{width:3.7,height:1.02},scene);face.position.set(x,3.0,z-.20);face.material=tm;
     const cap=MeshBuilder.CreateBox("imperial-hammam-wayfinding-cap",{width:4.5,height:.16,depth:.38},scene);cap.position.set(x,3.82,z);cap.material=hammamGold;
   };
-  makeBathWaySign(-7.5,19.0,"帝国浴場　↖","THERMAE  •  HAMMAM");
-  makeBathWaySign(-49.0,-8.5,"帝国浴場　←","PUBLIC BATHS");
+
 
 
   // The entry remains accessible through a single central opening; the perimeter stays solid.
@@ -3307,6 +3307,33 @@ export async function createRoyalCity(engine, canvas) {
     const merged=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
     if(merged){merged.name="imperial-hammam-static-detail-batch";merged.material=material;merged.isPickable=false;}
   }
+
+  // Relocate the complete bath complex to the north side of the fountain district.
+  // Move the finished meshes, door pivots, collision volumes and pool obstacles together.
+  const bathShiftX=122,bathShiftZ=98;
+  for(const mesh of scene.meshes.slice(hammamMeshStart)) {
+    if(!mesh.parent&&!mesh.isDisposed()&&!mesh.name.includes("wayfinding")) {
+      mesh.position.x+=bathShiftX;
+      mesh.position.z+=bathShiftZ;
+    }
+  }
+  for(const door of scene.metadata?.doorLeaves||[]) {
+    if(door.name==="imperial-hammam-entry-double-door") {
+      door.pivot.position.x+=bathShiftX;door.pivot.position.z+=bathShiftZ;
+      door.position.x+=bathShiftX;door.position.z+=bathShiftZ;
+    }
+  }
+  for(const obstacle of obstacles.slice(hammamObstacleStart)) {
+    obstacle.x+=bathShiftX;obstacle.z+=bathShiftZ;
+  }
+  const bathCollider=colliders[hammamColliderIndex];
+  if(bathCollider) {
+    bathCollider.minX+=bathShiftX;bathCollider.maxX+=bathShiftX;
+    bathCollider.minZ+=bathShiftZ;bathCollider.maxZ+=bathShiftZ;
+    bathCollider.doorX+=bathShiftX;bathCollider.doorZ+=bathShiftZ;
+  }
+  makeBathWaySign(7,18,"帝国浴場　↗","THERMAE  •  HAMMAM");
+  makeBathWaySign(22,13,"帝国浴場　↗","PUBLIC BATHS");
 
   // Full-height townspeople are assembled locally so their proportions never depend
   // on third-party model downloads. Head height is kept close to one-seventh of stature.
@@ -3684,7 +3711,7 @@ export async function createRoyalCity(engine, canvas) {
     if(x<-8&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
     if(x>34&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
-    if(x<-73&&x>-112&&z<-39&&z>-78)return "帝国浴場 — THERMAE · HAMMAM";
+    if(x>11&&x<49&&z>21&&z<61)return "帝国浴場 — THERMAE · HAMMAM";
     if(z<-72)return "王宮 — 王城の中庭";
     if(z<-45)return "王城への大通り";
     if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
@@ -3692,9 +3719,11 @@ export async function createRoyalCity(engine, canvas) {
   }
   function interact() {
     const doors=scene.metadata?.doorLeaves||[];
-    let nearest=null,nearestDistance=5.2;
+    let nearest=null,nearestDistance=7.5;
     for(const door of doors) {
-      const distance=Vector3.Distance(camera.position,door.position);
+      // Use ground-plane distance: the hinge is above the player's eye line,
+      // so 3D distance made the bath doors frustratingly hard to activate.
+      const distance=Math.hypot(camera.position.x-door.position.x,camera.position.z-door.position.z);
       if(distance<nearestDistance){nearest=door;nearestDistance=distance;}
     }
     if(nearest) {
@@ -3710,7 +3739,7 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
     else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
-    else if(x<-73&&x>-112&&z<-39&&z>-78)message="帝国浴場。温泉プール、蒸気浴室、休憩回廊を備えた市民のための大浴場。";
+    else if(x>11&&x<49&&z>21&&z<61)message="帝国浴場。温泉プール、蒸気浴室、休憩回廊を備えた市民のための大浴場。";
     else if(z<-45)message="王城へ続く大門。街の喧騒が遠のき、王宮の静けさが近づいてくる。";
     else if(x>34&&z>-3&&z<35)message="酒場通り。旅人や商人、冒険者たちが夜まで集う街の一角。";
     else if(x>10&&z<-5)message="市場の屋台。果物や旅の道具が並んでいる。";
