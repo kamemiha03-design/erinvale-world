@@ -1118,7 +1118,7 @@ export async function createRoyalCity(engine, canvas) {
     // Small overflowing flower baskets are fastened beneath each lantern.
     const basketRing=MeshBuilder.CreateTorus("plaza-lamp-flower-basket-ring",{diameter:1.05,thickness:.10,tessellation:20},scene);
     basketRing.position.set(x,2.45,z);basketRing.material=plazaGold;
-    cylinder(scene,"plaza-lamp-flower-basket-soil",[x,2.45,z],.86,.18,smithWood,16);
+    cylinder(scene,"plaza-lamp-flower-basket-soil",[x,2.45,z],.86,.18,mats.wood,16);
     for(let bloom=0;bloom<5; bloom++) {
       const a=bloom*Math.PI*2/5,bx=x+Math.cos(a)*.34,bz=z+Math.sin(a)*.34;
       const flowerMat=bloom%3===0?mats.flowers:(bloom%3===1?mats.banner:plazaGold);
@@ -2095,6 +2095,9 @@ export async function createRoyalCity(engine, canvas) {
   }
   // Side garden balconies connect the outer stair landing to both sides of the palace.
   const openHallBalconyStone=mat(scene,"royal-entry-side-balcony-stone",new Color3(.72,.68,.58),.38,.12);
+  const openHallBalconyGreen=mat(scene,"royal-entry-side-balcony-green",new Color3(.12,.29,.14),.9);
+  const openHallBalconyRose=mat(scene,"royal-entry-side-balcony-rose",new Color3(.78,.18,.28),.82);
+  const openHallBalconyCream=mat(scene,"royal-entry-side-balcony-cream",new Color3(.92,.82,.64),.86);
   for(const side of [-1,1]) {
     const bx=side*14.4;
     box(scene,"royal-entry-side-balcony-floor",[bx,8.60,-125.2],[8.8,.30,25.0],openHallBalconyStone);
@@ -2107,8 +2110,8 @@ export async function createRoyalCity(engine, canvas) {
     for(let j=0;j<9;j++) {
       const z=-132.0+j*1.8,x=side*(15.6+(j%2)*.18);
       const stem=MeshBuilder.CreateTube("royal-entry-side-balcony-rose-cane",{path:[new Vector3(x,9.2,z),new Vector3(x+side*.18,9.8,z),new Vector3(x,10.25,z)],radius:.025,tessellation:6},scene);
-      stem.material=openHallFlowerGreen;
-      addPetalBloom(scene,"royal-entry-side-balcony-rose",new Vector3(x,10.28,z),.30,j%2?openHallFlowerRose:openHallFlowerCream,7);
+      stem.material=openHallBalconyGreen;
+      addPetalBloom(scene,"royal-entry-side-balcony-rose",new Vector3(x,10.28,z),.30,j%2?openHallBalconyRose:openHallBalconyCream,7);
     }
   }
   // Flowered side promenades flank the main doors without narrowing the central approach.
@@ -3553,11 +3556,12 @@ export async function createRoyalCity(engine, canvas) {
       const lobbyStairT=Scalar.Clamp((-camera.position.z-132)/39,0,1);
       const lobbyStairCenterX=18*(1-lobbyStairT);
       const onLobbyGrandStair=camera.position.z<=-132&&camera.position.z>=-171.5&&Math.abs(Math.abs(camera.position.x)-lobbyStairCenterX)<3.55;
+      const onLobbyStairLanding=camera.position.z<-171.0&&camera.position.z>=-174.0&&Math.abs(camera.position.x)<5.2;
       const onLobbyUpperGallery=camera.position.z<-173.35&&camera.position.z>-182.4&&Math.abs(camera.position.x)<19.2;
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
       camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
-        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:(onLobbyUpperGallery?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))));
+        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
