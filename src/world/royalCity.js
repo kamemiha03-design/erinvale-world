@@ -3323,13 +3323,15 @@ export async function createRoyalCity(engine, canvas) {
       mesh.rotation.y+=Math.PI;
     }
   }
+  // The hidden baths have no door: remove the old decorative double-door assembly.
   for(const door of scene.metadata?.doorLeaves||[]) {
-    if(door.name==="imperial-hammam-entry-double-door") {
-      const p=rotateBathPoint(door.pivot.position.x,door.pivot.position.z);
-      door.pivot.position.x=p.x;door.pivot.position.z=p.z;
-      door.pivot.rotation.y+=Math.PI;door.home+=Math.PI;
-      door.position.x=bathCenterX;door.position.z=45;
-    }
+    if(door.name==="imperial-hammam-entry-double-door") door.pivot.dispose(false,false);
+  }
+  if(scene.metadata?.doorLeaves) {
+    scene.metadata.doorLeaves=scene.metadata.doorLeaves.filter(door=>door.name!=="imperial-hammam-entry-double-door");
+  }
+  for(const mesh of [...scene.meshes]) {
+    if(mesh.name.includes("imperial-hammam-entry-double-door")) mesh.dispose(false,true);
   }
   for(const obstacle of obstacles.slice(hammamObstacleStart)) {
     const p=rotateBathPoint(obstacle.x,obstacle.z);
@@ -3345,7 +3347,64 @@ export async function createRoyalCity(engine, canvas) {
     bathCollider.doorX=door.x;bathCollider.doorZ=door.z;
   }
 
-  // Layered steam rises from the pools and drifts through the warm, lantern-lit air.
+  // A concealed, doorless passage is cut into the rocky garden approach.
+  // Its low vaulted ceiling, repeated stone ribs and warm wall lamps make the
+  // transition from the public plaza feel like entering a private grotto.
+  const tunnelX=30,tunnelStartZ=33.6,tunnelEndZ=45.35,tunnelMidZ=(tunnelStartZ+tunnelEndZ)/2;
+  const tunnelStone=texturedMat(scene,"imperial-bath-grotto-stone",new Color3(.38,.37,.32),"#777365","#282a25",.98);
+  const tunnelDark=mat(scene,"imperial-bath-grotto-shadow",new Color3(.075,.085,.078),.98);
+  const tunnelMoss=mat(scene,"imperial-bath-grotto-moss",new Color3(.13,.22,.12),1);
+  const tunnelBronze=mat(scene,"imperial-bath-grotto-bronze",new Color3(.39,.28,.16),.62,.48);
+  box(scene,"imperial-bath-grotto-floor",[tunnelX,.12,tunnelMidZ],[7.45,.26,12.2],hammamStone);
+  box(scene,"imperial-bath-grotto-floor-inlay",[tunnelX,.265,tunnelMidZ],[5.7,.035,11.6],hammamTile);
+  for(const side of [-1,1]) {
+    box(scene,"imperial-bath-grotto-sidewall",[tunnelX+side*3.78,2.55,tunnelMidZ],[.72,5.15,12.0],tunnelStone);
+    box(scene,"imperial-bath-grotto-wall-foot",[tunnelX+side*3.48,.48,tunnelMidZ],[.30,.48,12.0],hammamGold);
+    for(let lampIndex=0;lampIndex<3;lampIndex++) {
+      const z=tunnelStartZ+2.0+lampIndex*3.7;
+      box(scene,"imperial-bath-grotto-lamp-bracket",[tunnelX+side*3.34,3.55,z],[.48,.12,.13],tunnelBronze);
+      const lamp=MeshBuilder.CreateSphere("imperial-bath-grotto-lantern",{diameter:.34,segments:12},scene);
+      lamp.position.set(tunnelX+side*3.22,3.32,z);lamp.material=hammamGlow;
+      const cage=MeshBuilder.CreateTorus("imperial-bath-grotto-lantern-cage",{diameter:.52,thickness:.045,tessellation:16},scene);
+      cage.position.copyFrom(lamp.position);cage.rotation.x=Math.PI/2;cage.material=tunnelBronze;
+    }
+    for(let n=0;n<7;n++) obstacles.push({x:tunnelX+side*3.75,z:tunnelStartZ+.8+n*1.65,r:.58});
+  }
+  box(scene,"imperial-bath-grotto-vault-core",[tunnelX,5.0,tunnelMidZ],[7.1,.62,12.0],tunnelDark);
+  for(let rib=0;rib<4;rib++) {
+    const z=tunnelStartZ+.25+rib*3.75,points=[];
+    for(let k=0;k<=24;k++) {
+      const a=Math.PI-k*Math.PI/24;
+      points.push(new Vector3(tunnelX+Math.cos(a)*3.62,2.65+Math.sin(a)*2.48,z));
+    }
+    const arch=MeshBuilder.CreateTube("imperial-bath-grotto-carved-vault-rib",{path:points,radius:.22,tessellation:12},scene);
+    arch.material=hammamIvory;
+    const keystone=MeshBuilder.CreateSphere("imperial-bath-grotto-keystone",{diameter:.38,segments:12},scene);
+    keystone.position.set(tunnelX,5.16,z);keystone.scaling.y=.72;keystone.material=hammamGold;
+  }
+  // Rough rock shoulders and trailing ivy partially conceal the passage from outside.
+  for(const side of [-1,1]) {
+    for(let n=0;n<4;n++) {
+      const rock=MeshBuilder.CreateSphere("imperial-bath-grotto-entrance-rock",{diameter:1,segments:12},scene);
+      rock.position.set(tunnelX+side*(4.05+n*.25),1.0+n*.45,tunnelStartZ+.3+n*.72);
+      rock.scaling.set(1.15,.9,1.35);rock.material=tunnelStone;
+    }
+    for(let vine=0;vine<4;vine++) {
+      const x=tunnelX+side*(3.95+vine*.22),z=tunnelStartZ+1.0+vine*1.7;
+      const path=[new Vector3(x,5.6,z),new Vector3(x-side*.25,4.6,z+.35),new Vector3(x+side*.12,3.7,z+.72),new Vector3(x-side*.18,2.9,z+1.0)];
+      const tendril=MeshBuilder.CreateTube("imperial-bath-grotto-hanging-ivy",{path,radius:.055,tessellation:7},scene);
+      tendril.material=tunnelMoss;
+      for(let leaf=0;leaf<5;leaf++) {
+        const p=path[1+leaf%3].add(new Vector3(side*(leaf%2?.22:-.18),.05,leaf*.09));
+        const blade=MeshBuilder.CreateSphere("imperial-bath-grotto-ivy-leaf",{diameter:.34,segments:10},scene);
+        blade.position.copyFrom(p);blade.scaling.set(.45,.16,.9);blade.rotation.z=side*.42;blade.material=tunnelMoss;
+      }
+    }
+  }
+  const tunnelThreshold=MeshBuilder.CreateTorus("imperial-bath-grotto-threshold-carving",{diameter:7.2,thickness:.12,tessellation:48},scene);
+  tunnelThreshold.position.set(tunnelX,.30,tunnelStartZ+.12);tunnelThreshold.scaling.z=.18;tunnelThreshold.material=hammamGold;
+
+  // Layered steam rises from every pool and gathers beneath the warm vaulted ceiling.
   const bathSteamPuffs=[];
   const bathSteamMaterial=mat(scene,"imperial-bath-living-steam",new Color3(.91,.94,.92),.98);
   bathSteamMaterial.alpha=.19;
@@ -3366,6 +3425,26 @@ export async function createRoyalCity(engine, canvas) {
     puff.position.set(x,1.35+(i%3)*.4,z);puff.scaling.set(.48,1.25,.48);
     puff.material=bathSteamMaterial;puff.isPickable=false;
     bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*1.13,speed:.19,drift:.28});
+  }
+  // Broader, overlapping steam banks create a visible humid atmosphere instead
+  // of a few isolated puffs. Each billow has its own slow rise and lateral drift.
+  for(let i=0;i<30;i++) {
+    const pool=i%3;
+    const x=pool===0?30+((i*7)%9-4)*.92:pool===1?18+((i*3)%5-2)*.48:42+((i*5)%5-2)*.48;
+    const z=pool===0?59.8+((i*11)%13)*.62:61.0+((i*7)%11)*.82;
+    const puff=MeshBuilder.CreateSphere("imperial-bath-dense-steam-bank",{diameter:1,segments:12},scene);
+    puff.position.set(x,1.2+(i%7)*.36,z);
+    puff.scaling.set(.95+(i%4)*.18,1.7+(i%5)*.24,.82+(i%3)*.18);
+    puff.material=bathSteamMaterial;puff.isPickable=false;
+    bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*.51,speed:.15+(i%4)*.018,drift:.55+(i%3)*.13});
+  }
+  // Fine wisps rise from the waterline and dissolve into the dome's humid air.
+  for(let i=0;i<18;i++) {
+    const x=24+(i%9)*1.5,z=59.4+Math.floor(i/9)*7.2;
+    const puff=MeshBuilder.CreateSphere("imperial-bath-fine-steam-wisp",{diameter:1,segments:10},scene);
+    puff.position.set(x,1.0+(i%4)*.25,z);puff.scaling.set(.24,.95,.24);
+    puff.material=bathSteamMaterial;puff.isPickable=false;
+    bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*.87,speed:.24,drift:.22});
   }
   makeBathWaySign(16,18,"帝国浴場　↗","THERMAE  •  HAMMAM");
   makeBathWaySign(25,31,"帝国浴場　↗","PUBLIC BATHS");
@@ -3400,6 +3479,7 @@ export async function createRoyalCity(engine, canvas) {
         :MeshBuilder.CreateSphere(name,{diameter:1,segments:14},scene);
       mesh.parent=root;mesh.position.set(...pos);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
     };
+    const workingArms=[];
     if(pose==="soaking") {
       part("bath-guest-submerged-body",[0,.16,0],[.78,.72,.43],phase%2?bathClothBlue:bathTowel);
       part("bath-guest-shoulders",[0,.54,-.015],[.72,.34,.42],bathSkin);
@@ -3420,11 +3500,11 @@ export async function createRoyalCity(engine, canvas) {
       for(const side of [-1,1]) {
         part("bath-attendant-kneeling-leg",[side*.20,.22,.34],[.25,.30,.58],bathTowel);
         const arm=part("bath-attendant-working-arm",[side*.28,.78,-.40],[.15,.18,.72],bathSkin);
-        arm.rotation.x=-.30;
+        arm.rotation.x=-.30;workingArms.push({mesh:arm,side});
         part("bath-attendant-hand",[side*.28,.73,-.72],[.16,.13,.18],bathSkin);
       }
     }
-    bathActors.push({root,baseY:y,phase,pose});
+    bathActors.push({root,baseY:y,phase,pose,workingArms});
     return root;
   }
 
@@ -3539,6 +3619,13 @@ export async function createRoyalCity(engine, canvas) {
   makeBathGuest(25.8,.88,64.4,"soaking",-Math.PI/2,3);
   makeBathGuest(42.2,.38,73.0,"scrubbed",Math.PI/2,4);
   makeBathGuest(40.8,.38,72.8,"attendant",-Math.PI/2,5);
+  // Quiet conversations in the two side plunge pools and a second treatment pair.
+  makeBathGuest(18.0,.79,60.5,"soaking",Math.PI/2,6);
+  makeBathGuest(18.2,.79,63.1,"soaking",-Math.PI/2,7);
+  makeBathGuest(42.0,.79,60.8,"soaking",Math.PI/2,8);
+  makeBathGuest(43.0,.79,63.4,"soaking",-Math.PI/2,9);
+  makeBathGuest(20.6,.38,72.7,"scrubbed",Math.PI/2,10);
+  makeBathGuest(19.2,.38,72.5,"attendant",-Math.PI/2,11);
 
   // Palace attendants welcome visitors and keep the reception hall lived-in.
   makeTownsperson(-9.0,-126.0,"maid",21.1,-Math.PI/2,false);
@@ -3831,7 +3918,8 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
     else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
-    else if(x>11&&x<49&&z>35&&z<86)message="帝国浴場。温泉プール、蒸気浴室、休憩回廊を備えた市民のための大浴場。";
+    else if(x>24.15&&x<35.85&&z>58.35&&z<66.05)message="湯船に浸かっている。湯気と水音に包まれ、ゆっくり身体を温めよう。";
+    else if(x>11&&x<49&&z>35&&z<86)message="帝国浴場。岩のトンネルを抜けると、湯気に包まれた隠れ家的な温泉が広がる。";
     else if(z<-45)message="王城へ続く大門。街の喧騒が遠のき、王宮の静けさが近づいてくる。";
     else if(x>34&&z>-3&&z<35)message="酒場通り。旅人や商人、冒険者たちが夜まで集う街の一角。";
     else if(x>10&&z<-5)message="市場の屋台。果物や旅の道具が並んでいる。";
@@ -3937,7 +4025,7 @@ export async function createRoyalCity(engine, canvas) {
     update(dt){
       const input=moveSource();
       const step=Math.min(dt,.045);
-      const inBathPool=camera.position.x>24.15&&camera.position.x<35.85&&camera.position.z>59.35&&camera.position.z<67.05;
+      const inBathPool=camera.position.x>24.15&&camera.position.x<35.85&&camera.position.z>58.35&&camera.position.z<66.05;
       const speed=inBathPool?2.25:4.4;
       const forward=camera.getDirection(new Vector3(0,0,1));
       forward.y=0;
@@ -3966,7 +4054,7 @@ export async function createRoyalCity(engine, canvas) {
       const onLobbyStairLanding=camera.position.z<-171.0&&camera.position.z>=-174.0&&Math.abs(camera.position.x)<5.2;
       const onLobbyUpperGallery=camera.position.z<-173.35&&camera.position.z>-182.4&&Math.abs(camera.position.x)<19.2;
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
-      camera.position.y=inBathPool?1.82:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
+      camera.position.y=inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
         (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
@@ -3987,8 +4075,15 @@ export async function createRoyalCity(engine, canvas) {
         puff.mesh.scaling.z=swell*(.9+(index%2)*.12);
       });
       bathActors.forEach(actor=>{
-        actor.root.position.y=actor.baseY+Math.sin(time*.72+actor.phase)*.018;
-        if(actor.pose==="attendant")actor.root.rotation.z=Math.sin(time*1.15+actor.phase)*.025;
+        actor.root.position.y=actor.baseY+Math.sin(time*.72+actor.phase)*.022;
+        if(actor.pose==="attendant") {
+          actor.root.rotation.z=Math.sin(time*1.15+actor.phase)*.035;
+          actor.workingArms?.forEach(arm=>{arm.mesh.rotation.x=-.30+Math.sin(time*2.1+actor.phase+arm.side)*.18;});
+        } else if(actor.pose==="soaking") {
+          actor.root.rotation.z=Math.sin(time*.48+actor.phase)*.012;
+        } else if(actor.pose==="scrubbed") {
+          actor.root.rotation.x=Math.sin(time*.38+actor.phase)*.008;
+        }
       });
       canopy.forEach(o=>{o.mesh.rotation.z=o.base+Math.sin(time*.35+o.phase)*.025;o.mesh.position.y=o.baseY+Math.sin(time*.35+o.phase)*.16;});
       // Subtle fountain ripples and falling droplets keep the water from feeling static.
