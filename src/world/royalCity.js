@@ -1207,6 +1207,44 @@ export async function createRoyalCity(engine, canvas) {
     }
     box(scene,"avenue-gate-brace",[side*8.35,3.4,-53],[.13,4.4,.13],avenueGateGold);
   }
+  // A continuous old limestone boundary wall separates the town from the royal estate.
+  // It leaves a broad central opening for the iron carriage gate.
+  const boundaryStone=texturedMat(scene,"royal-boundary-aged-stone",new Color3(.62,.58,.49),"#a99f8d","#514a3d",.94);
+  const boundaryIvy=mat(scene,"royal-boundary-ivy",new Color3(.075,.22,.105),.96);
+  const boundaryIvyLight=mat(scene,"royal-boundary-ivy-light",new Color3(.16,.34,.14),.92);
+  for(const side of [-1,1]) {
+    const start=side<0?-76:11, end=side<0?-11:76;
+    const length=end-start, cx=(start+end)/2;
+    box(scene,"royal-boundary-wall-foundation",[cx,.48,-53],[length+.8,.96,2.25],mats.trim);
+    box(scene,"royal-boundary-wall-main",[cx,4.25,-53],[length,7.0,1.72],boundaryStone);
+    box(scene,"royal-boundary-wall-coping",[cx,7.95,-53],[length+.45,.42,2.05],mats.trim);
+    for(let x=start+1.5;x<end;x+=3.1) {
+      box(scene,"royal-boundary-wall-merlon",[x,8.55,-53],[1.45,.9,1.9],boundaryStone);
+      box(scene,"royal-boundary-wall-buttress",[x,3.8,-54.0],[.62,7.2,.62],mats.trim);
+    }
+    // Ivy climbs in irregular tendrils from the town-facing side, with small leaf clusters.
+    for(let vine=0;vine<8;vine++) {
+      const x=start+4.5+vine*(length-9)/7;
+      const lean=(vine%2?1:-1)*(.35+(vine%3)*.12);
+      const pathPts=[
+        new Vector3(x,1.0,-54.0),
+        new Vector3(x+lean*.45,2.2,-54.05),
+        new Vector3(x-lean*.25,3.5,-54.05),
+        new Vector3(x+lean,4.7,-54.05),
+        new Vector3(x+lean*.55,6.0,-54.05),
+        new Vector3(x+lean*1.25,7.25,-54.05)
+      ];
+      const tendril=MeshBuilder.CreateTube("royal-wall-ivy-tendril",{path:pathPts,radius:.055,tessellation:7},scene);
+      tendril.material=boundaryIvy;
+      for(let leaf=0;leaf<11;leaf++) {
+        const p=Vector3.Lerp(pathPts[Math.floor(leaf/2)],pathPts[Math.min(5,Math.floor(leaf/2)+1)],leaf%2?.72:.25);
+        const blade=MeshBuilder.CreateSphere("royal-wall-ivy-leaf",{diameter:.42,segments:10},scene);
+        blade.position.set(p.x+(leaf%2?-.28:.28),p.y,p.z-.08);
+        blade.scaling.set(.82,.42,.22);blade.rotation.z=(leaf%2?.55:-.55);blade.material=leaf%3?boundaryIvy:boundaryIvyLight;
+      }
+    }
+  }
+
   // The royal citadel: a layered limestone fortress with a proper keep, curtain walls,
   // crenellations, arched windows, buttresses, rooflines and royal banners.
   const royalPalaceStartIndex=scene.meshes.length;
@@ -1815,6 +1853,10 @@ export async function createRoyalCity(engine, canvas) {
   for(const mesh of scene.meshes.slice(royalPalaceStartIndex)) {
     if(mesh.name!=="world-tree-approach") mesh.position.z-=40;
   }
+  // Remove obsolete gatehouse fragments left behind by the old entrance layout.
+  for(const mesh of [...scene.meshes]) {
+    if(/^(gatehouse-tower-window|gatehouse-window-sill|gatehouse-tower-balcony|gatehouse-baluster|distant-waterfall)$/.test(mesh.name)) mesh.dispose(false,false);
+  }
   // Discard the former staircase/landing that was shifted with the palace.
   // It used to leave a phantom climb in the old coordinates.
   for(const mesh of [...scene.meshes]) {
@@ -1916,132 +1958,271 @@ export async function createRoyalCity(engine, canvas) {
   const lobbyCrest=MeshBuilder.CreateCylinder("palace-lobby-national-crest",{diameter:2.1,height:.18,tessellation:8},scene);
   lobbyCrest.position.set(0,17.6,-124.88);lobbyCrest.rotation.x=Math.PI/2;lobbyCrest.material=palaceGold;
 
-  const royalGardenStartIndex=scene.meshes.length;
-  // The approach is a broad carriage boulevard; formal rose gardens sit on both sides BEFORE the stair.
-  const gardenSoil=mat(scene,"royal-garden-rich-earth",new Color3(.16,.115,.075),.98);
-  const gardenHedge=mat(scene,"royal-garden-clipped-boxwood",new Color3(.075,.20,.105),.96);
-  const leafMats=[new Color3(.10,.27,.12),new Color3(.16,.36,.16),new Color3(.23,.42,.19)].map((c,i)=>mat(scene,"rose-leaf-"+i,c,.94));
-  const stemMat=mat(scene,"rose-stem",new Color3(.12,.25,.10),.96);
-  const roseMats=[
-    mat(scene,"rose-crimson",new Color3(.56,.035,.095),.68),
-    mat(scene,"rose-blush",new Color3(.91,.38,.49),.68),
-    mat(scene,"rose-ivory",new Color3(.96,.84,.67),.72)
+  // Two detailed horse-drawn carriages wait in the forecourt, clear of the central stair.
+  const horseCoats=[
+    mat(scene,"carriage-horse-chestnut",new Color3(.28,.105,.045),.78),
+    mat(scene,"carriage-horse-bay",new Color3(.39,.18,.075),.78)
   ];
-  function leafBlade(name,base,tip,width,material) {
-    const axis=tip.subtract(base),side=Vector3.Cross(axis,new Vector3(.18,1,.12)).normalize().scale(width*.5);
-    const mid=Vector3.Lerp(base,tip,.5).add(new Vector3(0,width*.18,0));
-    const left=[base,Vector3.Lerp(base,mid,.5).add(side.scale(.72)),mid.add(side.scale(.45)),tip];
-    const right=[base,Vector3.Lerp(base,mid,.5).subtract(side.scale(.72)),mid.subtract(side.scale(.45)),tip];
-    const mesh=MeshBuilder.CreateRibbon(name,{pathArray:[left,right],sideOrientation:2},scene);
-    mesh.material=material;mesh.isPickable=false;
-    const vein=MeshBuilder.CreateTube(name+"-vein",{path:[base,mid,tip],radius:.012,tessellation:5},scene);
-    vein.material=stemMat;vein.isPickable=false;
-    return mesh;
+  const horseMane=mat(scene,"carriage-horse-mane",new Color3(.075,.045,.028),.9);
+  const horseMark=mat(scene,"carriage-horse-blaze",new Color3(.82,.72,.57),.88);
+  const horseHoof=mat(scene,"carriage-horse-hoof",new Color3(.10,.085,.07),.8,.12);
+  const horseLeather=mat(scene,"carriage-horse-harness",new Color3(.16,.075,.035),.66,.12);
+  const carriageWood=mat(scene,"royal-carriage-lacquered-walnut",new Color3(.22,.085,.035),.46,.16);
+  const carriageGold=mat(scene,"royal-carriage-gilt-brass",new Color3(.76,.54,.22),.3,.72);
+  const carriageCloth=mat(scene,"royal-carriage-velvet",new Color3(.20,.055,.09),.78);
+  function horsePart(root,name,position,scale,material,segments=18) {
+    const mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments},scene);
+    mesh.position.set(...position);mesh.scaling.set(...scale);mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
   }
-  function roseFlower(name,center,radius,material,phase=0) {
-    // Individual cupped petals: every petal is a separate curved ribbon, not a sphere.
+  function horseTube(root,name,points,radius,material) {
+    const mesh=MeshBuilder.CreateTube(name,{path:points.map(p=>new Vector3(...p)),radius,tessellation:8},scene);
+    mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
+  }
+  function addHorse(x,z,coat,phase=0) {
+    const root=new TransformNode("royal-carriage-horse-root",scene);
+    root.position.set(x,0,z);
+    // Muscular barrel, shoulder and hindquarters create a proper equine silhouette.
+    horsePart(root,"horse-barrel",[0,1.34,.02],[1.12,1.02,2.05],coat,24);
+    horsePart(root,"horse-chest",[0,1.36,-.72],[1.02,1.12,.92],coat,20);
+    horsePart(root,"horse-haunch-left",[-.34,1.38,.72],[.70,.90,.86],coat,18);
+    horsePart(root,"horse-haunch-right",[.34,1.38,.72],[.70,.90,.86],coat,18);
+    const neck=horsePart(root,"horse-arched-neck",[0,1.91,-.91],[.66,1.22,.72],coat,24);
+    neck.rotation.x=-.38;
+    horsePart(root,"horse-throatlatch",[0,2.02,-1.16],[.38,.72,.46],coat,18);
+    horsePart(root,"horse-head",[0,2.43,-1.43],[.48,.72,.50],coat,22);
+    horsePart(root,"horse-muzzle",[0,2.16,-1.78],[.43,.34,.46],coat,18);
+    horsePart(root,"horse-nostril-left",[-.19,2.23,-1.98],[.055,.07,.045],horseHoof,10);
+    horsePart(root,"horse-nostril-right",[.19,2.23,-1.98],[.055,.07,.045],horseHoof,10);
+    horsePart(root,"horse-blaze",[0,2.48,-1.91],[.12,.42,.045],horseMark,14);
+    for(const side of [-1,1]) {
+      const ear=MeshBuilder.CreateCylinder("horse-ear",{diameterTop:.025,diameterBottom:.16,height:.42,tessellation:10},scene);
+      ear.parent=root;ear.position.set(side*.16,2.91,-1.42);ear.rotation.z=side*.22;ear.material=coat;
+      horsePart(root,"horse-eye",[side*.215,2.55,-1.76],[.075,.07,.045],horseHoof,12);
+      horsePart(root,"horse-eye-glint",[side*.23,2.57,-1.80],[.022,.022,.012],horseMark,8);
+      // Four articulated-looking legs with knees, fetlocks and shaped hooves.
+      for(const front of [false,true]) {
+        const zz=front?-.72:.78,hipY=front?1.24:1.18,kneeY=front?.66:.72;
+        const upper=[side*.43,hipY,zz],knee=[side*.47,kneeY,zz+(front?-.10:.12)],fetlock=[side*.48,.25,knee[2]+(front?-.04:.03)];
+        horseTube(root,"horse-leg-muscle",[upper,knee],.17,coat);
+        horsePart(root,"horse-knee",[...knee],[.30,.31,.30],coat,14);
+        horseTube(root,"horse-cannon-bone",[knee,fetlock],.09,coat);
+        horsePart(root,"horse-fetlock",[...fetlock],[.19,.20,.19],coat,12);
+        const hoof=MeshBuilder.CreateCylinder("horse-shaped-hoof",{diameterTop:.22,diameterBottom:.32,height:.22,tessellation:12},scene);
+        hoof.parent=root;hoof.position.set(side*.48,.12,fetlock[2]-.015);hoof.material=horseHoof;
+      }
+    }
+    // Flowing mane, forelock and a curved tail are sculpted from tapered strands.
+    for(let i=0;i<9;i++) {
+      const t=i/8;
+      horseTube(root,"horse-mane-strand",[
+        [-.16+t*.32,2.75-t*.58,-1.18-t*.06],
+        [-.20+t*.42,2.52-t*.52,-.98-t*.10],
+        [-.24+t*.48,2.25-t*.45,-.72-t*.12]
+      ],.055,horseMane);
+    }
+    for(let i=0;i<5;i++) {
+      horseTube(root,"horse-forelock-strand",[
+        [-.13+i*.065,2.79,-1.55],
+        [-.12+i*.06,2.96,-1.73],
+        [-.10+i*.055,2.82,-1.92]
+      ],.045,horseMane);
+    }
+    horseTube(root,"horse-tail",[0,1.75,1.0],[0,1.42,1.42],[0,1.04,1.55]],.10,horseMane);
+    // Bridle, browband and chest harness catch the light.
+    horseTube(root,"horse-bridle-cheek-left",[[-.23,2.56,-1.55],[-.28,2.35,-1.70],[-.21,2.18,-1.88]],.035,horseLeather);
+    horseTube(root,"horse-bridle-cheek-right",[[.23,2.56,-1.55],[.28,2.35,-1.70],[.21,2.18,-1.88]],.035,horseLeather);
+    horseTube(root,"horse-browband",[[-.23,2.65,-1.60],[0,2.69,-1.66],[.23,2.65,-1.60]],.04,horseLeather);
+    horseTube(root,"horse-reins",[[-.2,2.18,-1.85],[-.18,1.72,-1.2],[0,1.48,.1]],.028,horseLeather);
+    return root;
+  }
+  function carriageWheel(x,y,z,radius) {
+    const wheel=MeshBuilder.CreateTorus("royal-carriage-wheel",{diameter:radius*2,thickness:.20,tessellation:32},scene);
+    wheel.position.set(x,y,z);wheel.rotation.z=Math.PI/2;wheel.material=carriageGold;
+    const hub=cylinder(scene,"royal-carriage-wheel-hub",[x,y,z],.42,.42,carriageWood,16);hub.rotation.z=Math.PI/2;
+    for(let i=0;i<12;i++) {
+      const angle=i*Math.PI/6;
+      const spoke=box(scene,"royal-carriage-wheel-spoke",[x,y+Math.cos(angle)*radius*.48,z+Math.sin(angle)*radius*.48],[.10,radius*.94,.10],carriageWood);
+      spoke.rotation.x=-angle;
+    }
+  }
+  function addCarriage(x,z,coat,turn=0) {
+    // The horse faces down the drive; the carriage stands behind it.
+    addHorse(x,z-4.25,coat,turn);
+    const pad=MeshBuilder.CreateGround("royal-carriage-parking-pad",{width:5.8,height:8.8,subdivisions:1},scene);
+    pad.position.set(x,.025,z+.3);pad.material=courtStone;
+    box(scene,"royal-carriage-underframe",[x,.92,z+.72],[2.8,.28,3.55],carriageWood);
+    box(scene,"royal-carriage-body",[x,1.65,z+1.05],[3.35,1.42,2.65],carriageWood);
+    box(scene,"royal-carriage-side-panel-left",[x-1.72,1.75,z+1.05],[.18,1.45,2.7],carriageGold);
+    box(scene,"royal-carriage-side-panel-right",[x+1.72,1.75,z+1.05],[.18,1.45,2.7],carriageGold);
+    box(scene,"royal-carriage-door-panel-left",[x-1.82,1.75,z+1.0],[.06,.78,1.45],carriageCloth);
+    box(scene,"royal-carriage-door-panel-right",[x+1.82,1.75,z+1.0],[.06,.78,1.45],carriageCloth);
+    box(scene,"royal-carriage-cabin-roof",[x,2.65,z+.95],[3.75,.28,2.95],carriageGold);
+    for(const side of [-1,1]) {
+      for(const zz of [z-.25,z+2.15]) {
+        const pillar=box(scene,"royal-carriage-canopy-pillar",[x+side*1.62,2.15,zz],[.16,1.05,.16],carriageWood);
+      }
+      box(scene,"royal-carriage-curtain",[x+side*1.55,2.15,z+.95],[.10,.9,1.9],carriageCloth);
+      const lamp=MeshBuilder.CreateSphere("royal-carriage-lantern",{diameter:.28,segments:10},scene);
+      lamp.position.set(x+side*1.92,2.55,z-.05);lamp.material=mats.lantern;
+    }
+    box(scene,"royal-carriage-driver-seat",[x,2.15,z-.48],[1.55,.24,.62],carriageCloth);
+    box(scene,"royal-carriage-front-board",[x,1.7,z-.58],[2.6,1.1,.18],carriageWood);
+    // Four gold-rimmed wheels and turned wooden spokes.
+    carriageWheel(x-1.82,1.0,z+.15,1.0);
+    carriageWheel(x+1.82,1.0,z+.15,1.0);
+    carriageWheel(x-1.82,.78,z+2.15,.72);
+    carriageWheel(x+1.82,.78,z+2.15,.72);
+    // Paired shafts connect the coach to the horse harness.
+    for(const side of [-1,1]) {
+      const shaft=box(scene,"royal-carriage-draft-shaft",[x+side*.48,1.0,z-1.85],[.13,.14,3.1],carriageWood);
+      shaft.rotation.x=.02;
+    }
+    for(const side of [-1,1]) {
+      cylinder(scene,"royal-carriage-lamp-bracket",[x+side*1.88,2.48,z-.1],.08,.48,carriageGold,10);
+    }
+  }
+  addCarriage(-15.2,-73.5,horseCoats[0],.1);
+  addCarriage(15.2,-73.5,horseCoats[1],.4);
+
+  const royalGardenStartIndex=scene.meshes.length;
+  // The rose garden is now inside the palace complex, in the long inner court behind the lobby.
+  const gardenFloor=mat(scene,"inner-rose-court-marble",new Color3(.68,.64,.55),.86);
+  const gardenSoil=mat(scene,"inner-rose-garden-earth",new Color3(.16,.105,.065),.98);
+  const gardenHedge=mat(scene,"inner-rose-garden-boxwood",new Color3(.075,.20,.105),.96);
+  const leafMats=[new Color3(.09,.24,.11),new Color3(.14,.34,.15),new Color3(.22,.42,.19)].map((c,i)=>mat(scene,"inner-rose-leaf-"+i,c,.92));
+  const stemMat=mat(scene,"inner-rose-stem",new Color3(.10,.22,.085),.96);
+  const roseMats=[
+    mat(scene,"inner-rose-crimson",new Color3(.55,.025,.075),.62),
+    mat(scene,"inner-rose-blush",new Color3(.88,.31,.43),.64),
+    mat(scene,"inner-rose-ivory",new Color3(.94,.81,.65),.68)
+  ];
+  const courtZ=-156;
+  const innerCourt=MeshBuilder.CreateGround("palace-inner-rose-court-floor",{width:19,height:48,subdivisions:2},scene);
+  innerCourt.position.set(0,8.48,courtZ);innerCourt.material=gardenFloor;
+  const courtRunner=MeshBuilder.CreateGround("palace-inner-rose-court-walkway",{width:6.2,height:44,subdivisions:1},scene);
+  courtRunner.position.set(0,8.515,courtZ);courtRunner.material=carriageMat;
+  for(const side of [-1,1]) {
+    box(scene,"inner-rose-court-stone-border",[side*9.1,8.85,courtZ],[.7,.72,47],mats.trim);
+    box(scene,"inner-rose-court-hedge-bed",[side*6.7,8.72,courtZ],[3.6,.22,40],gardenSoil);
+    for(let z=-174;z<=-138;z+=6) {
+      const hedge=MeshBuilder.CreateSphere("inner-rose-court-clipped-hedge",{diameter:1.25,segments:24},scene);
+      hedge.position.set(side*6.65,9.35,z);hedge.scaling.set(1.5,.78,1.0);hedge.material=gardenHedge;
+      const urn=cylinder(scene,"inner-rose-court-stone-urn",[side*4.7,9.0,z],.82,.55,mats.trim,16);
+      for(let flower=0;flower<3;flower++) {
+        const bloom=new Vector3(side*4.7+(flower-1)*.22,9.75,z+(flower%2?-.12:.12));
+        // Small clusters of individually cupped roses.
+        const petals=[];
+        for(let p=0;p<7;p++) {
+          const ang=p*Math.PI*2/7, left=[],right=[];
+          for(let k=0;k<4;k++) {
+            const t=k/3,r=.035+t*.18,spread=.018+Math.sin(t*Math.PI)*.055;
+            const px=bloom.x+Math.cos(ang)*r,pz=bloom.z+Math.sin(ang)*r,py=bloom.y+Math.sin(t*Math.PI)*.045;
+            left.push(new Vector3(px-Math.sin(ang)*spread,py,pz+Math.cos(ang)*spread));
+            right.push(new Vector3(px+Math.sin(ang)*spread,py,pz-Math.cos(ang)*spread));
+          }
+          const petal=MeshBuilder.CreateRibbon("inner-court-urn-rose-petal",{pathArray:[left,right],sideOrientation:2},scene);
+          petal.material=roseMats[(flower+side+3)%3];petals.push(petal);
+        }
+        const merged=Mesh.MergeMeshes(petals,true,true,undefined,false,false);
+        if(merged)merged.material=roseMats[(flower+side+3)%3];
+      }
+    }
+  }
+  // Stone paths and low balustrades define a quiet, enclosed palace garden.
+  for(const side of [-1,1]) {
+    for(let z=-178;z<=-134;z+=4) {
+      const post=cylinder(scene,"inner-rose-court-balustrade-post",[side*9.0,9.55,z],.34,1.8,mats.trim,12);
+      const cap=cylinder(scene,"inner-rose-court-balustrade-cap",[side*9.0,10.48,z],.48,.18,castleGold,12);
+    }
+    const rail=box(scene,"inner-rose-court-balustrade-rail",[side*9.0,9.95,courtZ],[.22,.18,45],mats.trim);
+  }
+  // Six elliptical iron arches form a walk-through rose tunnel over the central path.
+  const ironArch=mat(scene,"rose-tunnel-wrought-iron",new Color3(.12,.16,.14),.38,.68);
+  function roseLeaf(base,tip,width,material) {
+    const axis=tip.subtract(base),side=Vector3.Cross(axis,new Vector3(.15,1,.12)).normalize().scale(width*.5);
+    const mid=Vector3.Lerp(base,tip,.5).add(new Vector3(0,width*.15,0));
+    const mesh=MeshBuilder.CreateRibbon("rose-tunnel-individual-leaf",{pathArray:[
+      [base,Vector3.Lerp(base,mid,.5).add(side),mid.add(side.scale(.4)),tip],
+      [base,Vector3.Lerp(base,mid,.5).subtract(side),mid.subtract(side.scale(.4)),tip]
+    ],sideOrientation:2},scene);
+    mesh.material=material;mesh.isPickable=false;
+  }
+  function tunnelRose(center,radius,material,phase=0) {
+    const pieces=[];
     for(let layer=0;layer<3;layer++) {
       const count=layer===0?7:layer===1?6:5;
       for(let p=0;p<count;p++) {
-        const a=phase+p*Math.PI*2/count+layer*.31;
-        const inner=radius*(layer===0?.08:layer===1?.28:.48);
-        const outer=radius*(layer===0?1:.78);
+        const angle=phase+p*Math.PI*2/count+layer*.28;
+        const inner=radius*(layer===0?.08:layer===1?.28:.48),outer=radius*(layer===0?1:.78);
         const left=[],right=[];
         for(let k=0;k<5;k++) {
-          const t=k/4,rr=inner+(outer-inner)*t;
-          const spread=(.08+Math.sin(t*Math.PI)*.34)*radius;
-          const px=center.x+Math.cos(a)*rr, pz=center.z+Math.sin(a)*rr;
-          const tangentX=-Math.sin(a),tangentZ=Math.cos(a);
-          const y=center.y+Math.sin(t*Math.PI)*radius*.25+layer*.025;
-          left.push(new Vector3(px+tangentX*spread,y,pz+tangentZ*spread));
-          right.push(new Vector3(px-tangentX*spread,y,pz-tangentZ*spread));
+          const t=k/4,rr=inner+(outer-inner)*t,spread=(.08+Math.sin(t*Math.PI)*.34)*radius;
+          const px=center.x+Math.cos(angle)*rr,pz=center.z+Math.sin(angle)*rr,py=center.y+Math.sin(t*Math.PI)*radius*.24+layer*.018;
+          left.push(new Vector3(px-Math.sin(angle)*spread,py,pz+Math.cos(angle)*spread));
+          right.push(new Vector3(px+Math.sin(angle)*spread,py,pz-Math.cos(angle)*spread));
         }
-        const petal=MeshBuilder.CreateRibbon(name+"-petal-"+layer+"-"+p,{pathArray:[left,right],sideOrientation:2},scene);
-        petal.material=material;petal.isPickable=false;
+        const petal=MeshBuilder.CreateRibbon("rose-tunnel-cupped-petal",{pathArray:[left,right],sideOrientation:2},scene);
+        petal.material=material;pieces.push(petal);
       }
     }
-    const heart=MeshBuilder.CreateDisc(name+"-pollen-heart",{radius:radius*.16,tessellation:12},scene);
-    heart.position.copyFrom(center);heart.position.y+=radius*.22;heart.material=roseMats[2];
+    const flower=Mesh.MergeMeshes(pieces,true,true,undefined,false,false);
+    if(flower){flower.name="rose-tunnel-bloom";flower.material=material;flower.isPickable=false;}
+    const heart=MeshBuilder.CreateSphere("rose-tunnel-flower-heart",{diameter:radius*.22,segments:10},scene);
+    heart.position.copyFrom(center);heart.material=roseMats[2];
   }
-  function roseBush(x,z,scale,variant=0) {
-    const baseY=.48;
-    for(let stem=0;stem<4;stem++) {
-      const a=stem*Math.PI*.5+variant*.7;
-      const h=scale*(.62+(stem%2)*.18);
-      const tip=new Vector3(x+Math.cos(a)*.22*scale,baseY+h,z+Math.sin(a)*.22*scale);
-      const branch=MeshBuilder.CreateTube("rose-branch",{path:[new Vector3(x,baseY,z),new Vector3(x+Math.cos(a)*.12*scale,baseY+h*.48,z+Math.sin(a)*.12*scale),tip],radius:.025*scale,tessellation:6},scene);
-      branch.material=stemMat;
-      for(let l=0;l<3;l++) {
-        const t=.25+l*.23;
-        const anchor=Vector3.Lerp(new Vector3(x,baseY,z),tip,t);
-        const dir=new Vector3(Math.cos(a+(l%2?1:-1)*.8),.24,Math.sin(a+(l%2?1:-1)*.8)).normalize();
-        leafBlade("individual-rose-leaf",anchor,anchor.add(dir.scale(.32*scale)),.16*scale,leafMats[(l+stem)%3]);
-      }
-      if(stem===0||stem===2) roseFlower("hand-built-rose",tip,.25*scale,roseMats[(variant+stem)%3],a);
+  const tunnelZs=[-137,-144,-151,-158,-165,-172];
+  for(let archIndex=0;archIndex<tunnelZs.length;archIndex++) {
+    const z=tunnelZs[archIndex],pathPts=[];
+    for(let i=0;i<=24;i++) {
+      const t=Math.PI*i/24;
+      pathPts.push(new Vector3(-3.35*Math.cos(t),8.78+4.65*Math.sin(t),z));
+    }
+    const frame=MeshBuilder.CreateTube("rose-tunnel-arched-iron-frame",{path:pathPts,radius:.105,tessellation:10},scene);
+    frame.material=ironArch;
+    // Slim vertical supports, foot plates and decorative finials anchor each arch.
+    for(const side of [-1,1]) {
+      const support=box(scene,"rose-tunnel-arch-foot",[side*3.35,8.95,z],[.62,.28,.62],mats.trim);
+      cylinder(scene,"rose-tunnel-arch-finial",[side*3.35,9.28,z],.22,.42,castleGold,10);
+    }
+    // Rose canes spiral up the ironwork; alternating red, blush and ivory blooms.
+    for(let k=0;k<9;k++) {
+      const t=.12+k*.095,angle=Math.PI*t;
+      const x=-3.35*Math.cos(angle),y=8.78+4.65*Math.sin(angle),side=(k%2?1:-1);
+      const vinePath=[
+        new Vector3(x+side*.28,y-.25,z-.12),
+        new Vector3(x-side*.12,y+.32,z+.02),
+        new Vector3(x+side*.20,y+.78,z+.14)
+      ];
+      const vine=MeshBuilder.CreateTube("rose-tunnel-climbing-cane",{path:vinePath,radius:.035,tessellation:6},scene);
+      vine.material=stemMat;
+      roseLeaf(vinePath[1],vinePath[2].add(new Vector3(side*.35,.04,0)),.24,leafMats[k%3]);
+      tunnelRose(new Vector3(x+side*.16,y+.5,z-.12),.31,roseMats[k%3],k*.7);
+    }
+    // A few trailing tendrils soften the outline instead of making a rigid metal cage.
+    for(const side of [-1,1]) {
+      const x=side*2.5;
+      const trailing=MeshBuilder.CreateTube("rose-tunnel-trailing-ivy",{path:[
+        new Vector3(x,9.2,z),new Vector3(x+side*.18,10.2,z-.12),new Vector3(x+side*.12,11.0,z-.18)
+      ],radius:.028,tessellation:5},scene);
+      trailing.material=stemMat;
     }
   }
-  // Central carriage road: wide enough for a wagon, with separate pedestrian promenades.
-  const carriageMat=texturedMat(scene,"royal-carriage-cobble",new Color3(.62,.58,.49),"#a99d86","#554d41",.92);
-  const carriage=MeshBuilder.CreateGround("royal-palace-carriage-boulevard",{width:18,height:48,subdivisions:2},scene);
-  carriage.position.set(0,-.025,-39);carriage.material=carriageMat;
+  // Low clipped borders and a carved stone entrance portal make the garden feel intentional.
   for(const side of [-1,1]) {
-    const gx=side*27,gz=-39;
-    box(scene,"royal-rose-garden-terrace",[gx,.12,gz],[29,.24,34],mats.trim);
-    box(scene,"royal-rose-garden-soil",[gx,.27,gz],[26,.12,31],gardenSoil);
-    // Geometric parterre beds with clipped hedges and ornamental stone borders.
-    for(const dx of [-7,7]) for(const dz of [-9,3]) {
-      const bx=gx+dx,bz=gz+dz;
-      box(scene,"formal-rose-bed-border",[bx,.38,bz],[10.2,.28,8.6],castleGold);
-      box(scene,"formal-rose-bed-earth",[bx,.54,bz],[9.7,.10,8.1],gardenSoil);
-      for(let row=0;row<3;row++) for(let col=0;col<4;col++)
-        roseBush(bx-3.5+col*2.3,bz-2.5+row*2.5,.95,(row+col+side+2)%3);
-      for(const edge of [-1,1]) {
-        box(scene,"parterre-clipped-hedge",[bx+edge*4.9,.92,bz],[.36,.8,8.4],gardenHedge);
-        box(scene,"parterre-clipped-hedge",[bx,.92,bz+edge*4.1],[9.9,.8,.36],gardenHedge);
-      }
-    }
-    // Stone balustrade, clipped yew topiary and rose-covered trellis arches.
-    for(let z=-53;z<=-25;z+=7) {
-      for(const dx of [-2.1,2.1]) {
-        cylinder(scene,"rose-garden-pergola-column-base",[gx+dx,.42,z],.72,.5,mats.trim,16);
-        cylinder(scene,"rose-garden-pergola-column",[gx+dx,2.45,z],.30,4.0,mats.trim,16);
-        cylinder(scene,"rose-garden-pergola-capital",[gx+dx,4.55,z],.62,.3,castleGold,16);
-      }
-      box(scene,"rose-garden-pergola-crossbeam",[gx,4.7,z],[4.8,.26,.3],castleGold);
-      for(let j=0;j<9;j++) {
-        const vineX=gx-1.9+j*.48;
-        leafBlade("pergola-vine-leaf",new Vector3(vineX,4.45,z),new Vector3(vineX+.16,4.72,z+.12),.13,leafMats[j%3]);
-        if(j%2===0) roseFlower("climbing-rose",new Vector3(vineX,4.55,z-.08),.18*1.0,roseMats[j%3],j*.7);
-      }
-    }
-    for(let i=0;i<5;i++) {
-      const tx=gx+(i%2? -10:10),tz=-50+i*5.5;
-      cylinder(scene,"garden-topiary-planter",[tx,.45,tz],1.6,.7,mats.trim,16);
-      for(let l=0;l<10;l++) {
-        const a=l*Math.PI*.2;
-        leafBlade("topiary-leaf",new Vector3(tx,.82,tz),new Vector3(tx+Math.cos(a)*.62,1.55,tz+Math.sin(a)*.62),.26,leafMats[l%3]);
-      }
-    }
-    // A formal fountain anchors the garden's outer court.
-    cylinder(scene,"rose-garden-fountain-basin",[gx,.38,-39],4.0,.62,castleGold,32);
-    cylinder(scene,"rose-garden-fountain-water",[gx,.71,-39],3.45,.05,mats.glass,32);
-    cylinder(scene,"rose-garden-fountain-stem",[gx,1.35,-39],.72,1.25,mats.trim,20);
-    cylinder(scene,"rose-garden-fountain-bowl",[gx,2.0,-39],2.0,.34,mats.trim,24);
-  }
-  // Ornate wrought-iron gates open from the boulevard into each garden promenade.
-  for(const side of [-1,1]) {
-    const gx=side*17.4;
-    for(const dx of [-2.1,2.1]) cylinder(scene,"garden-gate-pillar",[gx+dx,1.4,-39],.75,2.8,mats.trim,16);
-    for(let j=-8;j<=8;j++) {
-      const rail=box(scene,"garden-gate-ironwork",[gx+j*.25,1.55,-39],[.055,2.0,.06],castleGold);
-      if(j%4===0) { const spear=MeshBuilder.CreateCylinder("garden-gate-spear",{diameterTop:0,diameterBottom:.16,height:.42,tessellation:4},scene);spear.position.set(gx+j*.25,2.72,-39);spear.material=castleGold; }
+    box(scene,"rose-tunnel-garden-bed-edge",[side*4.25,8.75,courtZ],[.28,.42,42],mats.trim);
+    for(let z=-174;z<=-138;z+=4) {
+      const shrub=MeshBuilder.CreateSphere("rose-tunnel-border-shrub",{diameter:.72,segments:20},scene);
+      shrub.position.set(side*4.45,9.18,z);shrub.scaling.y=.75;shrub.material=gardenHedge;
     }
   }
-  // Link the gardens to the gate stair with a continuous paved apron; no stairs interrupt the carriage lane.
-  const gardenApron=MeshBuilder.CreateGround("royal-garden-carriage-apron",{width:18,height:18,subdivisions:1},scene);
-  gardenApron.position.set(0,-.03,-60);gardenApron.material=carriageMat;
+  const gardenPortal=MeshBuilder.CreateTube("rose-tunnel-entry-portal",{path:[
+    new Vector3(-4.0,8.75,-134),new Vector3(-4.0,12.8,-134),new Vector3(0,14.0,-134),new Vector3(4.0,12.8,-134),new Vector3(4.0,8.75,-134)
+  ],radius:.22,tessellation:12},scene);
+  gardenPortal.material=castleGold;
   for(const mesh of scene.meshes.slice(royalGardenStartIndex)) {
-    if(mesh.name.startsWith("royal-rose")||mesh.name.startsWith("formal-")||mesh.name.startsWith("parterre-")||mesh.name.startsWith("rose-garden")||mesh.name.startsWith("garden-")||mesh.name.startsWith("individual-")||mesh.name.startsWith("hand-built-")||mesh.name.startsWith("climbing-")||mesh.name.startsWith("pergola-")||mesh.name.startsWith("topiary-")) mesh.receiveShadows=true;
+    if(mesh.name.startsWith("rose-tunnel")||mesh.name.startsWith("inner-rose")||mesh.name.startsWith("palace-inner-rose")) {
+      mesh.receiveShadows=true;mesh.isPickable=false;
+    }
   }
 
   // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
@@ -2188,11 +2369,41 @@ export async function createRoyalCity(engine, canvas) {
   const brookWater=mat(scene,"guildside-brook-water",new Color3(.12,.39,.47),.16,.22);brookWater.alpha=.88;
   const brookStone=mat(scene,"guildside-brook-stone",new Color3(.48,.45,.37),.92);
   const brookEdge=mat(scene,"guildside-brook-edge",new Color3(.68,.62,.49),.78);
-  const brookPoints=[[-18,-45],[-14,-41],[-10,-37],[-5,-36],[7,-36],[20,-36],[34,-36],[46,-36],[53,-43],[68,-43],[79,-43],[84,-32],[96,-27],[106,-22],[108,-8],[105,10],[96,27]].map(([x,z])=>new Vector3(x,.055,z));
+  const brookAnchors=[[-18,-45],[-14,-41],[-10,-37],[-5,-36],[7,-36],[20,-36],[34,-36],[46,-36],[53,-43],[68,-43],[79,-43],[84,-32],[96,-27],[106,-22],[108,-8],[105,10],[96,27]].map(([x,z])=>new Vector3(x,.055,z));
+  // Catmull-Rom sampling makes a continuous natural meander, without sharp polyline corners.
+  const brookPoints=[];
+  for(let i=0;i<brookAnchors.length-1;i++) {
+    const p0=brookAnchors[Math.max(0,i-1)],p1=brookAnchors[i],p2=brookAnchors[i+1],p3=brookAnchors[Math.min(brookAnchors.length-1,i+2)];
+    for(let step=0;step<8;step++) {
+      const t=step/8,t2=t*t,t3=t2*t;
+      const v=p1.scale(2).add(p2.subtract(p0).scale(t))
+        .add(p0.scale(2).subtract(p1.scale(5)).add(p2.scale(4)).subtract(p3).scale(t2))
+        .add(p0.scale(-1).add(p1.scale(3)).subtract(p2.scale(3)).add(p3).scale(t3)).scale(.5);
+      brookPoints.push(new Vector3(v.x,.055,v.z));
+    }
+  }
+  brookPoints.push(brookAnchors[brookAnchors.length-1].clone());
   const brookLeft=[],brookRight=[];
-  for(let i=0;i<brookPoints.length;i++){const t=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize(),n=new Vector3(-t.z,0,t.x).scale(1.05);brookLeft.push(brookPoints[i].add(n));brookRight.push(brookPoints[i].subtract(n));}
-  const brook=MeshBuilder.CreateRibbon("connected-town-brook",{pathArray:[brookLeft,brookRight],sideOrientation:2},scene);brook.material=brookWater;brook.isPickable=false;
-  for(const side of [-1,1]){const bank=[];for(let i=0;i<brookPoints.length;i++){const t=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();bank.push(brookPoints[i].add(new Vector3(-t.z,0,t.x).scale(side*1.38)));}for(let i=0;i<bank.length-1;i++){const m=Vector3.Lerp(bank[i],bank[i+1],.5),len=bank[i].subtract(bank[i+1]).length(),stone=box(scene,"brook-rounded-bank-stone",[m.x,.16,m.z],[len+.42,.30,.48],i%2?brookStone:brookEdge);stone.rotation.y=Math.atan2(bank[i+1].z-bank[i].z,bank[i+1].x-bank[i].x);}}
+  for(let i=0;i<brookPoints.length;i++) {
+    const tangent=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();
+    const normal=new Vector3(-tangent.z,0,tangent.x).scale(1.18);
+    brookLeft.push(brookPoints[i].add(normal));brookRight.push(brookPoints[i].subtract(normal));
+  }
+  const brook=MeshBuilder.CreateRibbon("connected-town-brook",{pathArray:[brookLeft,brookRight],sideOrientation:2},scene);
+  brook.material=brookWater;brook.isPickable=false;
+  for(const side of [-1,1]) {
+    const bank=[];
+    for(let i=0;i<brookPoints.length;i++) {
+      const tangent=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();
+      bank.push(brookPoints[i].add(new Vector3(-tangent.z,0,tangent.x).scale(side*1.48)));
+    }
+    for(let i=0;i<bank.length-1;i+=2) {
+      const next=bank[Math.min(i+2,bank.length-1)],mid=Vector3.Lerp(bank[i],next,.5);
+      const dx=next.x-bank[i].x,dz=next.z-bank[i].z,len=Math.sqrt(dx*dx+dz*dz);
+      const stone=box(scene,"brook-rounded-bank-stone",[mid.x,.16,mid.z],[len+.30,.30,.46],i%4?brookStone:brookEdge);
+      stone.rotation.y=Math.atan2(dz,dx);
+    }
+  }
   // A broad Romanesque bridge crosses the straight western reach at right angles.
   const bridgeX=7,bridgeZ=-36;
   box(scene,"great-stone-bridge-deck",[bridgeX,.78,bridgeZ],[5.8,.48,5.2],brookEdge);
