@@ -174,26 +174,67 @@ function addBarrel(scene, x, z, wood, hoop) {
   cylinder(scene, "barrel-lid", [x,1.32,z], 0.7, 0.06, wood, 20);
 }
 
-function addPlanter(scene, x, z, stone, greens, flowers) {
-  box(scene, "stone-planter", [x,0.38,z], [1.8,0.72,1.35], stone);
-  box(scene, "planter-soil", [x,0.76,z], [1.52,0.08,1.08], mat(scene,"rich-soil",new Color3(.16,.12,.08)));
-  for (let i=0;i<8;i++) {
-    const px=x+(Math.random()-.5)*1.25, pz=z+(Math.random()-.5)*.82;
-    const h=0.55+Math.random()*.55;
-    const leaf=MeshBuilder.CreateSphere("flowering-shrub",{diameter:0.5,segments:8},scene);
-    leaf.position.set(px,0.95+h*.45,pz);
-    leaf.scaling.set(.7,h,.7);
-    leaf.material = i%3===0 ? flowers : greens;
+function addPlanter(scene,x,z,stone,greens,flowers) {
+  box(scene,"stone-planter",[x,.38,z],[1.8,.72,1.35],stone);
+  box(scene,"planter-soil",[x,.76,z],[1.52,.08,1.08],mat(scene,"rich-soil",new Color3(.16,.12,.08)));
+  for(let i=0;i<8;i++) {
+    const px=x+((i%4)-1.5)*.31,pz=z+(Math.floor(i/4)? .22:-.22);
+    const stemTop=new Vector3(px,.98+(i%3)*.18,pz);
+    const stem=MeshBuilder.CreateTube("planter-flower-stem",{path:[new Vector3(px,.82,pz),stemTop],radius:.018,tessellation:5},scene);
+    stem.material=greens;
+    for(let l=0;l<4;l++) {
+      const a=l*Math.PI*.5+i*.6;
+      const base=new Vector3(px,.9+(l%2)*.12,pz);
+      const tip=base.add(new Vector3(Math.cos(a)*.28,.12,Math.sin(a)*.24));
+      const mid=Vector3.Lerp(base,tip,.5).add(new Vector3(0,.05,0));
+      const side=Vector3.Cross(tip.subtract(base),new Vector3(.2,1,.1)).normalize().scale(.075);
+      const blade=MeshBuilder.CreateRibbon("planter-individual-leaf",{pathArray:[
+        [base,Vector3.Lerp(base,mid,.5).add(side),mid.add(side.scale(.4)),tip],
+        [base,Vector3.Lerp(base,mid,.5).subtract(side),mid.subtract(side.scale(.4)),tip]
+      ],sideOrientation:2},scene);
+      blade.material=greens;
+    }
+    // Five separate petals around a small central flower.
+    for(let petal=0;petal<5;petal++) {
+      const a=petal*Math.PI*2/5+i*.3,center=new Vector3(px,stemTop.y,pz);
+      const left=[],right=[];
+      for(let k=0;k<4;k++) {
+        const t=k/3,r=.03+t*.15,spread=.015+Math.sin(t*Math.PI)*.065;
+        const cx=center.x+Math.cos(a)*r,cz=center.z+Math.sin(a)*r,cy=center.y+Math.sin(t*Math.PI)*.055;
+        left.push(new Vector3(cx-Math.sin(a)*spread,cy,cz+Math.cos(a)*spread));
+        right.push(new Vector3(cx+Math.sin(a)*spread,cy,cz-Math.cos(a)*spread));
+      }
+      const petalMesh=MeshBuilder.CreateRibbon("planter-flower-petal",{pathArray:[left,right],sideOrientation:2},scene);
+      petalMesh.material=flowers;
+    }
   }
 }
 
-function addTree(scene, x, z, scale, trunk, leaves) {
-  cylinder(scene,"old-tree-trunk",[x,2.2*scale,z],0.85*scale,4.4*scale,trunk,12);
-  for (let i=0;i<7;i++) {
-    const crown=MeshBuilder.CreateSphere("leaf-crown",{diameter:3.5*scale,segments:12},scene);
-    crown.position.set(x+(Math.random()-.5)*2*scale,4.2*scale+Math.random()*1.6*scale,z+(Math.random()-.5)*2*scale);
-    crown.scaling.y=.8+Math.random()*.45;
-    crown.material=leaves;
+function addTree(scene,x,z,scale,trunk,leaves) {
+  cylinder(scene,"old-tree-trunk",[x,2.2*scale,z],.85*scale,4.4*scale,trunk,12);
+  // Branches carry individually modeled leaf blades; no spherical canopy clusters.
+  for(let branch=0;branch<9;branch++) {
+    const a=branch*Math.PI*2/9,level=3.0+((branch*7)%5)*.34;
+    const spread=(1.0+((branch*3)%4)*.22)*scale;
+    const origin=new Vector3(x,level*scale,z);
+    const end=new Vector3(x+Math.cos(a)*spread,level*scale+(.9+(branch%3)*.22)*scale,z+Math.sin(a)*spread);
+    const twig=MeshBuilder.CreateTube("tree-branch",{path:[origin,Vector3.Lerp(origin,end,.55),end],radius:.12*scale,tessellation:7},scene);
+    twig.material=trunk;
+    for(let leaf=0;leaf<12;leaf++) {
+      const t=.16+(leaf%4)*.20;
+      const anchor=Vector3.Lerp(origin,end,t);
+      const side=(leaf%2?1:-1);
+      const direction=new Vector3(Math.cos(a+side*.9),.20+(leaf%3)*.10,Math.sin(a+side*.9)).normalize();
+      const tip=anchor.add(direction.scale((.48+(leaf%3)*.10)*scale));
+      const axis=tip.subtract(anchor),perp=Vector3.Cross(axis,new Vector3(.12,1,.18)).normalize().scale(.18*scale);
+      const mid=Vector3.Lerp(anchor,tip,.5).add(new Vector3(0,.10*scale,0));
+      const left=[anchor,Vector3.Lerp(anchor,mid,.5).add(perp.scale(.7)),mid.add(perp.scale(.42)),tip];
+      const right=[anchor,Vector3.Lerp(anchor,mid,.5).subtract(perp.scale(.7)),mid.subtract(perp.scale(.42)),tip];
+      const blade=MeshBuilder.CreateRibbon("individual-tree-leaf",{pathArray:[left,right],sideOrientation:2},scene);
+      blade.material=leaves;blade.isPickable=false;
+      const vein=MeshBuilder.CreateTube("tree-leaf-vein",{path:[anchor,mid,tip],radius:.012*scale,tessellation:4},scene);
+      vein.material=trunk;vein.isPickable=false;
+    }
   }
 }
 
