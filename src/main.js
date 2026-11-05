@@ -27,7 +27,27 @@ async function boot() {
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
   world.onDoor=(opening)=>audio.playDoor(opening);
+  const mapToggle=document.querySelector("#map-toggle"),mapPanel=document.querySelector("#world-map"),mapClose=document.querySelector("#map-close");
+  const setMapOpen=open=>{mapPanel.classList.toggle("hidden",!open);mapToggle.setAttribute("aria-expanded",String(open));mapToggle.innerHTML=open?'閉じる <span>×</span>':'地図 <span>⌖</span>';};
+  mapToggle.addEventListener("click",()=>setMapOpen(mapPanel.classList.contains("hidden")));
+  mapClose.addEventListener("click",()=>setMapOpen(false));
+  window.addEventListener("keydown",event=>{if(event.key==="Escape")setMapOpen(false);});
+
+  const mapToggle=document.querySelector("#map-toggle"),mapPanel=document.querySelector("#world-map"),mapClose=document.querySelector("#map-close");
+  const setMapOpen=open=>{mapPanel.classList.toggle("hidden",!open);mapToggle.setAttribute("aria-expanded",String(open));mapToggle.innerHTML=open?'閉じる <span>×</span>':'地図 <span>⌖</span>';};
+  mapToggle.addEventListener("click",()=>setMapOpen(mapPanel.classList.contains("hidden")));
+  mapClose.addEventListener("click",()=>setMapOpen(false));
+  window.addEventListener("keydown",event=>{if(event.key==="Escape")setMapOpen(false);});
+
   world.onMovement=(moving,position,location)=>{
+    const mapDot=document.querySelector("#map-player");
+    if(mapDot){mapDot.setAttribute("cx",Math.max(4,Math.min(356,(position.x+112)/224*360)).toFixed(1));mapDot.setAttribute("cy",Math.max(4,Math.min(466,(80-position.z)/270*470)).toFixed(1));}
+
+    const mapDot=document.querySelector("#map-player");
+    if(mapDot) {
+      mapDot.setAttribute("cx",Math.max(4,Math.min(356,(position.x+112)/224*360)).toFixed(1));
+      mapDot.setAttribute("cy",Math.max(4,Math.min(466,(80-position.z)/270*470)).toFixed(1));
+    }
     const tavern=position.x>-27.8&&position.x<-14.2&&position.z>1.4&&position.z<10.6;
     const guild=position.x>-27.8&&position.x<-14.2&&position.z>-20.4&&position.z<-11.6;
     const palace=position.z<-72;

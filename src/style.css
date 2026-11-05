@@ -54,3 +54,21 @@ button:active { transform: scale(.96); }
   box-shadow:0 3px 14px #0007; touch-action:manipulation;
 }
 .walk-toggle.active { background:#8b6b35ee; border-color:#f4d99b; }
+
+/* World map */
+.map-toggle{pointer-events:auto;position:absolute;top:calc(env(safe-area-inset-top) + 66px);right:14px;z-index:8;border:1px solid #d8c18d;border-radius:4px;color:#f8edda;background:#172729ed;padding:10px 15px;font:600 12px "Noto Sans JP",sans-serif;letter-spacing:.08em;box-shadow:0 3px 14px #0007;touch-action:manipulation}
+.map-toggle span{color:#e4c17b;margin-left:5px;font-size:15px}
+.world-map{position:absolute;z-index:9;top:calc(env(safe-area-inset-top) + 112px);right:12px;width:min(92vw,390px);max-width:calc(100vw - 24px);max-height:min(74vh,650px);padding:14px 14px 12px;border:1px solid #c8ad79;border-radius:8px;color:#443d30;background:linear-gradient(145deg,#f1e6ce,#d9c8a6);box-shadow:0 12px 36px #0009;pointer-events:auto}
+.map-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.map-eyebrow{font:600 9px "Cinzel",serif;letter-spacing:.22em;color:#88744d}
+.map-heading h2{margin:2px 0 0;font:600 16px "Noto Sans JP",sans-serif;color:#443d30}
+.map-close{border:1px solid #9c8968;border-radius:50%;width:32px;height:32px;background:#efe2c7;color:#594a34;font-size:22px;line-height:1}
+.map-scroll{width:100%;max-height:calc(74vh - 145px);overflow:auto;border:1px solid #bca982;border-radius:5px;background:#e4d8bd}
+.map-art{display:block;width:100%;height:auto}
+.map-marker text{fill:#443d30;font:600 10px "Noto Sans JP",sans-serif;paint-order:stroke;stroke:#eee2c8;stroke-width:2.6px;stroke-linejoin:round}
+.map-marker .map-sub{font:8px "Cinzel",serif;letter-spacing:.5px}
+.map-legend{margin:8px 2px 0;font-size:10px;color:#5a503e;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.map-you,.map-bath,.map-place{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:3px}
+.map-you{background:#d94b3e}.map-bath{background:#287b82}.map-place{background:#b88a43}
+.map-footnote{margin:6px 2px 0;font-size:10px;line-height:1.5;color:#6b5b42}
+@media(max-width:600px){.map-toggle{top:calc(env(safe-area-inset-top) + 62px);right:12px;padding:9px 13px}.world-map{top:calc(env(safe-area-inset-top) + 108px);right:8px;width:calc(100vw - 16px);max-height:72vh}.map-scroll{max-height:calc(72vh - 145px)}}

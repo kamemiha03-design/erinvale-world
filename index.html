@@ -25,6 +25,32 @@
         <div class="hint" id="hint">画面をダブルタップして前進・ドラッグで見回す</div>
         <button id="bgm-toggle" class="bgm-toggle" type="button" aria-pressed="true">♫ BGM ON</button>
       </div>
+
+      <button id="map-toggle" class="map-toggle" type="button" aria-expanded="false" aria-controls="world-map">地図 <span>⌖</span></button>
+      <section id="world-map" class="world-map hidden" aria-label="エリンヴェイルの地図">
+        <div class="map-heading"><div><span class="map-eyebrow">WORLD GUIDE</span><h2>エリンヴェイル案内図</h2></div><button id="map-close" class="map-close" type="button" aria-label="地図を閉じる">×</button></div>
+        <div class="map-scroll"><svg class="map-art" viewBox="0 0 360 470" role="img" aria-label="街の施設と現在位置を示す地図">
+          <defs><pattern id="map-paper" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M0 18L18 0" stroke="#c6b58e" stroke-opacity=".12" stroke-width=".12"/></pattern><filter id="map-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <rect x="2" y="2" width="356" height="466" rx="8" fill="#e4d8bd"/><rect x="2" y="2" width="356" height="466" rx="8" fill="url(#map-paper)"/>
+          <path d="M10 100 C70 84 110 110 150 128 S250 150 350 112" fill="none" stroke="#b9c7a4" stroke-width="26" opacity=".72"/>
+          <path d="M8 230 C58 215 80 242 112 255 S200 265 245 245 S318 220 352 204" fill="none" stroke="#7eafae" stroke-width="12" opacity=".75"/>
+          <path d="M8 230 C58 215 80 242 112 255 S200 265 245 245 S318 220 352 204" fill="none" stroke="#e0e8d8" stroke-width="2"/>
+          <path d="M180 82 L180 126 L145 155 L145 190 L180 218 L180 298 M145 155 L70 196 L45 235 M180 128 L246 155 L286 180 M160 300 L160 350 L180 385" fill="none" stroke="#b69b70" stroke-width="7" stroke-linecap="round"/>
+          <path d="M180 82 L180 126 L145 155 L145 190 L180 218 L180 298 M145 155 L70 196 L45 235 M180 128 L246 155 L286 180 M160 300 L160 350 L180 385" fill="none" stroke="#f7eedb" stroke-width="2.5" stroke-linecap="round"/>
+          <g fill="#8a9d76" opacity=".75"><circle cx="32" cy="75" r="9"/><circle cx="55" cy="65" r="7"/><circle cx="306" cy="86" r="10"/><circle cx="330" cy="99" r="7"/><circle cx="32" cy="315" r="9"/><circle cx="330" cy="320" r="11"/></g>
+          <g font-family="sans-serif" fill="#4a4437" font-size="9" font-weight="600"><text x="180" y="28" text-anchor="middle" font-size="10" letter-spacing="2">NORTH DISTRICT</text><text x="180" y="458" text-anchor="middle" font-size="10" letter-spacing="2">ROYAL PALACE</text></g>
+          <g class="map-marker" transform="translate(32 241)"><circle r="8" fill="#287b82" stroke="#fff8e7" stroke-width="2"/><text x="44" y="3">帝国浴場</text><text x="44" y="14" class="map-sub">THERMAE · HAMMAM</text></g>
+          <g class="map-marker" transform="translate(145 130)"><circle r="6" fill="#b88a43" stroke="#fff8e7" stroke-width="2"/><text x="-4" y="-13" text-anchor="middle">銅鹿亭</text></g>
+          <g class="map-marker" transform="translate(145 166)"><circle r="6" fill="#b88a43" stroke="#fff8e7" stroke-width="2"/><text x="-6" y="17" text-anchor="middle">冒険者ギルド</text></g>
+          <g class="map-marker" transform="translate(225 172)"><circle r="6" fill="#b88a43" stroke="#fff8e7" stroke-width="2"/><text x="10" y="4">市場</text></g>
+          <g class="map-marker" transform="translate(201 128)"><circle r="6" fill="#b88a43" stroke="#fff8e7" stroke-width="2"/><text x="10" y="-8">噴水広場</text></g>
+          <g class="map-marker" transform="translate(180 334)"><circle r="7" fill="#9d7543" stroke="#fff8e7" stroke-width="2"/><text x="0" y="-13" text-anchor="middle">宮殿</text></g>
+          <g class="map-marker" transform="translate(180 91)"><circle r="5" fill="#675d4d" stroke="#fff8e7" stroke-width="2"/><text x="10" y="-5">初期位置</text></g>
+          <circle id="map-player" cx="180" cy="91" r="7" fill="#d94b3e" stroke="#fff" stroke-width="2.5" filter="url(#map-glow)"/><text x="345" y="24" text-anchor="end" fill="#615744" font-size="11" font-weight="bold">N ↑</text>
+        </svg></div>
+        <p class="map-legend"><span class="map-you"></span>現在位置　<span class="map-bath"></span>帝国浴場　<span class="map-place"></span>主な施設</p>
+        <p class="map-footnote">赤い点が現在位置。浴場は初期位置から見て左奥（西側）です。</p>
+      </section>
       <div id="mobile-controls" class="mobile-controls hidden">
         <div id="move-pad" class="move-pad" aria-label="移動スティック"><div id="move-knob"></div></div>
         <div class="look-label">左下スティック：移動・画面ドラッグ：視点</div>

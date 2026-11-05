@@ -2767,6 +2767,47 @@ export async function createRoyalCity(engine, canvas) {
     );
   }
 
+  // Rebuild the visible outer palace entrance after removing the old palace shell.
+  const royalApproachDoorGold=mat(scene,"royal-approach-door-gold",new Color3(.78,.56,.23),.28,.72);
+  const royalApproachDoorStone=mat(scene,"royal-approach-door-white-stone",new Color3(.89,.85,.76),.38,.12);
+  const royalApproachDoorDark=mat(scene,"royal-approach-door-dark-wood",new Color3(.12,.065,.035),.58,.24);
+  const royalApproachDoorGlow=mat(scene,"royal-approach-door-lantern-glow",new Color3(1,.68,.34),.2,0);
+  royalApproachDoorGlow.emissiveColor=new Color3(.95,.36,.10);
+  box(scene,"royal-approach-door-back-wall",[0,13.2,-112.82],[13.8,9.2,.72],royalApproachDoorStone);
+  addAntiqueDoor(scene,"royal-approach-grand-double-door",0,8.68,-112.35,7.2,7.25,mats,.08);
+  for(const d of scene.metadata.doorLeaves.filter(d=>d.name==="royal-approach-grand-double-door")) {
+    const side=d.pivot.position.x<0?-1:1,lw=7.2*.49,lh=7.25*.91,lx=-side*lw*.5;
+    for(const level of [-1,1]) {
+      const panel=box(scene,"royal-approach-door-gilded-panel",[0,0,0],[lw*.72,lh*.29,.065],royalApproachDoorDark);
+      panel.parent=d.pivot;panel.position.set(lx,level*lh*.23,.145);
+      const inset=box(scene,"royal-approach-door-ivory-inlay",[0,0,0],[lw*.55,lh*.22,.04],royalApproachDoorStone);
+      inset.parent=d.pivot;inset.position.set(lx,level*lh*.23,.19);
+      const rail=box(scene,"royal-approach-door-gold-rail",[0,0,0],[lw*.78,.09,.06],royalApproachDoorGold);
+      rail.parent=d.pivot;rail.position.set(lx,level*lh*.39,.21);
+    }
+    for(let yy=-3;yy<=3;yy+=.55) {
+      const stud=MeshBuilder.CreateSphere("royal-approach-door-brass-stud",{diameter:.11,segments:10},scene);
+      stud.parent=d.pivot;stud.position.set(lx+side*lw*.39,yy,.245);stud.material=royalApproachDoorGold;
+    }
+    const boss=MeshBuilder.CreateCylinder("royal-approach-door-rosette",{diameter:.48,height:.12,tessellation:16},scene);
+    boss.parent=d.pivot;boss.position.set(lx,0,.25);boss.rotation.x=Math.PI/2;boss.material=royalApproachDoorGold;
+  }
+  for(const side of [-1,1]) {
+    box(scene,"royal-approach-door-pilaster",[side*4.15,12.6,-111.88],[.78,8.5,.92],royalApproachDoorStone);
+    box(scene,"royal-approach-door-pilaster-base",[side*4.15,8.55,-111.88],[1.25,.55,1.2],royalApproachDoorGold);
+    box(scene,"royal-approach-door-pilaster-capital",[side*4.15,16.78,-111.88],[1.42,.72,1.2],royalApproachDoorGold);
+    addLantern(scene,side*5.3,13.2,-111.25,royalApproachDoorGold,royalApproachDoorGlow);
+  }
+  const royalApproachArchPath=[];
+  for(let i=0;i<=36;i++){const a=Math.PI-i*Math.PI/36;royalApproachArchPath.push(new Vector3(Math.cos(a)*4.2,15.75+Math.sin(a)*2.35,-111.82));}
+  const royalApproachArch=MeshBuilder.CreateTube("royal-approach-door-gilded-arch",{path:royalApproachArchPath,radius:.27,tessellation:14},scene);
+  royalApproachArch.material=royalApproachDoorGold;
+  const royalApproachCrest=MeshBuilder.CreateCylinder("royal-approach-door-heraldic-crest",{diameter:1.9,height:.26,tessellation:12},scene);
+  royalApproachCrest.position.set(0,18.35,-111.78);royalApproachCrest.rotation.x=Math.PI/2;royalApproachCrest.material=royalApproachDoorGold;
+  const royalApproachCrestCore=MeshBuilder.CreateCylinder("royal-approach-door-heraldic-core",{diameter:.95,height:.28,tessellation:8},scene);
+  royalApproachCrestCore.position.set(0,18.35,-111.96);royalApproachCrestCore.rotation.x=Math.PI/2;royalApproachCrestCore.material=royalApproachDoorDark;
+
+
   // Yggdrasil now floats much higher in the open sky, with its roots fully exposed beneath the island.
   const treeX=34,treeZ=-165,treeLift=18;
   const islandStone=mat(scene,"world-tree-floating-stone",new Color3(.28,.31,.29),.98);
@@ -3090,7 +3131,7 @@ export async function createRoyalCity(engine, canvas) {
   const hammamFloorInner=MeshBuilder.CreateTorus("imperial-hammam-floor-inner-ring",{diameter:7.8,thickness:.09,tessellation:64},scene);
   hammamFloorInner.position.set(hammamX,.42,hammamZ);hammamFloorInner.material=hammamIvory;
 
-  const hammamWallY=6.55,hammamWallH=13.0;
+  const hammamWallY=11.0,hammamWallH=21.8;
   box(scene,"imperial-hammam-west-wall",[hammamX-17.25,hammamWallY,hammamZ],[.85,hammamWallH,34.0],hammamStone);
   box(scene,"imperial-hammam-east-wall",[hammamX+17.25,hammamWallY,hammamZ],[.85,hammamWallH,34.0],hammamStone);
   box(scene,"imperial-hammam-rear-wall",[hammamX,hammamWallY,hammamBack+.45],[35.0,hammamWallH,.9],hammamStone);
@@ -3099,7 +3140,14 @@ export async function createRoyalCity(engine, canvas) {
     const width=b-a;
     box(scene,"imperial-hammam-front-wall",[hammamX+(a+b)/2,hammamWallY,hammamFront],[width,hammamWallH,.9],hammamStone);
   }
-  box(scene,"imperial-hammam-front-lintel",[hammamX,12.35,hammamFront],[7.1,1.35,1.0],hammamIvory);
+  box(scene,"imperial-hammam-front-lintel",[hammamX,6.55,hammamFront],[7.1,1.0,1.0],hammamIvory);
+  // Close the upper entrance wall so the bath interior is not exposed above the door.
+  box(scene,"imperial-hammam-front-upper-wall",[hammamX,14.65,hammamFront],[7.15,14.2,.95],hammamStone);
+  box(scene,"imperial-hammam-front-upper-panel",[hammamX,17.2,hammamFront-.53],[5.6,3.1,.18],hammamIvory);
+  const bathFrontOculus=MeshBuilder.CreateTorus("imperial-hammam-front-oculus-frame",{diameter:2.35,thickness:.16,tessellation:40},scene);
+  bathFrontOculus.position.set(hammamX,17.2,hammamFront-.66);bathFrontOculus.rotation.x=Math.PI/2;bathFrontOculus.material=hammamGold;
+  const bathFrontGrille=MeshBuilder.CreateCylinder("imperial-hammam-front-oculus-grille",{diameter:1.92,height:.10,tessellation:12},scene);
+  bathFrontGrille.position.set(hammamX,17.2,hammamFront-.68);bathFrontGrille.rotation.x=Math.PI/2;bathFrontGrille.material=hammamTile;
   for(const side of [-1,1]) {
     const px=hammamX+side*17.15;
     for(const zz of [-69,-58,-47]) {
@@ -3225,6 +3273,23 @@ export async function createRoyalCity(engine, canvas) {
   const hammamSign=MeshBuilder.CreatePlane("imperial-hammam-sign",{width:8.4,height:2.1},scene);
   hammamSign.position.set(hammamX,10.15,hammamFront-.56);hammamSign.material=hammamSignMat;
   hammamSign.rotation.y=0;
+  // Directional signs at the arrival square and along the western lane.
+  const bathWayWood=mat(scene,"imperial-hammam-wayfinding-oak",new Color3(.22,.12,.065),.82);
+  const bathWayBronze=mat(scene,"imperial-hammam-wayfinding-bronze",new Color3(.20,.31,.30),.42,.62);
+  const makeBathWaySign=(x,z,label,subline)=>{
+    for(const side of [-1,1]){const post=MeshBuilder.CreateCylinder("imperial-hammam-wayfinding-post",{diameter:.22,height:3.9,tessellation:12},scene);post.position.set(x+side*1.7,1.95,z);post.material=bathWayWood;}
+    box(scene,"imperial-hammam-wayfinding-board",[x,3.0,z],[4.25,1.45,.24],bathWayWood);
+    box(scene,"imperial-hammam-wayfinding-plaque",[x,3.0,z-.15],[3.95,1.18,.06],bathWayBronze);
+    const tex=new DynamicTexture("imperial-hammam-wayfinding-texture",{width:900,height:260},scene,false),ctx=tex.getContext();
+    ctx.fillStyle="#e8d6ad";ctx.textAlign="center";ctx.font="bold 82px sans-serif";ctx.fillText(label,450,112);
+    ctx.font="38px Georgia";ctx.fillText(subline,450,190);tex.update();
+    const tm=new StandardMaterial("imperial-hammam-wayfinding-text-material",scene);tm.diffuseTexture=tex;tm.emissiveColor=new Color3(.10,.08,.045);
+    const face=MeshBuilder.CreatePlane("imperial-hammam-wayfinding-lettering",{width:3.7,height:1.02},scene);face.position.set(x,3.0,z-.20);face.material=tm;
+    const cap=MeshBuilder.CreateBox("imperial-hammam-wayfinding-cap",{width:4.5,height:.16,depth:.38},scene);cap.position.set(x,3.82,z);cap.material=hammamGold;
+  };
+  makeBathWaySign(-7.5,19.0,"帝国浴場　↖","THERMAE  •  HAMMAM");
+  makeBathWaySign(-49.0,-8.5,"帝国浴場　←","PUBLIC BATHS");
+
 
   // The entry remains accessible through a single central opening; the perimeter stays solid.
   colliders.push({minX:hammamX-17.5,maxX:hammamX+17.5,minZ:hammamBack-.5,maxZ:hammamFront+.5,doorX:hammamX,doorWidth:hammamDoorWidth,doorZ:hammamFront,interior:true,passThrough:false});
