@@ -1993,6 +1993,60 @@ export async function createRoyalCity(engine, canvas) {
   for(const side of [-1,1])box(scene,"royal-lobby-carpet-gilt-border",[side*2.82,8.725,-148.5],[.075,.025,59.6],openHallLobbyTrim);
   const openHallDeskWood=mat(scene,"royal-lobby-reception-walnut",new Color3(.25,.12,.065),.72);
   for(const side of [-1,1]){box(scene,"royal-lobby-reception-desk",[side*9.2,9.35,-172.2],[6.4,1.35,1.45],openHallDeskWood);box(scene,"royal-lobby-reception-countertop",[side*9.2,10.08,-172.2],[6.7,.18,1.62],openHallLobbyTrim);}
+  // Twin sweeping staircases rise from both sides and meet a rear gallery.
+  const openHallStairStone=mat(scene,"royal-lobby-stair-marble",new Color3(.72,.69,.62),.24,.08);
+  const openHallStairGold=mat(scene,"royal-lobby-stair-brass",new Color3(.82,.62,.29),.28,.78);
+  const openHallRailStone=mat(scene,"royal-lobby-balustrade-stone",new Color3(.83,.78,.67),.38,.12);
+  const openHallGalleryY=16.2;
+  box(scene,"royal-lobby-upper-gallery-floor",[0,16.18,-178.0],[40,.38,8.8],openHallStairStone);
+  box(scene,"royal-lobby-upper-gallery-front-rail",[0,17.05,-173.62],[39,.22,.22],openHallStairGold);
+  for(let x=-19;x<=19.01;x+=.95)cylinder(scene,"royal-lobby-upper-gallery-baluster",[x,16.68,-173.62],.16,.78,openHallRailStone,12);
+  for(const side of [-1,1]){
+    box(scene,"royal-lobby-upper-gallery-side-rail",[side*19.55,17.05,-178],[.22,.22,8.5],openHallStairGold);
+    for(let z=-181.6;z<=-174.4;z+=.95)cylinder(scene,"royal-lobby-upper-gallery-side-baluster",[side*19.55,16.68,z],.16,.78,openHallRailStone,12);
+    const railPaths=[[],[]],steps=32;
+    for(let i=0;i<steps;i++){
+      const t=(i+.5)/steps,px=side*(18-8*t*t),pz=-132-39*t,py=openHallLobbyTop+7.58*t;
+      const nextT=Math.min(1,t+.01),dx=side*(18-8*nextT*nextT-px),yaw=Math.atan2(dx,-.39);
+      const tread=box(scene,"royal-lobby-curved-stair-tread",[px,py,pz],[3.65,.22,1.42],openHallStairStone,{rotation:yaw});
+      tread.receiveShadows=true;
+      box(scene,"royal-lobby-curved-stair-gilt-nosing",[px,py+.12,pz-.02],[3.68,.055,1.45],openHallStairGold,{rotation:yaw});
+    }
+    for(let i=0;i<=24;i++){
+      const t=i/24,px=side*(18-8*t*t),pz=-132-39*t,py=openHallLobbyTop+7.58*t+1.02;
+      railPaths[0].push(new Vector3(px-side*1.86,py,pz));
+      railPaths[1].push(new Vector3(px+side*1.86,py,pz));
+    }
+    for(const path of railPaths){
+      const rail=MeshBuilder.CreateTube("royal-lobby-curved-stair-handrail",{path,radius:.105,tessellation:12},scene);
+      rail.material=openHallStairGold;
+      for(let i=0;i<path.length;i+=3)cylinder(scene,"royal-lobby-stair-newel-baluster",path[i].subtract(new Vector3(0,.48,0)),.13,.92,openHallRailStone,12);
+    }
+    for(const t of [0,1]){
+      const px=side*(18-8*t*t),pz=-132-39*t,py=openHallLobbyTop+7.58*t;
+      cylinder(scene,"royal-lobby-stair-newel-base",[px,py+.25,pz],.72,.5,openHallStairGold,20);
+      cylinder(scene,"royal-lobby-stair-newel-finial",[px,py+1.18,pz],.34,.42,openHallStairGold,16);
+    }
+  }
+  // Flowered side promenades flank the main doors without narrowing the central approach.
+  const openHallFlowerGreen=mat(scene,"royal-lobby-entry-flower-green",new Color3(.12,.29,.14),.9);
+  const openHallFlowerRose=mat(scene,"royal-lobby-entry-flower-rose",new Color3(.68,.12,.22),.48);
+  const openHallFlowerIvory=mat(scene,"royal-lobby-entry-flower-ivory",new Color3(.92,.78,.62),.48);
+  for(const side of [-1,1]){
+    box(scene,"palace-entry-side-promenade",[side*11.5,8.67,-119.2],[8.5,.16,9.2],openHallStairStone);
+    box(scene,"palace-entry-side-promenade-rail",[side*16.0,9.45,-119.2],[.22,1.45,9.4],openHallStairGold);
+    for(let z=-123.2;z<=-115.2;z+=1.0)cylinder(scene,"palace-entry-side-promenade-baluster",[side*16.0,9.02,z],.16,.88,openHallRailStone,12);
+    box(scene,"palace-entry-side-promenade-front-rail",[side*11.5,9.45,-123.8],[8.8,1.45,.22],openHallStairGold);
+    for(let x=side>0?7.8:-15.8;x<=(side>0?15.8:-7.8);x+=1.0)cylinder(scene,"palace-entry-side-promenade-front-baluster",[x,9.02,-123.8],.16,.88,openHallRailStone,12);
+    box(scene,"palace-entry-flower-trough",[side*11.5,9.05,-115.5],[6.8,.72,1.15],openHallStairGold);
+    box(scene,"palace-entry-flower-soil",[side*11.5,9.43,-115.5],[6.35,.08,.82],openHallDeskWood);
+    for(let i=0;i<9;i++){
+      const fx=side*11.5+(i-4)*.68,fz=-115.5;
+      cylinder(scene,"palace-entry-flower-leaf",[fx,9.72,fz],.19,.38,openHallFlowerGreen,10);
+      const bloom=MeshBuilder.CreateSphere("palace-entry-rose-bloom",{diameter:.34,segments:12},scene);
+      bloom.position.set(fx,9.98+(i%3)*.06,fz);bloom.scaling.y=.72;bloom.material=i%2?openHallFlowerRose:openHallFlowerIvory;
+    }
+  }
   const openHallPortraitMat=mat(scene,"royal-lobby-portrait-ground",new Color3(.16,.12,.10),.88);
   for(const side of [-1,1])for(const z of [-165,-148.5,-132]){box(scene,"royal-lobby-portrait-frame",[side*26.32,18.2,z],[.22,4.3,3.0],openHallLobbyTrim);box(scene,"royal-lobby-portrait-canvas",[side*26.18,18.2,z],[.08,3.65,2.35],openHallPortraitMat);}
   // Wall colliders bound the full hall while leaving the entrance completely open.
@@ -3398,9 +3452,13 @@ export async function createRoyalCity(engine, canvas) {
       const insideRoyalLobby=camera.position.x>-26.0&&camera.position.x<26.0&&camera.position.z<-113.0&&camera.position.z>-183.0;
       const onGreatBridge=Math.abs(camera.position.x-bridgeX)<2.85&&camera.position.z>=bridgeZ-bridgeHalf&&camera.position.z<=bridgeZ+bridgeHalf;
       const onSmallBridge=Math.abs(camera.position.x-sx)<2.0&&camera.position.z>=sz-smallHalf&&camera.position.z<=sz+smallHalf;
+      const lobbyStairT=Scalar.Clamp((-camera.position.z-132)/39,0,1);
+      const onLobbyGrandStair=camera.position.z<=-132&&camera.position.z>=-171.5&&[-1,1].some(side=>Math.abs(camera.position.x-side*(18-8*lobbyStairT*lobbyStairT))<3.35);
+      const onLobbyUpperGallery=camera.position.z<-173.35&&camera.position.z>-182.4&&Math.abs(camera.position.x)<19.2;
+      const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
       camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
-        (onRoyalStair?1.72+stairFloor:((onLanding||insideRoyalLobby)?10.34:1.72)));
+        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:(onLobbyUpperGallery?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
