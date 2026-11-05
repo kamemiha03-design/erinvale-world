@@ -23,7 +23,7 @@ async function boot() {
   });
   // Strong mobile safety preset: retain geometry and textures, but render fewer
   // pixels per frame. This is intentionally conservative for older iPhones.
-  let mobileScale=4.0;
+  let mobileScale=3.5;
   let lastScaleCheck=performance.now();
   let stableSince=lastScaleCheck;
   if(isTouch) engine.setHardwareScalingLevel(mobileScale);
@@ -51,13 +51,13 @@ async function boot() {
   if(isTouch)mobileControls.classList.remove("hidden");
   else desktopHint.classList.remove("hidden");
 
-  // Keep all scene geometry and textures, but cap mobile rendering at 15 FPS
+  // Keep all scene geometry and textures, but cap mobile rendering at 12 FPS
   // to reduce sustained GPU heat and memory bandwidth.
   let lastMobileFrame=0;
   engine.runRenderLoop(()=>{
     if(document.hidden)return;
     const now=performance.now();
-    if(isTouch && now-lastMobileFrame<1000/10)return;
+    if(isTouch && now-lastMobileFrame<1000/12)return;
     const elapsed=lastMobileFrame?Math.min((now-lastMobileFrame)/1000,.1):engine.getDeltaTime()/1000;
     lastMobileFrame=now;
 
