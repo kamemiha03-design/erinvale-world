@@ -2259,10 +2259,13 @@ export async function createRoyalCity(engine, canvas) {
     for(let row=0;row<3;row++) {
       const x=side*(22+row*7.2);
       // Leave a deliberate cross-path through every western garden hedge row.
-      box(scene,"palace-court-hedge-border",[x,.72,-85],[1.05,1.25,42],courtHedge);
+      // Open a broad east-west passage through the western garden, aligned
+      // with the public library entrance. Keep the clipped hedge on both sides.
+      box(scene,"palace-court-hedge-border",[x,.72,-96.5],[1.05,1.25,19],courtHedge);
+      box(scene,"palace-court-hedge-border",[x,.72,-70.5],[1.05,1.25,13],courtHedge);
       box(scene,"palace-court-hedge-border",[x,.72,-58.5],[1.05,1.25,1],courtHedge);
       for(let z=-101;z<=-63;z+=9) {
-        if(z===-65) continue;
+        if(z===-65 || z===-83) continue;
         const bed=MeshBuilder.CreateBox("palace-court-shrub-island",{width:5.8,height:.34,depth:4.6},scene);
         bed.position.set(side*(16.0+row*7.2),.22,z);bed.material=courtGrass;
         for(let n=0;n<5;n++) {
@@ -2919,8 +2922,8 @@ export async function createRoyalCity(engine, canvas) {
   royalApproachCrestCore.position.set(0,18.35,-111.96);royalApproachCrestCore.rotation.x=Math.PI/2;royalApproachCrestCore.material=royalApproachDoorDark;
 
 
-  // Public Royal Library: reached by crossing the western garden path from the iron gate.
-  // It is deliberately a civic building, open to every resident rather than a private palace room.
+  // Public Royal Library: a civic landmark reached by a clear, generous path
+  // branching left from the palace garden after the iron gate.
   const libraryStone=mat(scene,"public-library-limestone",new Color3(.78,.73,.63),.84);
   const libraryTrim=mat(scene,"public-library-carved-stone",new Color3(.88,.83,.72),.52,.12);
   const libraryRoof=mat(scene,"public-library-slate-roof",new Color3(.13,.19,.23),.42,.28);
@@ -2936,11 +2939,12 @@ export async function createRoyalCity(engine, canvas) {
     mat(scene,"library-book-ochre",new Color3(.55,.34,.12),.82)
   ];
   const libX=-52,libZ=-84,libW=24,libD=24,libEast=-40;
-  // A pale stone walkway begins at the gap in the western garden hedge and leads to the library.
+  // A 4.8 m pale-stone promenade turns left from the garden entrance,
+  // passes through the deliberately cleared hedge corridor, and reaches the east door.
   const libraryWalk=MeshBuilder.CreateRibbon("public-library-garden-walk",{
     pathArray:[
-      [new Vector3(-14,.035,-61.5),new Vector3(-22,.035,-61.5),new Vector3(-32,.035,-61.5),new Vector3(-43,.035,-61.5),new Vector3(-49,.035,-68),new Vector3(-49,.035,-78),new Vector3(-43,.035,-84)],
-      [new Vector3(-14,.035,-64.7),new Vector3(-22,.035,-64.7),new Vector3(-32,.035,-64.7),new Vector3(-43,.035,-64.7),new Vector3(-52.2,.035,-70),new Vector3(-52.2,.035,-78),new Vector3(-43,.035,-87.2)]
+      [new Vector3(-16.4,.045,-61.5),new Vector3(-16.4,.045,-70),new Vector3(-16.4,.045,-79.6),new Vector3(-23,.045,-79.6),new Vector3(-32,.045,-79.6),new Vector3(-40,.045,-79.6),new Vector3(-43.0,.045,-81.6)],
+      [new Vector3(-11.6,.045,-61.5),new Vector3(-11.6,.045,-70),new Vector3(-11.6,.045,-84.4),new Vector3(-23,.045,-84.4),new Vector3(-32,.045,-84.4),new Vector3(-40,.045,-84.4),new Vector3(-43.0,.045,-86.4)]
     ],
     sideOrientation:2
   },scene);
