@@ -580,8 +580,8 @@ export async function createRoyalCity(engine, canvas) {
   const sky=new HemisphericLight("sky-fill",new Vector3(0,1,0),scene);sky.intensity=.86;sky.groundColor=new Color3(.29,.25,.20);
   const sun=new DirectionalLight("golden-sun",new Vector3(-.45,-1,.3),scene);sun.position=new Vector3(45,70,-20);sun.intensity=2.0;
   const isTouchDevice=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
-  const shadow=new ShadowGenerator(isTouchDevice?1024:2048,sun);
-  shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=isTouchDevice?12:24;
+  const shadow=new ShadowGenerator(2048,sun);
+  shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=24;
   shadow.setDarkness(.22);shadow.bias=.0005;shadow.normalBias=.025;
   scene.imageProcessingConfiguration.toneMappingEnabled=true;
   scene.imageProcessingConfiguration.toneMappingType=ImageProcessingConfiguration.TONEMAPPING_ACES;
@@ -2043,8 +2043,8 @@ export async function createRoyalCity(engine, canvas) {
   // A restrained cinematic pass: soft highlight bloom and edge smoothing.
   // Kept deliberately light so Safari on recent iPhones can sustain the frame rate.
   const isTouchDevice=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
-  const cinematic=new DefaultRenderingPipeline("erinvale-cinematic",!isTouchDevice,scene,[camera]);
-  cinematic.samples=isTouchDevice?1:2;
+  const cinematic=new DefaultRenderingPipeline("erinvale-cinematic",true,scene,[camera]);
+  cinematic.samples=2;
   cinematic.fxaaEnabled=true;
   cinematic.bloomEnabled=true;
   cinematic.bloomThreshold=.88;
