@@ -1218,7 +1218,8 @@ export async function createRoyalCity(engine, canvas) {
       const key=String(segments);let template=marketSphereTemplates.get(key);
       if(!template){template=MeshBuilder.CreateSphere("market-shared-sphere-"+key,{diameter:1,segments},scene);template.isVisible=false;template.isPickable=false;template.setEnabled(false);marketSphereTemplates.set(key,template);}
       const m=template.clone(name,null,true);
-      m.parent=root;m.position.set(p[0],p[1],p[2]);m.scaling.set(size[0],size[1],size[2]);m.material=material;m.isPickable=false;return m;
+      m.isVisible=true;m.isPickable=false;m.setEnabled(true);
+      m.parent=root;m.position.set(p[0],p[1],p[2]);m.scaling.set(size[0],size[1],size[2]);m.material=material;return m;
     };
     const localCylinder=(name,p,diameter,height,material,tess=12)=>{
       const m=sharedPrimitive(scene,"market-stall-cylinders",name,"cylinder",{diameter,height,tessellation:tess});
