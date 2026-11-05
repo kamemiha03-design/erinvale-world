@@ -78,19 +78,45 @@ function texturedMat(scene, name, color, base, fleck, roughness = 0.9) {
   return m;
 }
 
+// Reuse immutable vertex buffers for repeated box/cylinder dimensions.
+// Each placed object remains an independent mesh with its own transform and material.
+const primitiveGeometryCaches = new WeakMap();
+function sharedPrimitive(scene, cacheName, name, kind, options) {
+  let caches=primitiveGeometryCaches.get(scene);
+  if(!caches){caches=new Map();primitiveGeometryCaches.set(scene,caches);}
+  let cache=caches.get(cacheName);
+  if(!cache){cache=new Map();caches.set(cacheName,cache);}
+  const key=Object.keys(options).sort().map(k=>k+":"+options[k]).join("|");
+  let template=cache.get(key);
+  if(!template){
+    template=kind==="box"
+      ?MeshBuilder.CreateBox("shared-"+cacheName+"-geometry",options,scene)
+      :MeshBuilder.CreateCylinder("shared-"+cacheName+"-geometry",options,scene);
+    template.isVisible=false;
+    template.isPickable=false;
+    template.setEnabled(false);
+    cache.set(key,template);
+  }
+  const mesh=template.clone(name,null,true);
+  mesh.isVisible=true;
+  mesh.isPickable=false;
+  mesh.setEnabled(true);
+  return mesh;
+}
+
 function box(scene, name, pos, size, material, opts = {}) {
-  const mesh = MeshBuilder.CreateBox(name, { width:size[0], height:size[1], depth:size[2] }, scene);
-  mesh.position.set(pos[0], pos[1], pos[2]);
-  mesh.material = material;
-  if (opts.rotation) mesh.rotation.y = opts.rotation;
-  if (opts.castShadow) mesh.receiveShadows = true;
+  const mesh=sharedPrimitive(scene,"boxes",name,"box",{width:size[0],height:size[1],depth:size[2]});
+  mesh.position.set(pos[0],pos[1],pos[2]);
+  mesh.material=material;
+  if(opts.rotation)mesh.rotation.y=opts.rotation;
+  if(opts.castShadow)mesh.receiveShadows=true;
   return mesh;
 }
 
 function cylinder(scene, name, pos, diameter, height, material, tessellation = 24) {
-  const mesh = MeshBuilder.CreateCylinder(name, { diameter, height, tessellation }, scene);
-  mesh.position.set(pos[0], pos[1], pos[2]);
-  mesh.material = material;
+  const mesh=sharedPrimitive(scene,"cylinders",name,"cylinder",{diameter,height,tessellation});
+  mesh.position.set(pos[0],pos[1],pos[2]);
+  mesh.material=material;
   return mesh;
 }
 
