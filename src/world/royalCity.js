@@ -4125,13 +4125,13 @@ export async function createRoyalCity(engine, canvas) {
   function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
     const root=new TransformNode("townsperson-root",scene);
     const inPublicLibrary=x>-65&&x<-39&&z>-97&&z<-71;
-    const baseY=inPublicLibrary?(z<-90?6.97:.96):(z<-70?8.62:0);
+    const baseY=inPublicLibrary?(z<-92?6.97:.96):(z<-70?8.62:0);
     root.position.set(x,baseY,z);root.rotation.y=heading;
     const outfit=role==="guard"?npcCloth[0]:role==="merchant"||role==="butler"?npcCloth[3]:role==="maid"?npcCloth[5]:role==="hostess"?npcCloth[Math.abs(Math.floor(phase*7))%npcCloth.length]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
     const part=(name,pos,size,material,kind="box")=>{
-      const mesh=sharedActorPrimitive(name,kind==="sphere"?"sphere":kind==="cylinder"?"cylinder":"box",kind==="sphere"?40:kind==="cylinder"?48:1);
+      const mesh=sharedActorPrimitive(name,kind==="sphere"?"sphere":kind==="cylinder"?"cylinder":"box",kind==="sphere"?48:kind==="cylinder"?56:1);
       mesh.position.set(pos[0],pos[1],pos[2]);mesh.scaling.set(size[0],size[1],size[2]);
       mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
     };
@@ -4410,6 +4410,10 @@ export async function createRoyalCity(engine, canvas) {
     makeBathGuest(32.8,.88,64.5,"soaking",Math.PI+.25,1);
     makeBathGuest(25.8,.88,64.4,"soaking",-Math.PI/2,3);
     makeBathGuest(42.0,.79,60.8,"soaking",Math.PI/2,8);
+    box(scene,"imperial-bath-treatment-marble-bed",[34.0,.55,52.8],[1.72,.42,2.35],hammamIvory);
+    box(scene,"imperial-bath-treatment-linen",[34.0,.79,52.76],[1.48,.12,2.08],bathTowel);
+    box(scene,"imperial-bath-treatment-headrest",[34.0,.91,52.02],[.72,.16,.46],hammamTile);
+    cylinder(scene,"imperial-bath-treatment-oil-bowl",[32.88,.72,53.28],.38,.20,hammamGold,16);
     makeBathGuest(34.0,.38,52.8,"scrubbed",Math.PI/2,18);
     makeBathGuest(35.28,.10,52.88,"attendant",Math.PI/2,19);
 
