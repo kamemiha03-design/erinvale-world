@@ -1,5 +1,5 @@
 import {
-  UniversalCamera, Color3, Color4, DirectionalLight, HemisphericLight,
+  UniversalCamera, Color3, Color4, DirectionalLight, HemisphericLight, PointLight,
   Mesh, MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial, TransformNode,
   DynamicTexture, Texture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
 } from "@babylonjs/core";
@@ -3091,10 +3091,11 @@ export async function createRoyalCity(engine, canvas) {
   const hammamMeshStart=scene.meshes.length;
   const hammamObstacleStart=obstacles.length,hammamColliderIndex=colliders.length;
   const hammamX=-92,hammamZ=-58,hammamFront=-41,hammamBack=-75;
-  const hammamStone=texturedMat(scene,"imperial-hammam-pale-travertine",new Color3(.78,.73,.63),"#d7cdb9","#8f8069",.88);
-  const hammamIvory=mat(scene,"imperial-hammam-ivory-marble",new Color3(.91,.87,.77),.28,.08);
-  const hammamGold=mat(scene,"imperial-hammam-aged-bronze",new Color3(.56,.39,.18),.34,.68);
-  const hammamTile=texturedMat(scene,"imperial-hammam-blue-mosaic",new Color3(.16,.36,.39),"#2d7779","#c5a66a",.32);
+  // A low-key stone palette lets local lanterns and skylight shape the room.
+  const hammamStone=texturedMat(scene,"imperial-hammam-pale-travertine",new Color3(.49,.47,.42),"#a69a83","#5b5144",.88);
+  const hammamIvory=mat(scene,"imperial-hammam-ivory-marble",new Color3(.69,.65,.56),.32,.08);
+  const hammamGold=mat(scene,"imperial-hammam-aged-bronze",new Color3(.39,.28,.15),.34,.68);
+  const hammamTile=texturedMat(scene,"imperial-hammam-blue-mosaic",new Color3(.11,.25,.28),"#24575a","#a88b59",.32);
   const hammamShadow=mat(scene,"imperial-hammam-recess",new Color3(.19,.22,.20),.94);
   const hammamWater=mat(scene,"imperial-hammam-thermal-water",new Color3(.22,.57,.61),.16,.18);
   hammamWater.alpha=.78;
@@ -3150,32 +3151,14 @@ export async function createRoyalCity(engine, canvas) {
   bathFrontOculus.position.set(hammamX,17.2,hammamFront-.66);bathFrontOculus.rotation.x=Math.PI/2;bathFrontOculus.material=hammamGold;
   const bathFrontGrille=MeshBuilder.CreateCylinder("imperial-hammam-front-oculus-grille",{diameter:1.92,height:.10,tessellation:12},scene);
   bathFrontGrille.position.set(hammamX,17.2,hammamFront-.68);bathFrontGrille.rotation.x=Math.PI/2;bathFrontGrille.material=hammamTile;
-  for(const side of [-1,1]) {
-    const px=hammamX+side*17.15;
-    for(const zz of [-69,-58,-47]) {
-      box(scene,"imperial-hammam-exterior-pilaster",[px,6.7,zz],[1.15,13.3,.9],hammamIvory);
-      cylinder(scene,"imperial-hammam-pilaster-base",[px,.85,zz],1.48,.72,hammamGold,20);
-      cylinder(scene,"imperial-hammam-pilaster-capital",[px,12.95,zz],1.55,.52,hammamIvory,20);
-    }
-  }
-  for(const zz of [-69,-58,-47]) {
-    for(const side of [-1,1]) {
-      const px=hammamX+side*10.8;
-      cylinder(scene,"imperial-hammam-interior-column-base",[px,.72,zz],1.18,.52,hammamGold,24);
-      cylinder(scene,"imperial-hammam-interior-column",[px,5.8,zz],.72,10.0,hammamIvory,24);
-      cylinder(scene,"imperial-hammam-interior-capital",[px,10.95,zz],1.22,.56,hammamGold,24);
-      cylinder(scene,"imperial-hammam-interior-abacus",[px,11.28,zz],1.38,.18,hammamIvory,24);
-    }
-  }
-  // Repeated semicircular arches join the columns and give the hall a Roman bathhouse rhythm.
-  for(const side of [-1,1]) for(const zz of [-69,-58,-47]) {
-    const cx=hammamX+side*10.8,archPoints=[];
-    for(let k=0;k<=20;k++) {
-      const a=Math.PI-k*Math.PI/20;
-      archPoints.push(new Vector3(cx+Math.cos(a)*2.15,11.25+Math.sin(a)*2.15,zz));
-    }
-    const arch=MeshBuilder.CreateTube("imperial-hammam-colonnade-arch",{path:archPoints,radius:.22,tessellation:12},scene);
-    arch.material=hammamGold;
+  // Four substantial load-bearing columns frame the hall; the clutter of
+  // decorative pilasters and repeated small arches is removed.
+  for(const side of [-1,1]) for(const zz of [-70,-46]) {
+    const px=hammamX+side*15.2;
+    cylinder(scene,"imperial-hammam-main-support-column-base",[px,.72,zz],1.72,.62,hammamGold,32);
+    cylinder(scene,"imperial-hammam-main-support-column",[px,5.85,zz],1.12,9.8,hammamIvory,32);
+    cylinder(scene,"imperial-hammam-main-support-column-capital",[px,10.9,zz],1.88,.72,hammamGold,32);
+    cylinder(scene,"imperial-hammam-main-support-column-abacus",[px,11.34,zz],2.05,.20,hammamIvory,32);
   }
 
   // The great central dome and two smaller steam-room cupolas rise above the colonnades.
@@ -3350,44 +3333,44 @@ export async function createRoyalCity(engine, canvas) {
   // A concealed, doorless passage is cut into the rocky garden approach.
   // Its low vaulted ceiling, repeated stone ribs and warm wall lamps make the
   // transition from the public plaza feel like entering a private grotto.
-  const tunnelX=30,tunnelStartZ=33.6,tunnelEndZ=45.35,tunnelMidZ=(tunnelStartZ+tunnelEndZ)/2;
+  const tunnelX=30,tunnelStartZ=34.0,tunnelEndZ=45.35,tunnelMidZ=(tunnelStartZ+tunnelEndZ)/2;
   const tunnelStone=texturedMat(scene,"imperial-bath-grotto-stone",new Color3(.38,.37,.32),"#777365","#282a25",.98);
   const tunnelDark=mat(scene,"imperial-bath-grotto-shadow",new Color3(.075,.085,.078),.98);
   const tunnelMoss=mat(scene,"imperial-bath-grotto-moss",new Color3(.13,.22,.12),1);
   const tunnelBronze=mat(scene,"imperial-bath-grotto-bronze",new Color3(.39,.28,.16),.62,.48);
-  box(scene,"imperial-bath-grotto-floor",[tunnelX,.12,tunnelMidZ],[7.45,.26,12.2],hammamStone);
-  box(scene,"imperial-bath-grotto-floor-inlay",[tunnelX,.265,tunnelMidZ],[5.7,.035,11.6],hammamTile);
+  // A narrow, low rock passage, intentionally more cave than corridor.
+  box(scene,"imperial-bath-grotto-floor",[tunnelX,.10,tunnelMidZ],[5.0,.22,11.8],hammamStone);
+  box(scene,"imperial-bath-grotto-floor-inlay",[tunnelX,.225,tunnelMidZ],[3.55,.025,11.2],hammamTile);
   for(const side of [-1,1]) {
-    box(scene,"imperial-bath-grotto-sidewall",[tunnelX+side*3.78,2.55,tunnelMidZ],[.72,5.15,12.0],tunnelStone);
-    box(scene,"imperial-bath-grotto-wall-foot",[tunnelX+side*3.48,.48,tunnelMidZ],[.30,.48,12.0],hammamGold);
+    box(scene,"imperial-bath-grotto-sidewall",[tunnelX+side*2.52,1.95,tunnelMidZ],[.72,3.95,11.7],tunnelStone);
+    box(scene,"imperial-bath-grotto-wall-foot",[tunnelX+side*2.18,.38,tunnelMidZ],[.22,.35,11.7],hammamGold);
     for(let lampIndex=0;lampIndex<3;lampIndex++) {
-      const z=tunnelStartZ+2.0+lampIndex*3.7;
-      box(scene,"imperial-bath-grotto-lamp-bracket",[tunnelX+side*3.34,3.55,z],[.48,.12,.13],tunnelBronze);
-      const lamp=MeshBuilder.CreateSphere("imperial-bath-grotto-lantern",{diameter:.34,segments:12},scene);
-      lamp.position.set(tunnelX+side*3.22,3.32,z);lamp.material=hammamGlow;
-      const cage=MeshBuilder.CreateTorus("imperial-bath-grotto-lantern-cage",{diameter:.52,thickness:.045,tessellation:16},scene);
+      const z=tunnelStartZ+1.7+lampIndex*3.7;
+      box(scene,"imperial-bath-grotto-lamp-bracket",[tunnelX+side*2.20,2.45,z],[.34,.10,.12],tunnelBronze);
+      const lamp=MeshBuilder.CreateSphere("imperial-bath-grotto-lantern",{diameter:.30,segments:12},scene);
+      lamp.position.set(tunnelX+side*2.12,2.28,z);lamp.material=hammamGlow;
+      const cage=MeshBuilder.CreateTorus("imperial-bath-grotto-lantern-cage",{diameter:.44,thickness:.04,tessellation:16},scene);
       cage.position.copyFrom(lamp.position);cage.rotation.x=Math.PI/2;cage.material=tunnelBronze;
     }
-    for(let n=0;n<7;n++) obstacles.push({x:tunnelX+side*3.75,z:tunnelStartZ+.8+n*1.65,r:.58});
+    for(let n=0;n<7;n++) obstacles.push({x:tunnelX+side*2.48,z:tunnelStartZ+.8+n*1.65,r:.42});
   }
-  box(scene,"imperial-bath-grotto-vault-core",[tunnelX,5.0,tunnelMidZ],[7.1,.62,12.0],tunnelDark);
   for(let rib=0;rib<4;rib++) {
-    const z=tunnelStartZ+.25+rib*3.75,points=[];
+    const z=tunnelStartZ+.25+rib*3.65,points=[];
     for(let k=0;k<=24;k++) {
       const a=Math.PI-k*Math.PI/24;
-      points.push(new Vector3(tunnelX+Math.cos(a)*3.62,2.65+Math.sin(a)*2.48,z));
+      points.push(new Vector3(tunnelX+Math.cos(a)*2.42,1.95+Math.sin(a)*1.78,z));
     }
-    const arch=MeshBuilder.CreateTube("imperial-bath-grotto-carved-vault-rib",{path:points,radius:.22,tessellation:12},scene);
-    arch.material=hammamIvory;
-    const keystone=MeshBuilder.CreateSphere("imperial-bath-grotto-keystone",{diameter:.38,segments:12},scene);
-    keystone.position.set(tunnelX,5.16,z);keystone.scaling.y=.72;keystone.material=hammamGold;
+    const arch=MeshBuilder.CreateTube("imperial-bath-grotto-carved-vault-rib",{path:points,radius:.24,tessellation:12},scene);
+    arch.material=tunnelStone;
+    const keystone=MeshBuilder.CreateSphere("imperial-bath-grotto-keystone",{diameter:.32,segments:12},scene);
+    keystone.position.set(tunnelX,3.83,z);keystone.scaling.y=.72;keystone.material=tunnelBronze;
   }
   // Rough rock shoulders and trailing ivy partially conceal the passage from outside.
   for(const side of [-1,1]) {
     for(let n=0;n<4;n++) {
       const rock=MeshBuilder.CreateSphere("imperial-bath-grotto-entrance-rock",{diameter:1,segments:12},scene);
-      rock.position.set(tunnelX+side*(4.05+n*.25),1.0+n*.45,tunnelStartZ+.3+n*.72);
-      rock.scaling.set(1.15,.9,1.35);rock.material=tunnelStone;
+      rock.position.set(tunnelX+side*(2.75+n*.18),.78+n*.30,tunnelStartZ+.3+n*.72);
+      rock.scaling.set(.95,.78,1.18);rock.material=tunnelStone;
     }
     for(let vine=0;vine<4;vine++) {
       const x=tunnelX+side*(3.95+vine*.22),z=tunnelStartZ+1.0+vine*1.7;
@@ -3401,8 +3384,28 @@ export async function createRoyalCity(engine, canvas) {
       }
     }
   }
-  const tunnelThreshold=MeshBuilder.CreateTorus("imperial-bath-grotto-threshold-carving",{diameter:7.2,thickness:.12,tessellation:48},scene);
-  tunnelThreshold.position.set(tunnelX,.30,tunnelStartZ+.12);tunnelThreshold.scaling.z=.18;tunnelThreshold.material=hammamGold;
+  const tunnelThreshold=MeshBuilder.CreateTorus("imperial-bath-grotto-threshold-carving",{diameter:4.9,thickness:.10,tessellation:48},scene);
+  tunnelThreshold.position.set(tunnelX,.22,tunnelStartZ+.12);tunnelThreshold.scaling.z=.18;tunnelThreshold.material=tunnelBronze;
+
+  // Cool daylight spills through the oculus while warm lanterns create small
+  // amber islands around the darker bath hall.
+  const skylight=new PointLight("imperial-bath-oculus-daylight",new Vector3(30,18.5,62),scene);
+  skylight.diffuse=new Color3(.68,.78,.86);skylight.specular=new Color3(.42,.52,.62);skylight.intensity=.62;skylight.range=27;
+  const bathLanterns=[];
+  for(const [x,z] of [[15.2,51],[44.8,51],[15.2,74],[44.8,74],[19,62],[41,62]]) {
+    const fixture=MeshBuilder.CreateBox("imperial-bath-wall-lantern-bracket",{width:.52,height:.12,depth:.18},scene);
+    fixture.position.set(x,4.1,z);fixture.material=hammamGold;
+    const bowl=MeshBuilder.CreateCylinder("imperial-bath-wall-oil-lamp",{diameter:.34,height:.24,tessellation:16},scene);
+    bowl.position.set(x,4.0,z);bowl.material=hammamGold;
+    const flame=MeshBuilder.CreateSphere("imperial-bath-wall-lantern-flame",{diameter:.22,segments:12},scene);
+    flame.position.set(x,4.22,z);flame.material=hammamGlow;
+    const light=new PointLight("imperial-bath-warm-wall-light",new Vector3(x,4.15,z),scene);
+    light.diffuse=new Color3(1,.58,.30);light.specular=new Color3(1,.72,.42);light.intensity=.48;light.range=13;
+    bathLanterns.push({flame,light,phase:bathLanterns.length*.9});
+  }
+  const skylightShaft=MeshBuilder.CreateCylinder("imperial-bath-soft-skylight-shaft",{diameterTop:1.0,diameterBottom:3.8,height:13,tessellation:32},scene);
+  skylightShaft.position.set(30,10.8,62);skylightShaft.material=mat(scene,"imperial-bath-soft-skylight-shaft-material",new Color3(.72,.82,.9),1);
+  skylightShaft.material.alpha=.055;skylightShaft.material.disableLighting=true;skylightShaft.isPickable=false;
 
   // Layered steam rises from every pool and gathers beneath the warm vaulted ceiling.
   const bathSteamPuffs=[];
@@ -4063,6 +4066,10 @@ export async function createRoyalCity(engine, canvas) {
       camera._lastFootX=camera.position.x;camera._lastFootZ=camera.position.z;
       if(this.onMovement)this.onMovement(moving,camera.position,getLocation(camera.position.x,camera.position.z));
       const time=performance.now()*.001;
+      bathLanterns.forEach(lamp=>{
+        const flicker=.94+Math.sin(time*5.1+lamp.phase)*.045+Math.sin(time*8.3+lamp.phase*1.7)*.018;
+        lamp.flame.scaling.y=flicker;lamp.light.intensity=.48*flicker;
+      });
       bathSteamPuffs.forEach((puff,index)=>{
         const cycle=(time*puff.speed+puff.phase)%3.8;
         puff.mesh.position.x=puff.x+Math.sin(time*.55+puff.phase)*puff.drift;
