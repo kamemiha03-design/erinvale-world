@@ -4387,9 +4387,23 @@ export async function createRoyalCity(engine, canvas) {
     actor.route=route;actor.waypointIndex=1;actor.speed=.92+(index%4)*.11;
   });
   };
-  // Detailed multipart residents are omitted on touch devices to avoid a large
-  // delayed mesh-allocation burst after the first frame.
+  // Desktop keeps the fully articulated townspeople. On phones, bring residents
+  // back as compact low-poly figures with only three meshes each to protect Safari.
   if(!isTouchDevice) populateResidents();
+  else {
+    const mobileCrowd=[[-5,24],[3,25],[31,4],[29,22],[4,-17],[29,-20],[-34,1],[-2,-29],[35,12],[6,31],[-18.8,0],[-23,0],[17,17],[21,-4],[-9,-12],[2,8],[-20,-15.4],[-21,4.6]];
+    mobileCrowd.forEach(([x,z],i)=>{
+      const root=new TransformNode("mobile-townsperson-root",scene);
+      root.position.set(x,0,z);
+      const body=MeshBuilder.CreateCapsule("mobile-townsperson-body",{height:1.18,radius:.25,tessellation:6,subdivisions:1},scene);
+      body.parent=root;body.position.y=.78;body.material=npcCloth[i%npcCloth.length];
+      const head=MeshBuilder.CreateSphere("mobile-townsperson-head",{diameter:.34,segments:8},scene);
+      head.parent=root;head.position.y=1.58;head.material=i%2?npcSkin:npcSkinLight;
+      const hair=MeshBuilder.CreateSphere("mobile-townsperson-hair",{diameter:.36,segments:8},scene);
+      hair.parent=root;hair.position.set(0,1.72,.015);hair.scaling.y=.52;hair.material=npcHair[i%npcHair.length];
+      root.rotation.y=(i%6)*Math.PI/3;
+    });
+  }
 
   // Small songbirds gather among the formal roses: some perch, others circle over the beds.
   const birdBodyMat=mat(scene,"rose-garden-bird-plumage",new Color3(.22,.27,.25),.82);
@@ -4803,7 +4817,7 @@ export async function createRoyalCity(engine, canvas) {
       const libraryFloorY=onLibraryStair?1.72+Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1)*3.53:(onLibraryGallery?6.97:1.72);
       camera.position.y=seatedAt?2.02:(camera.position.x>-64.5&&camera.position.x<-39.4&&camera.position.z>-97&&camera.position.z<-71?libraryFloorY:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
-        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))))));
+        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
