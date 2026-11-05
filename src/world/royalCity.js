@@ -685,12 +685,14 @@ export async function createRoyalCity(engine, canvas) {
   const sky=new HemisphericLight("sky-fill",new Vector3(0,1,0),scene);sky.intensity=.86;sky.groundColor=new Color3(.29,.25,.20);
   const sun=new DirectionalLight("golden-sun",new Vector3(-.45,-1,.3),scene);sun.position=new Vector3(45,70,-20);sun.intensity=2.0;
   const isTouchDevice=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
-  // Safari on iPhone has a tight GPU-memory budget. Keep the full world geometry,
-  // materials and textures, but use a smaller mobile shadow target to avoid a large
-  // transient GPU allocation during scene startup. Desktop retains the 2048 map.
-  const shadow=new ShadowGenerator(isTouchDevice?1024:2048,sun);
-  shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=isTouchDevice?12:24;
-  shadow.setDarkness(.22);shadow.bias=.0005;shadow.normalBias=.025;
+  // iPhone Safari has repeatedly exhausted its GPU process during scene startup.
+  // Keep all world geometry, materials, textures and lighting intact, but omit the
+  // real-time shadow-map pass on touch devices. Desktop keeps the full 2048 shadow map.
+  const shadow=isTouchDevice?null:new ShadowGenerator(2048,sun);
+  if(shadow){
+    shadow.useBlurExponentialShadowMap=true;shadow.blurKernel=24;
+    shadow.setDarkness(.22);shadow.bias=.0005;shadow.normalBias=.025;
+  }
   scene.imageProcessingConfiguration.toneMappingEnabled=true;
   scene.imageProcessingConfiguration.toneMappingType=ImageProcessingConfiguration.TONEMAPPING_ACES;
   scene.imageProcessingConfiguration.exposure=1.12;
@@ -4108,7 +4110,7 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   const shadowNames = /facade-|side-wall-|rear-wall|roof-left|roof-right|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-trunk|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
-  for (const mesh of scene.meshes) {
+  if(shadow) for (const mesh of scene.meshes) {
     if (shadowNames.test(mesh.name)) shadow.addShadowCaster(mesh, false);
   }
 
