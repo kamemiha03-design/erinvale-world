@@ -75,7 +75,9 @@ export function createWorldAudio() {
   let musicStep = 0;
   let nextMusicTime = 0;
   let musicEnabled = true;
-  const beat = 60 / 76;
+  // A slow, original royal-court theme: restrained strings, soft piano-like
+  // tones and sparse harp notes. It evokes a quiet palace without copying a score.
+  const beat = 60 / 64;
   const chordProgression = [
     [146.83, 185.00, 220.00],
     [123.47, 146.83, 185.00],
@@ -105,6 +107,24 @@ export function createWorldAudio() {
     osc.start(time);osc.stop(time+duration+.03);
   }
 
+  function sustainString(frequency,time,duration,volume) {
+    if(!audioContext || !musicGain || !frequency) return;
+    const filter=audioContext.createBiquadFilter();
+    filter.type="lowpass";filter.frequency.setValueAtTime(980,time);
+    filter.Q.value=.45;
+    const envelope=audioContext.createGain();
+    envelope.gain.setValueAtTime(.0001,time);
+    envelope.gain.linearRampToValueAtTime(volume,time+1.15);
+    envelope.gain.setValueAtTime(volume*.82,time+Math.max(1.2,duration-.75));
+    envelope.gain.exponentialRampToValueAtTime(.0001,time+duration);
+    filter.connect(envelope);envelope.connect(musicGain);
+    for(const detune of [-5,5]) {
+      const osc=audioContext.createOscillator();
+      osc.type="sawtooth";osc.frequency.setValueAtTime(frequency,time);osc.detune.value=detune;
+      osc.connect(filter);osc.start(time);osc.stop(time+duration+.04);
+    }
+  }
+
   function scheduleMusic() {
     if(!audioContext || !musicGain || !musicEnabled) return;
     const now=audioContext.currentTime;
@@ -119,13 +139,17 @@ export function createWorldAudio() {
       const beatInBar=step%8;
       const chord=chordProgression[bar];
       if(beatInBar===0) chord.forEach(frequency=>{
-        pluck(frequency/2,nextMusicTime,1.48,.008,"sine");
-        pluck(frequency,nextMusicTime,1.18,.0045,"sine");
+        sustainString(frequency,nextMusicTime,beat*3.85,.0065);
+        pluck(frequency/2,nextMusicTime,beat*2.8,.006,"sine");
       });
-      if(beatInBar%2===0) pluck(chord[0]/2,nextMusicTime,.62,.026,"sine");
+      // A slow broken-chord figure gives the harmony a delicate harp-like shimmer.
+      if(beatInBar===0||beatInBar===4) {
+        const harpNotes=[chord[0]*2,chord[1]*2,chord[2]*2];
+        pluck(harpNotes[beatInBar===0?0:1],nextMusicTime,beat*1.55,.010,"sine");
+      }
+      if(beatInBar===2||beatInBar===6) pluck(chord[beatInBar===2?1:2]*2,nextMusicTime,beat*1.2,.008,"sine");
       const note=melody[step];
-      if(note) pluck(note,nextMusicTime,beat*.82,.024,"triangle");
-      if(beatInBar===2||beatInBar===6) pluck(chord[beatInBar===2?1:2]*2,nextMusicTime,.5,.012,"sine");
+      if(note) pluck(note,nextMusicTime,beat*1.05,.014,"triangle");
       nextMusicTime+=beat/2;
       musicStep++;
     }
