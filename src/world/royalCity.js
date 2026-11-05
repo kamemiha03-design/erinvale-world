@@ -2027,7 +2027,7 @@ export async function createRoyalCity(engine, canvas) {
         [-.10+i*.055,2.82,-1.92]
       ],.045,horseMane);
     }
-    horseTube(root,"horse-tail",[0,1.75,1.0],[0,1.42,1.42],[0,1.04,1.55]],.10,horseMane);
+    horseTube(root,"horse-tail",[[0,1.75,1.0],[0,1.42,1.42],[0,1.04,1.55]],.10,horseMane);
     // Bridle, browband and chest harness catch the light.
     horseTube(root,"horse-bridle-cheek-left",[[-.23,2.56,-1.55],[-.28,2.35,-1.70],[-.21,2.18,-1.88]],.035,horseLeather);
     horseTube(root,"horse-bridle-cheek-right",[[.23,2.56,-1.55],[.28,2.35,-1.70],[.21,2.18,-1.88]],.035,horseLeather);
@@ -2086,6 +2086,7 @@ export async function createRoyalCity(engine, canvas) {
 
   const royalGardenStartIndex=scene.meshes.length;
   // The rose garden is now inside the palace complex, in the long inner court behind the lobby.
+  const carriageMat=texturedMat(scene,"inner-rose-court-path",new Color3(.62,.58,.49),"#a99d86","#554d41",.92);
   const gardenFloor=mat(scene,"inner-rose-court-marble",new Color3(.68,.64,.55),.86);
   const gardenSoil=mat(scene,"inner-rose-garden-earth",new Color3(.16,.105,.065),.98);
   const gardenHedge=mat(scene,"inner-rose-garden-boxwood",new Color3(.075,.20,.105),.96);
