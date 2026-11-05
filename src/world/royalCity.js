@@ -1949,6 +1949,37 @@ export async function createRoyalCity(engine, canvas) {
       part("npc-cloak",[0,1.25,.19],[.49,.65,.06],npcCloth[(Math.floor(phase*7)+2)%npcCloth.length]);
     }
     if(phase%3===0) part("npc-beard",[0,1.66,-.12],[.20,.17,.12],npcBeard,"sphere");
+
+    // Combine each resident's body parts by material. The original geometry,
+    // proportions and materials remain unchanged; only draw calls are reduced.
+    // Temporarily move the actor root to the origin so merged vertices stay local.
+    const savedPosition=root.position.clone();
+    const savedRotation=root.rotation.clone();
+    root.position.set(0,0,0);
+    root.rotation.set(0,0,0);
+    root.computeWorldMatrix(true);
+    const bodyGroups=new Map();
+    for(const child of root.getChildMeshes(false)) {
+      if(!child.geometry || !child.material) continue;
+      const group=bodyGroups.get(child.material)||[];
+      group.push(child);
+      bodyGroups.set(child.material,group);
+    }
+    for(const [material,parts] of bodyGroups) {
+      if(parts.length<2) continue;
+      const combined=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+      if(combined) {
+        combined.name="npc-body-batched";
+        combined.material=material;
+        combined.parent=root;
+        combined.isPickable=false;
+        combined.receiveShadows=true;
+      }
+    }
+    root.position.copyFrom(savedPosition);
+    root.rotation.copyFrom(savedRotation);
+    root.computeWorldMatrix(true);
+
     if(walking) {
       const actor={root,walking:true,phase,home:new Vector3(x,0,z),radius:1.25+(phase%3)*.35};
       people.push(actor);return actor;
