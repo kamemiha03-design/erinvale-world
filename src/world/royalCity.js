@@ -1149,83 +1149,113 @@ export async function createRoyalCity(engine, canvas) {
     }
   }
 
-  // Market stalls: carved counters, striped awnings, stacked crates and wicker baskets.
-  for(let i=0;i<4;i++) {
-    const x=14+i*4.5,z=-10-(i%2)*3;
-    addObstacle(x,z,1.9);
-    addObstacle(x-1.3,z+1.5,.68);
-    box(scene,"market-counter",[x,1,z],[3.3,1.6,2.1],mats.wood);
-    box(scene,"market-counter-front-inlay",[x,1,z-1.065],[2.9,.82,.07],mats.gold);
-    box(scene,"market-canopy",[x,2.65,z],[3.8,.18,2.7],i%2?mats.banner:mats.flowers);
-    for(const dx of [-1.65,1.65]) for(const dz of [-1.05,1.05]) {
-      box(scene,"market-post",[x+dx,1.8,z+dz],[.12,2.0,.12],mats.woodLight);
-      for(let k=0;k<3;k++)box(scene,"market-post-carving",[x+dx,1.12+k*.48,z+dz-.075],[.17,.055,.16],mats.gold);
+  // A proper market street: ten low stalls flank the central approach to the great bridge.
+  // Their fronts face inward toward the shared north-south street axis (x = 0).
+  const marketStallRows=[-13,-19,-25,-31,-37];
+  const marketLabels=["果物","野菜","焼きたてパン","花とハーブ","チーズ","蜂蜜","香辛料","布と染物","焼き菓子","雑貨"];
+  const marketCloths=[mats.banner,mats.flowers,mats.banner,mats.flowers,mats.banner];
+  const marketWood=mat(scene,"market-stall-oak",new Color3(.30,.17,.085),.92);
+  const marketWoodLight=mat(scene,"market-stall-honey-wood",new Color3(.52,.34,.18),.94);
+  const marketFruitMats=[
+    mat(scene,"market-fruit-red",new Color3(.78,.10,.055),.72),
+    mat(scene,"market-fruit-gold",new Color3(.94,.62,.10),.72),
+    mat(scene,"market-fruit-green",new Color3(.28,.52,.13),.82),
+    mat(scene,"market-fruit-purple",new Color3(.38,.16,.48),.78),
+    mat(scene,"market-fruit-cream",new Color3(.90,.79,.55),.82)
+  ];
+  const marketLeaf=mat(scene,"market-fruit-leaf",new Color3(.17,.36,.12),.92);
+  const marketSignInk=mat(scene,"market-sign-ink",new Color3(.19,.12,.075),.92);
+  function makeMarketStall(x,z,side,index) {
+    const root=new TransformNode("market-stall-root-"+index,scene);
+    root.position.set(x,0,z);
+    root.rotation.y=side<0?-Math.PI/2:Math.PI/2;
+    const localBox=(name,p,size,material)=>{
+      const m=MeshBuilder.CreateBox(name,{width:size[0],height:size[1],depth:size[2]},scene);
+      m.parent=root;m.position.set(p[0],p[1],p[2]);m.material=material;m.isPickable=false;return m;
+    };
+    const localSphere=(name,p,size,material,segments=16)=>{
+      const m=MeshBuilder.CreateSphere(name,{diameter:1,segments},scene);
+      m.parent=root;m.position.set(p[0],p[1],p[2]);m.scaling.set(size[0],size[1],size[2]);m.material=material;m.isPickable=false;return m;
+    };
+    const localCylinder=(name,p,diameter,height,material,tess=16)=>{
+      const m=MeshBuilder.CreateCylinder(name,{diameter,height,tessellation:tess},scene);
+      m.parent=root;m.position.set(p[0],p[1],p[2]);m.material=material;m.isPickable=false;return m;
+    };
+    // Lower counter and sturdy carved legs.
+    localBox("market-counter-body",[0,.53,0],[3.35,1.02,1.78],marketWood);
+    localBox("market-counter-top",[0,1.08,0],[3.55,.14,1.98],marketWoodLight);
+    localBox("market-counter-front-panel",[0,.60,-.91],[2.95,.66,.055],mats.wood);
+    localBox("market-counter-gilt-rail",[0,.94,-.96],[3.10,.075,.045],mats.gold);
+    for(const px of [-1.48,1.48]) {
+      for(const pz of [-.78,.78]) {
+        localBox("market-counter-carved-leg",[px,.54,pz],[.16,1.0,.16],marketWoodLight);
+        for(let k=0;k<2;k++)localBox("market-counter-leg-inlay",[px,.42+k*.28,pz-.085],[.19,.035,.018],mats.gold);
+      }
     }
-    for(let crate=0;crate<2;crate++) {
-      const cx=x-1.05+crate*1.65,cz=z+.55;
-      box(scene,"market-display-crate",[cx,1.83,cz],[1.35,.42,1.0],mats.woodLight);
-      for(let slat=0;slat<5;slat++)box(scene,"market-crate-slat",[cx- .55+slat*.275,2.07,cz],[.045,.12,1.0],mats.wood);
+    // A low striped awning, with carved uprights and a scalloped front edge.
+    for(const px of [-1.72,1.72])for(const pz of [-1.12,1.12]) {
+      localBox("market-awning-post",[px,1.73,pz],[.13,1.95,.13],marketWoodLight);
+      localBox("market-awning-post-foot",[px,.82,pz],[.22,.13,.22],mats.gold);
     }
-    // Wicker baskets and a folded linen cloth give each counter a lived-in market feel.
-    const basket=MeshBuilder.CreateCylinder("market-wicker-basket",{diameter:.78,height:.42,tessellation:12},scene);
-    basket.position.set(x+1.1,1.91,z+.25);basket.scaling.y=.72;basket.material=mats.woodLight;
-    for(let band=0;band<3;band++) {
-      const hoop=MeshBuilder.CreateTorus("market-basket-weave",{diameter:.70+band*.025,thickness:.025,tessellation:16},scene);
-      hoop.position.set(x+1.1,1.77+band*.14,z+.25);hoop.material=mats.gold;
+    localBox("market-awning-underframe",[0,2.65,0],[3.85,.12,2.72],marketWood);
+    localBox("market-awning-cloth",[0,2.73,0],[3.82,.12,2.68],marketCloths[index%marketCloths.length]);
+    for(let stripe=0;stripe<9;stripe++) {
+      const sx=-1.68+stripe*.42;
+      localBox("market-awning-stripe",[sx,2.805,0],[.19,.025,2.62],stripe%2===0?mats.banner:mats.flowers);
     }
-    addBarrel(scene,x-1.3,z+1.5,mats.wood,mats.gold);
+    for(let scallop=0;scallop<9;scallop++) {
+      const sx=-1.72+scallop*.43;
+      const valance=localBox("market-awning-scallop",[sx,2.64,-1.36],[.36,.20,.10],scallop%2===0?mats.banner:mats.flowers);
+      valance.rotation.z=Math.PI/2;
+    }
+    // Hanging sign faces the shoppers in the central lane.
+    localBox("market-sign-frame",[0,2.22,-1.43],[1.92,.52,.12],marketWood);
+    localBox("market-sign-inset",[0,2.22,-1.505],[1.70,.34,.025],marketSignInk);
+    const signTex=new DynamicTexture("market-sign-texture-"+index,{width:320,height:96},scene,false);
+    const ctx=signTex.getContext();ctx.fillStyle="#34271c";ctx.fillRect(0,0,320,96);
+    ctx.strokeStyle="#d8b66f";ctx.lineWidth=6;ctx.strokeRect(5,5,310,86);
+    ctx.fillStyle="#fff0cc";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 43px sans-serif";
+    ctx.fillText(marketLabels[index],160,49);signTex.update();
+    const signFace=MeshBuilder.CreatePlane("market-sign-face-"+index,{width:1.65,height:.29},scene);
+    signFace.parent=root;signFace.position.set(0,2.22,-1.525);
+    const signMat=new StandardMaterial("market-sign-material-"+index,scene);signMat.diffuseTexture=signTex;signMat.emissiveColor=new Color3(.10,.07,.035);signFace.material=signMat;signFace.isPickable=false;
+    // Baskets and a varied display of fresh produce on the lowered counter.
+    for(let basket=0;basket<2;basket++) {
+      const bx=-.78+basket*1.45,bz=-.43;
+      const bowl=localCylinder("market-counter-produce-basket",[bx,1.25,bz],.72,.28,marketWoodLight,20);
+      bowl.scaling.y=.72;
+      for(let fruit=0;fruit<5;fruit++) {
+        const a=fruit*Math.PI*2/5;
+        const color=marketFruitMats[(index+fruit)%marketFruitMats.length];
+        localSphere("market-counter-fruit",[bx+Math.cos(a)*.20,1.46+(fruit%2)*.035,bz+Math.sin(a)*.17],[.25,.27,.24],color,16);
+      }
+      localSphere("market-counter-fruit-center",[bx,1.53,bz],[.25,.27,.24],marketFruitMats[(index+2)%marketFruitMats.length],16);
+    }
+    // One open timber produce crate sits beside each stall, with visible fruit and leaves.
+    localBox("market-fruit-crate-base",[1.95,.30,.12],[.98,.12,.92],marketWood);
+    for(const xx of [-.47,.47])localBox("market-fruit-crate-side",[1.95+xx,.55,.12],[.10,.43,.96],marketWoodLight);
+    for(const zz of [-.43,.43])localBox("market-fruit-crate-end",[1.95,.55,.12+zz],[.98,.43,.10],marketWoodLight);
+    for(let slat=0;slat<4;slat++)localBox("market-fruit-crate-slat",[1.95,.48,.12-.30+slat*.20],[.94,.055,.045],marketWood);
+    for(let fruit=0;fruit<6;fruit++) {
+      const fx=1.70+(fruit%3)*.24,fz=-.08+Math.floor(fruit/3)*.35;
+      localSphere("market-crate-fruit",[fx,.78,fz],[.27,.28,.26],marketFruitMats[(index+fruit+1)%marketFruitMats.length],16);
+      const leaf=localSphere("market-crate-fruit-leaf",[fx+.035,.94,fz],[.12,.035,.07],marketLeaf,10);
+      leaf.rotation.z=.35;
+    }
+    // A small hanging lantern adds warmth after dusk.
+    localBox("market-lantern-bracket",[0,2.12,1.42],[.48,.08,.10],marketWood);
+    const lantern=localBox("market-lantern-frame",[0,1.88,1.47],[.24,.34,.24],mats.gold);
+    lantern.material=mats.lantern;
+    addObstacle(x,z,1.0);
+    const crateWorldX=x+(side<0?-.12:.12);
+    const crateWorldZ=z+(side<0?2.05:-2.05);
+    addObstacle(crateWorldX,crateWorldZ,.62);
+    return {x,z,side,index};
   }
-
-  // Each stall has a legible hanging sign and carefully modeled wares rather than generic balls.
-  const marketLabels=["野菜・果物","焼きたてパン","宝飾品","薬草・香辛料"];
-  const produceRed=mat(scene,"market-tomato-red",new Color3(.72,.075,.035),.76);
-  const produceOrange=mat(scene,"market-carrot-orange",new Color3(.92,.30,.045),.78);
-  const produceGreen=mat(scene,"market-leaf-green",new Color3(.16,.34,.105),.9);
-  const producePale=mat(scene,"market-cabbage-green",new Color3(.48,.62,.25),.92);
-  const breadCrust=mat(scene,"market-bread-crust",new Color3(.62,.32,.12),.92);
-  const breadScore=mat(scene,"market-bread-score",new Color3(.91,.72,.46),.9);
-  const herbLeaf=mat(scene,"market-herb-leaf",new Color3(.25,.39,.16),.92);
-  const gemBlue=mat(scene,"market-gem-blue",new Color3(.12,.40,.62),.24,.55);
-  const gemRed=mat(scene,"market-gem-red",new Color3(.58,.075,.16),.24,.55);
-  for(let i=0;i<4;i++){
-    const x=14+i*4.5,z=-10-(i%2)*3,tex=new DynamicTexture("market-sign-texture-"+i,{width:384,height:144},scene,false),ctx=tex.getContext();
-    ctx.fillStyle="#34271c";ctx.fillRect(0,0,384,144);ctx.strokeStyle="#d8b66f";ctx.lineWidth=9;ctx.strokeRect(7,7,370,130);ctx.fillStyle="#fff0cc";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 37px sans-serif";ctx.fillText(marketLabels[i],192,72);tex.update();
-    box(scene,"market-hanging-sign-board",[x,3.12,z-1.55],[2.75,.95,.14],mats.wood);
-    const face=MeshBuilder.CreatePlane("market-hanging-sign-face",{width:2.58,height:.78},scene);face.position.set(x,3.12,z-1.64);const sm=new StandardMaterial("market-sign-mat-"+i,scene);sm.diffuseTexture=tex;sm.emissiveColor=new Color3(.12,.085,.04);face.material=sm;
-    if(i===0) {
-      // Leafy cabbages: overlapping lobes and visible central ribs.
-      for(let j=0;j<3;j++) {
-        const cx=x-1.0+j*.82,cz=z-.72;
-        for(let leaf=0;leaf<5;leaf++){const a=leaf*Math.PI*2/5;const l=MeshBuilder.CreateSphere("market-cabbage-leaf",{diameter:.34,segments:10},scene);l.position.set(cx+Math.cos(a)*.13,1.95,cz+Math.sin(a)*.13);l.scaling.set(1,.72,.8);l.material=producePale;}
-        const heart=MeshBuilder.CreateSphere("market-cabbage-heart",{diameter:.28,segments:12},scene);heart.position.set(cx,2.02,cz);heart.scaling.set(.9,1,.9);heart.material=produceGreen;
-      }
-      // Carrots with tapered roots and feathery tops.
-      for(let j=0;j<4;j++) {
-        const cx=x-.95+j*.62,cz=z-.18;
-        const carrot=MeshBuilder.CreateCylinder("market-carrot",{diameterTop:.30,diameterBottom:.035,height:.72,tessellation:10},scene);
-        carrot.position.set(cx,1.98,cz);carrot.rotation.z=(j%2?-.22:.22);carrot.material=produceOrange;
-        for(let leaf=0;leaf<3;leaf++){const sprig=MeshBuilder.CreateCylinder("market-carrot-top",{diameterTop:.025,diameterBottom:.09,height:.35,tessellation:6},scene);sprig.position.set(cx+(leaf-1)*.08,2.42,cz);sprig.rotation.z=(leaf-1)*.48;sprig.material=produceGreen;}
-      }
-      // Tomatoes have small green calyxes and short stems.
-      for(let j=0;j<3;j++){const cx=x-.85+j*.78;const tomato=MeshBuilder.CreateSphere("market-tomato",{diameter:.34,segments:12},scene);tomato.position.set(cx,2.0,z-.95);tomato.scaling.y=.86;tomato.material=produceRed;const stem=MeshBuilder.CreateCylinder("market-tomato-stem",{diameter:.045,height:.18,tessellation:6},scene);stem.position.set(cx,2.19,z-.95);stem.material=produceGreen;}
-    }
-    if(i===1) {
-      // Oval country loaves, scored round breads and long golden baguettes.
-      for(let j=0;j<2;j++){const loaf=MeshBuilder.CreateSphere("market-country-loaf",{diameter:1,segments:16},scene);loaf.position.set(x-.78+j*1.55,2.0,z-.72);loaf.scaling.set(.68,.34,.48);loaf.material=breadCrust;for(let cut=0;cut<3;cut++){const score=MeshBuilder.CreateCylinder("market-loaf-score",{diameter:.035,height:.42,tessellation:6},scene);score.position.set(x-.96+j*1.55+cut*.18,2.27,z-.72);score.rotation.z=.9;score.material=breadScore;}}
-      for(let j=0;j<2;j++){const baguette=MeshBuilder.CreateCylinder("market-baguette",{diameterTop:.20,diameterBottom:.24,height:1.45,tessellation:12},scene);baguette.position.set(x-.55+j*1.05,2.03,z-.10);baguette.rotation.z=Math.PI/2;baguette.material=breadCrust;for(let cut=0;cut<4;cut++){const slash=MeshBuilder.CreateCylinder("market-baguette-score",{diameter:.028,height:.22,tessellation:6},scene);slash.position.set(x-1.1+j*1.05+cut*.25,2.15,z-.10);slash.rotation.z=.8;slash.material=breadScore;}}
-      const croissant=MeshBuilder.CreateTorus("market-croissant",{diameter:.62,thickness:.18,tessellation:16},scene);croissant.position.set(x+.9,2.0,z-.98);croissant.scaling.set(1,.65,.7);croissant.material=breadCrust;
-    }
-    if(i===2) {
-      // Velvet-lined jewellery trays, faceted gemstones and fine gold chains.
-      box(scene,"market-jewellery-tray",[x,1.88,z-.75],[2.7,.12,.72],mats.banner);
-      for(let j=0;j<4;j++){const ring=MeshBuilder.CreateTorus("market-gold-ring",{diameter:.28,thickness:.045,tessellation:16},scene);ring.position.set(x-1+j*.62,2.05,z-.78);ring.material=mats.gold;const gem=MeshBuilder.CreatePolyhedron("market-faceted-gem",{type:1,size:.20},scene);gem.position.set(x-1+j*.62,2.18,z-.78);gem.material=j%2?gemBlue:gemRed;}
-      for(let j=0;j<3;j++){const chain=MeshBuilder.CreateTorus("market-necklace-chain",{diameter:.62+j*.16,thickness:.025,tessellation:24},scene);chain.position.set(x-.65+j*.65,2.12,z-.25);chain.scaling.x=1.2;chain.material=mats.gold;}
-    }
-    if(i===3) {
-      // Bundled stems, broad herb leaves, dried flowers and corked apothecary jars.
-      for(let j=0;j<5;j++){const stem=MeshBuilder.CreateCylinder("market-herb-stem",{diameterTop:.025,diameterBottom:.055,height:.8,tessellation:6},scene);stem.position.set(x-.95+j*.45,2.1,z-.75);stem.rotation.z=(j%2?-.18:.18);stem.material=mats.woodLight;for(let side of [-1,1]){const leaf=MeshBuilder.CreateSphere("market-herb-leaf",{diameter:.28,segments:8},scene);leaf.position.set(x-.95+j*.45+side*.13,2.16,z-.75);leaf.scaling.set(1,.3,.65);leaf.rotation.z=side*.5;leaf.material=herbLeaf;}}
-      for(let j=0;j<3;j++){const jar=MeshBuilder.CreateCylinder("market-apothecary-jar",{diameterTop:.24,diameterBottom:.34,height:.58,tessellation:12},scene);jar.position.set(x-.7+j*.68,1.98,z-.15);jar.material=mats.glass;const cork=MeshBuilder.CreateCylinder("market-jar-cork",{diameter:.13,height:.12,tessellation:8},scene);cork.position.set(x-.7+j*.68,2.32,z-.15);cork.material=mats.wood;}
-    }
+  const marketStalls=[];
+  for(let row=0;row<marketStallRows.length;row++) {
+    marketStalls.push(makeMarketStall(-7.5,marketStallRows[row],-1,row));
+    marketStalls.push(makeMarketStall(7.5,marketStallRows[row],1,row+5));
   }
   // Blacksmith workshop with open forge, anvil, tools and a large wall sign.
   const smithStone=mat(scene,"blacksmith-stone",new Color3(.30,.29,.27),.96),smithWood=mat(scene,"blacksmith-oak",new Color3(.24,.13,.07),.9),smithIron=mat(scene,"blacksmith-iron",new Color3(.16,.18,.19),.42,.72),smithEmber=mat(scene,"blacksmith-embers",new Color3(.95,.28,.045),.35,.1);
@@ -3687,6 +3717,46 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(7.2,-114.1,"guard",16.0,0,false);
   makeTownsperson(-11.4,-57.2,"guard",17.1,0,false);
   makeTownsperson(11.4,-57.2,"guard",18.2,0,false);
+  // Ten stallkeepers, positioned behind their counters and facing the central lane.
+  for(let row=0;row<marketStallRows.length;row++) {
+    makeTownsperson(-6.65,marketStallRows[row],"merchant",30+row,-Math.PI/2,false);
+    makeTownsperson(6.65,marketStallRows[row],"merchant",36+row,Math.PI/2,false);
+  }
+  // Children browsing the market; their smaller proportions distinguish them from adults.
+  for(const [x,z,phase,heading] of [[-2.4,-16,41,.4],[2.2,-23,42,-.7],[-1.8,-34,43,.2]]) {
+    const child=makeTownsperson(x,z,"villager",phase,heading,false);
+    child.scaling.set(.72,.72,.72);
+  }
+  // A pair of friendly market dogs, with modeled muzzles, ears, collars and tails.
+  const dogCoat=mat(scene,"market-dog-coat",new Color3(.62,.40,.22),.94);
+  const dogCream=mat(scene,"market-dog-cream",new Color3(.88,.76,.57),.94);
+  const dogNose=mat(scene,"market-dog-nose",new Color3(.055,.035,.025),.72);
+  const dogEye=mat(scene,"market-dog-eye",new Color3(.045,.025,.015),.72);
+  const dogCollar=mat(scene,"market-dog-collar",new Color3(.55,.10,.12),.62);
+  function makeMarketDog(x,z,scale,heading) {
+    const dog=new TransformNode("market-dog",scene);dog.position.set(x,.02,z);dog.rotation.y=heading;dog.scaling.setAll(scale);
+    const part=(name,p,size,material)=>{
+      const m=MeshBuilder.CreateSphere(name,{diameter:1,segments:20},scene);
+      m.parent=dog;m.position.set(p[0],p[1],p[2]);m.scaling.set(size[0],size[1],size[2]);m.material=material;m.isPickable=false;return m;
+    };
+    part("market-dog-body",[0,.43,0],[.78,.48,.40],dogCoat);
+    part("market-dog-chest",[0,.48,-.24],[.38,.48,.34],dogCream);
+    part("market-dog-head",[0,.78,-.30],[.48,.48,.43],dogCoat);
+    part("market-dog-muzzle",[0,.68,-.57],[.30,.22,.23],dogCream);
+    part("market-dog-nose",[0,.72,-.69],[.12,.09,.08],dogNose);
+    for(const side of [-1,1]) {
+      part("market-dog-ear",[side*.19,.99,-.24],[.16,.30,.13],dogCoat);
+      part("market-dog-eye",[side*.115,.83,-.49],[.055,.06,.035],dogEye);
+      const leg=part("market-dog-leg",[side*.23,.19,side*.08],[.15,.40,.16],dogCoat);
+      leg.rotation.z=side*.04;
+    }
+    part("market-dog-tail",[0,.65,.31],[.13,.40,.13],dogCoat).rotation.x=-.8;
+    const collar=MeshBuilder.CreateTorus("market-dog-collar",{diameter:.38,thickness:.045,tessellation:20},scene);
+    collar.parent=dog;collar.position.set(0,.70,-.30);collar.rotation.x=Math.PI/2;collar.material=dogCollar;
+    return dog;
+  }
+  makeMarketDog(-2.6,-19.2,.88,-.35);
+  makeMarketDog(2.9,-31.7,.76,.55);
   // Extra residents make the fountain square feel like a lived-in town.
   makeTownsperson(17,17,"merchant",17.1,Math.PI/2,false);
   makeTownsperson(21,-4,"villager",18.2,-.7,true);
