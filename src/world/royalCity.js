@@ -1929,39 +1929,34 @@ export async function createRoyalCity(engine, canvas) {
     finial.position.set(x,level+4.12,z);finial.material=castleGold;
   }
   // Level threshold between the last tread, the open gate and the lobby.
-  box(scene,"palace-entry-landing",[0,8.44,-143.1],[44,.36,61.8],castleStone);
+  box(scene,"palace-entry-landing",[0,8.44,-148.5],[54,.36,70],castleStone);
   // A broad, open first-floor royal lobby: deliberately no exterior facade yet.
   const openHallLobbyWall=mat(scene,"royal-lobby-limestone",new Color3(.72,.68,.58),.92);
   const openHallLobbyTrim=mat(scene,"royal-lobby-gilt",new Color3(.78,.57,.25),.32,.72);
   const openHallLobbyCeiling=mat(scene,"royal-lobby-ceiling",new Color3(.82,.78,.68),.9);
   const openHallLobbyFloorMat=mat(scene,"royal-lobby-marble",new Color3(.78,.75,.68),.25,.08);
   const openHallLobbyTop=8.62, openHallLobbyHeight=18.0, openHallLobbyMidY=openHallLobbyTop+openHallLobbyHeight/2;
-  const openHallLobbyFloor=box(scene,"royal-lobby-marble-floor",[0,8.61,-143.1],[43.6,.12,61.4],openHallLobbyFloorMat);
+  const openHallLobbyFloor=box(scene,"royal-lobby-marble-floor",[0,8.61,-148.5],[53.6,.12,69.6],openHallLobbyFloorMat);
   openHallLobbyFloor.receiveShadows=true;
-  box(scene,"royal-lobby-ceiling",[0,26.82,-147.0],[44,.5,54],openHallLobbyCeiling);
+  box(scene,"royal-lobby-ceiling",[0,28.12,-148.5],[54,.5,69.2],openHallLobbyCeiling);
   // Tall side and rear walls enclose the walkable hall; the front remains a wide open entrance.
   for(const side of [-1,1]) {
-    box(scene,"royal-lobby-side-wall",[side*22,openHallLobbyMidY,-147.0],[.9,openHallLobbyHeight,54],openHallLobbyWall);
-    box(scene,"royal-lobby-side-gilt-course",[side*21.48,25.8,-147.0],[.14,.32,53.2],openHallLobbyTrim);
-    for(const z of [-166,-151,-136]) {
-      const pilaster=box(scene,"royal-lobby-side-pilaster",[side*21.35,17.7,z],[.42,17.2,1.0],openHallLobbyTrim);
+    box(scene,"royal-lobby-side-wall",[side*27,openHallLobbyMidY,-148.5],[.9,openHallLobbyHeight,69.2],openHallLobbyWall);
+    box(scene,"royal-lobby-side-gilt-course",[side*26.48,27.05,-148.5],[.14,.32,68.4],openHallLobbyTrim);
+    for(const z of [-166,-148.5,-131]) {
+      const pilaster=box(scene,"royal-lobby-side-pilaster",[side*26.35,18.0,z],[.42,17.8,1.0],openHallLobbyTrim);
       pilaster.receiveShadows=true;
     }
   }
-  box(scene,"royal-lobby-rear-wall",[0,openHallLobbyMidY,-174.0],[44,openHallLobbyHeight,.9],openHallLobbyWall);
-  box(scene,"royal-lobby-rear-gilt-course",[0,25.8,-173.48],[43.2,.32,.14],openHallLobbyTrim);
-  // Two short front returns frame a generous 14-metre opening from the exterior stair.
-  for(const side of [-1,1]) {
-    box(scene,"royal-lobby-entry-return",[side*14.5,openHallLobbyMidY,-120.0],[15,openHallLobbyHeight,.9],openHallLobbyWall);
-    box(scene,"royal-lobby-entry-pilaster",[side*7.2,17.7,-119.48],[.72,17.2,1.0],openHallLobbyTrim);
-  }
+  box(scene,"royal-lobby-rear-wall",[0,openHallLobbyMidY,-183.5],[54,openHallLobbyHeight,.9],openHallLobbyWall);
+  box(scene,"royal-lobby-rear-gilt-course",[0,27.05,-182.98],[53.2,.32,.14],openHallLobbyTrim);
+  // The full front edge remains open from the stair into the great hall.
   // Perimeter columns add palace scale without narrowing the central walking area.
-  for(const side of [-1,1]) for(const z of [-165,-151,-137]) {
-    cylinder(scene,"royal-lobby-column-base",[side*18.8,9.05,z],1.45,.72,openHallLobbyTrim,24);
-    cylinder(scene,"royal-lobby-column-shaft",[side*18.8,17.55,z],.62,16.3,openHallLobbyWall,24);
-    cylinder(scene,"royal-lobby-column-capital",[side*18.8,25.9,z],1.55,.72,openHallLobbyTrim,24);
-    // Solid collision footprint: the columns cannot be walked through.
-    colliders.push({minX:side*18.8-.72,maxX:side*18.8+.72,minZ:z-.72,maxZ:z+.72});
+  for(const side of [-1,1]) for(const z of [-166,-148.5,-131]) {
+    cylinder(scene,"royal-lobby-column-base",[side*23.2,9.05,z],1.55,.72,openHallLobbyTrim,32);
+    cylinder(scene,"royal-lobby-column-shaft",[side*23.2,18.0,z],.68,17.3,openHallLobbyWall,32);
+    cylinder(scene,"royal-lobby-column-capital",[side*23.2,26.8,z],1.7,.78,openHallLobbyTrim,32);
+    colliders.push({minX:side*23.2-.82,maxX:side*23.2+.82,minZ:z-.82,maxZ:z+.82});
   }
   // Grand central chandelier suspended over the open marble hall.
   const openHallChandelierGold=mat(scene,"royal-lobby-chandelier-gold",new Color3(.86,.65,.30),.25,.82);
@@ -1969,38 +1964,39 @@ export async function createRoyalCity(engine, canvas) {
   const openHallChandelierGlow=mat(scene,"royal-lobby-chandelier-glow",new Color3(1,.72,.32),.18,.12);
   openHallChandelierGlow.emissiveColor=new Color3(1,.48,.14);
   const openHallChain=MeshBuilder.CreateCylinder("royal-lobby-chandelier-openHallChain",{diameter:.16,height:4.2,tessellation:12},scene);
-  openHallChain.position.set(0,24.45,-147);openHallChain.material=openHallChandelierGold;
+  openHallChain.position.set(0,25.0,-148.5);openHallChain.material=openHallChandelierGold;
   const openHallCanopy=MeshBuilder.CreateCylinder("royal-lobby-chandelier-openHallCanopy",{diameter:1.35,height:.42,tessellation:24},scene);
-  openHallCanopy.position.set(0,26.55,-147);openHallCanopy.material=openHallChandelierGold;
+  openHallCanopy.position.set(0,27.65,-148.5);openHallCanopy.material=openHallChandelierGold;
   for(const [diameter,y] of [[8.4,22.25],[6.0,21.45],[3.4,20.72]]) {
     const ring=MeshBuilder.CreateTorus("royal-lobby-chandelier-ring",{diameter,thickness:.22,tessellation:64},scene);
-    ring.position.set(0,y,-147);ring.material=openHallChandelierGold;
+    ring.position.set(0,y,-148.5);ring.material=openHallChandelierGold;
   }
   for(let i=0;i<16;i++) {
     const a=i*Math.PI*2/16, x=Math.cos(a), z=Math.sin(a);
     const openHallArm=MeshBuilder.CreateTube("royal-lobby-chandelier-openHallArm",{
-      path:[new Vector3(x*.55,22.25,-147+z*.55),new Vector3(x*2.0,22.05,-147+z*2.0),new Vector3(x*3.8,22.25,-147+z*3.8)],
+      path:[new Vector3(x*.65,22.9,-148.5+z*.65),new Vector3(x*2.4,22.65,-148.5+z*2.4),new Vector3(x*4.65,22.9,-148.5+z*4.65)],
       radius:.105,tessellation:10
     },scene);
     openHallArm.material=openHallChandelierGold;
     const openHallCandle=MeshBuilder.CreateCylinder("royal-lobby-chandelier-openHallCandle",{diameter:.19,height:.72,tessellation:12},scene);
-    openHallCandle.position.set(x*3.9,22.62,-147+z*3.9);openHallCandle.material=openHallChandelierIvory;
+    openHallCandle.position.set(x*4.8,23.35,-148.5+z*4.8);openHallCandle.material=openHallChandelierIvory;
     const openHallFlame=MeshBuilder.CreateSphere("royal-lobby-chandelier-openHallFlame",{diameter:.34,segments:16},scene);
-    openHallFlame.position.set(x*3.9,23.13,-147+z*3.9);openHallFlame.material=openHallChandelierGlow;
+    openHallFlame.position.set(x*4.8,23.9,-148.5+z*4.8);openHallFlame.material=openHallChandelierGlow;
   }
   const openHallChandelierCore=MeshBuilder.CreateSphere("royal-lobby-chandelier-core",{diameter:1.0,segments:24},scene);
-  openHallChandelierCore.position.set(0,21.3,-147);openHallChandelierCore.material=openHallChandelierGlow;
+  openHallChandelierCore.position.set(0,21.45,-148.5);openHallChandelierCore.material=openHallChandelierGlow;
   // A brass-and-marble threshold bridges the last stair tread into the lobby floor.
   box(scene,"royal-lobby-entry-threshold",[0,8.69,-115.0],[13.8,.055,4.4],openHallLobbyTrim);
   box(scene,"royal-lobby-entry-threshold-inset",[0,8.725,-115.0],[11.8,.025,3.7],openHallLobbyFloorMat);
+  const openHallCarpet=mat(scene,"royal-lobby-burgundy-carpet",new Color3(.30,.045,.075),.94);
+  box(scene,"royal-lobby-central-carpet",[0,8.70,-148.5],[5.4,.035,60],openHallCarpet);
+  for(const side of [-1,1])box(scene,"royal-lobby-carpet-gilt-border",[side*2.82,8.725,-148.5],[.075,.025,59.6],openHallLobbyTrim);
+  const openHallDeskWood=mat(scene,"royal-lobby-reception-walnut",new Color3(.25,.12,.065),.72);
+  for(const side of [-1,1]){box(scene,"royal-lobby-reception-desk",[side*9.2,9.35,-172.2],[6.4,1.35,1.45],openHallDeskWood);box(scene,"royal-lobby-reception-countertop",[side*9.2,10.08,-172.2],[6.7,.18,1.62],openHallLobbyTrim);}
+  const openHallPortraitMat=mat(scene,"royal-lobby-portrait-ground",new Color3(.16,.12,.10),.88);
+  for(const side of [-1,1])for(const z of [-165,-148.5,-132]){box(scene,"royal-lobby-portrait-frame",[side*26.32,18.2,z],[.22,4.3,3.0],openHallLobbyTrim);box(scene,"royal-lobby-portrait-canvas",[side*26.18,18.2,z],[.08,3.65,2.35],openHallPortraitMat);}
   // Wall colliders bound the full hall while leaving the entrance completely open.
-  colliders.push(
-    {minX:-22.7,maxX:-21.3,minZ:-174.5,maxZ:-119.5},
-    {minX:21.3,maxX:22.7,minZ:-174.5,maxZ:-119.5},
-    {minX:-22.7,maxX:22.7,minZ:-174.8,maxZ:-173.2},
-    {minX:-22.7,maxX:-7.0,minZ:-120.8,maxZ:-119.2},
-    {minX:7.0,maxX:22.7,minZ:-120.8,maxZ:-119.2}
-  );
+  colliders.push({minX:-27.7,maxX:-26.3,minZ:-184.0,maxZ:-113.0},{minX:26.3,maxX:27.7,minZ:-184.0,maxZ:-113.0},{minX:-27.7,maxX:27.7,minZ:-184.2,maxZ:-182.8});
 
   // A broad carriage court with a circular turning area, clipped hedges and low topiary.
   const courtStone=mat(scene,"palace-carriage-court-stone",new Color3(.62,.59,.51),.92);
