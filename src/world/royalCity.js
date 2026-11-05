@@ -1463,7 +1463,7 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"palace-grand-pavilion-attic",[0,41,-72],[17,4.8,2],palaceIvory);
   for(let x=-10;x<=10;x+=5) {
     if(x===0) continue;
-    cylinder(scene,"palace-grand-portico-column-base,[x,10.5,-69.8],1.6,.55,palaceGold,20);
+    cylinder(scene,"palace-grand-portico-column-base",[x,10.5,-69.8],1.6,.55,palaceGold,20);
     cylinder(scene,"palace-grand-portico-column",[x,22,-69.8],.72,22.5,palaceIvory,24);
     cylinder(scene,"palace-grand-portico-capital",[x,33.4,-69.8],1.65,.65,palaceGold,20);
     box(scene,"palace-grand-window-recess",[x,24,-71.28],[2.6,9,.12],castleShadow);
