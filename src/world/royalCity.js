@@ -1198,6 +1198,7 @@ export async function createRoyalCity(engine, canvas) {
   }
   // The royal citadel: a layered limestone fortress with a proper keep, curtain walls,
   // crenellations, arched windows, buttresses, rooflines and royal banners.
+  const royalPalaceStartIndex=scene.meshes.length;
   const cliffMat=texturedMat(scene,"castle-cliff-rock",new Color3(.34,.36,.35),"#555750","#292b28",.98);
   const castleStone=texturedMat(scene,"castle-cut-limestone",new Color3(.73,.68,.57),"#b5a88e","#5b5142",.9);
   const castleShadow=mat(scene,"castle-window-depth",new Color3(.12,.13,.13),.98);
@@ -1208,8 +1209,8 @@ export async function createRoyalCity(engine, canvas) {
     const cliff=MeshBuilder.CreateBox("castle-cliff-shoulder",{width:24,height:17,depth:17},scene);
     cliff.position.set(side*20,7.5,-77);cliff.material=cliffMat;
   }
-  const approach=MeshBuilder.CreateGround("world-tree-approach",{width:15,height:68,subdivisions:1},scene);
-  approach.position.set(0,-.08,-88);approach.material=mats.floor;
+  const approach=MeshBuilder.CreateGround("world-tree-approach",{width:82,height:66,subdivisions:1},scene);
+  approach.position.set(0,-.08,-82);approach.material=mats.floor;
   // The national standard of Erinvale: midnight blue, ivory, forest green and a golden sun-tree.
   const erinvaleFlagTexture=new DynamicTexture("erinvale-national-flag-texture",{width:512,height:320},scene,false);
   const flagCtx=erinvaleFlagTexture.getContext();
@@ -1381,8 +1382,7 @@ export async function createRoyalCity(engine, canvas) {
       box(scene,"palace-wing-gilt-capital",[cx,24.9,z],[1.0,.38,.9],castleGold);
     }
   }
-  // Keep the entire new wing assembly aligned with the central keep after the citadel depth adjustment.
-  for(const mesh of scene.meshes.slice(palaceWingStartIndex)) mesh.position.z-=22;
+  // The wing rooms are moved with the complete palace assembly below.
   // Palace hall floor, pale columns, crimson runner and a visible throne.
   box(scene,"royal-hall-floor",[0,8.62,-82],[20.5,.24,15.0],mats.trim);
   box(scene,"royal-hall-carpet",[0,8.78,-82],[5.6,.06,14.5],mats.banner);
@@ -1449,12 +1449,21 @@ export async function createRoyalCity(engine, canvas) {
   const palaceGold=mat(scene,"palace-bright-gilding",new Color3(.86,.66,.30),.28,.78);
   const palaceBlue=mat(scene,"palace-mansard-blue",new Color3(.12,.18,.23),.38,.38);
   const palaceGlass=mat(scene,"palace-tall-window-glass",new Color3(.18,.27,.31),.18,.22);
-  box(scene,"palace-grand-front-pavilion",[0,23.5,-72.6],[25,29,2.4],palaceIvory);
+  // Split the monumental facade around a real, walk-through central entrance.
+  box(scene,"palace-grand-front-pavilion-left",[-8.4,23.5,-72.6],[8.2,29,2.4],palaceIvory);
+  box(scene,"palace-grand-front-pavilion-right",[8.4,23.5,-72.6],[8.2,29,2.4],palaceIvory);
+  box(scene,"palace-grand-front-pavilion-door-lintel",[0,33.0,-72.6],[8.6,9.0,2.4],palaceIvory);
+  for(const side of [-1,1]) {
+    box(scene,"palace-entrance-gilt-jamb",[side*4.25,19.0,-71.2],[.42,20,.48],palaceGold);
+    box(scene,"palace-entrance-capital",[side*4.25,29.2,-71.2],[1.0,.55,.8],palaceGold);
+  }
+  box(scene,"palace-entrance-gilt-arch",[0,29.2,-71.2],[8.8,.48,.8],palaceGold);
   box(scene,"palace-grand-pavilion-base",[0,10,-71.2],[27,1.5,3],palaceGold);
   box(scene,"palace-grand-pavilion-cornice",[0,38.1,-71],[28,.9,3.2],palaceGold);
   box(scene,"palace-grand-pavilion-attic",[0,41,-72],[17,4.8,2],palaceIvory);
   for(let x=-10;x<=10;x+=5) {
-    cylinder(scene,"palace-grand-portico-column-base",[x,10.5,-69.8],1.6,.55,palaceGold,20);
+    if(x===0) continue;
+    cylinder(scene,"palace-grand-portico-column-base,[x,10.5,-69.8],1.6,.55,palaceGold,20);
     cylinder(scene,"palace-grand-portico-column",[x,22,-69.8],.72,22.5,palaceIvory,24);
     cylinder(scene,"palace-grand-portico-capital",[x,33.4,-69.8],1.65,.65,palaceGold,20);
     box(scene,"palace-grand-window-recess",[x,24,-71.28],[2.6,9,.12],castleShadow);
@@ -1498,13 +1507,8 @@ export async function createRoyalCity(engine, canvas) {
     dormerRoof.position.set(x,48,-79);dormerRoof.rotation.y=Math.PI/4;dormerRoof.material=palaceBlue;
     box(scene,"palace-dormer-window",[x,45.7,-78.1],[1.1,1.8,.08],palaceGlass);
   }
-  for(let step=0;step<9;step++) box(scene,"palace-grand-stair-step",[0,8.8+step*.42,-64.5-step*1.1],[24-step*.65,.38,2.3],palaceIvory);
+  // No ceremonial staircase: the palace opens directly onto a broad carriage forecourt.
   for(const side of [-1,1]) {
-    box(scene,"palace-grand-stair-balustrade",[side*12,11,-69],[.55,3.5,14],palaceGold);
-    for(let i=0;i<8;i++) {
-      const bal=MeshBuilder.CreateCylinder("palace-grand-stair-baluster",{diameterTop:.2,diameterBottom:.32,height:1.3,tessellation:8},scene);
-      bal.position.set(side*12,9.6,-75+i*1.55);bal.material=palaceIvory;
-    }
     cylinder(scene,"palace-terrace-statue-plinth",[side*14.8,9.5,-70],1.3,1.8,palaceIvory,12);
     const statue=MeshBuilder.CreateSphere("palace-terrace-statue",{diameter:2,segments:12},scene);
     statue.position.set(side*14.8,11,-70);statue.scaling.y=1.8;statue.material=palaceGold;
@@ -1750,43 +1754,7 @@ export async function createRoyalCity(engine, canvas) {
   waterfall.position.set(27,7,-68);waterfall.material=new StandardMaterial("waterfall-material",scene);
   waterfall.material.diffuseColor=new Color3(.45,.75,.82);waterfall.material.alpha=.72;waterfall.material.emissiveColor=new Color3(.12,.2,.22);
 
-  // Set the keep behind the curtain wall, creating a genuine arrival courtyard.
-  for(const mesh of scene.meshes) {
-    if(/^(royal-keep|royal-hall|royal-throne|keep-|castle-tower|castle-spire|castle-roof|castle-tower-foot)/.test(mesh.name)) mesh.position.z-=12;
-  }
-  // Formal garden courtyard between the open gate and the palace entrance.
-  box(scene,"citadel-courtyard-paving",[0,8.48,-81.4],[17.5,.18,8.8],pavingLight);
-  box(scene,"citadel-courtyard-runner",[0,8.60,-81.5],[4.8,.035,8.2],mats.banner);
-  for(let side of [-1,1]) {
-    box(scene,"citadel-courtyard-flowerbed",[side*6.15,8.82,-81.4],[2.2,.5,5.6],mats.trim);
-    box(scene,"citadel-courtyard-soil",[side*6.15,9.09,-81.4],[1.85,.08,5.2],mats.floor);
-    for(let j=0;j<9;j++)
-      addPetalBloom(scene,"citadel-courtyard-rose",new Vector3(side*6.15+(Math.random()-.5)*1.5,9.48,-83.7+j*.58),.24,j%3===0?mats.gold:mats.flowers,8);
-    for(let j=0;j<3;j++) {
-      cylinder(scene,"courtyard-arcade-pillar",[side*8.2,11.1,-79.4+j*2.8],.62,5.2,mats.trim,16);
-      cylinder(scene,"courtyard-pillar-cap",[side*8.2,13.75,-79.4+j*2.8],1.0,.28,castleGold,16);
-    }
-    const crest=MeshBuilder.CreateCylinder("courtyard-royal-crest",{diameter:1.25,height:.16,tessellation:12},scene);
-    crest.position.set(side*5.9,12.2,-77.25);crest.rotation.x=Math.PI/2;crest.material=castleGold;
-    addLantern(scene,side*7.0,11.2,-77.15,mats.gold,mats.lantern);
-  }
-
-  // The royal citadel sits farther back beyond the city approach.
-  for(const mesh of scene.meshes) {
-    if(mesh.name.startsWith("citadel-") || mesh.name.startsWith("castle-cliff") ||
-       mesh.name.startsWith("castle-approach-") || mesh.name.startsWith("castle-step-") ||
-       mesh.name.startsWith("royal-gate-") || mesh.name.startsWith("gate-shadow") ||
-       mesh.name.startsWith("gate-pier") || mesh.name.startsWith("gate-arch-") ||
-       mesh.name.startsWith("gatehouse-side-") || mesh.name.startsWith("gatehouse-tower-") ||
-       mesh.name.startsWith("gatehouse-window-") || mesh.name.startsWith("gatehouse-balcony") ||
-       mesh.name.startsWith("gatehouse-baluster") || mesh.name.startsWith("royal-wall-") ||
-       mesh.name.startsWith("royal-keep") || mesh.name.startsWith("royal-hall") ||
-       mesh.name.startsWith("royal-throne") || mesh.name.startsWith("keep-") ||
-       mesh.name.startsWith("castle-tower") || mesh.name.startsWith("castle-spire") ||
-       mesh.name.startsWith("castle-roof") || mesh.name.startsWith("castle-stair-") ||
-       mesh.name.startsWith("royal-stair-") || mesh.name.startsWith("courtyard-") ||
-       mesh.name.startsWith("citadel-courtyard-")) mesh.position.z-=10;
-  }
+  // The whole palace complex is repositioned together after all of its rooms are built.
 
 
 
@@ -1842,6 +1810,91 @@ export async function createRoyalCity(engine, canvas) {
   }
   for(let x=-18;x<=18;x+=6) for(let z=-180;z<=-152;z+=7)
     box(scene,"state-ballroom-ceiling-coffer",[x,33.68,z],[5.5,.12,6.5],ballroomGold);
+
+  // Move the complete royal complex 40 metres deeper into the estate.
+  // The entrance gate remains at the city edge, leaving a generous garden forecourt.
+  for(const mesh of scene.meshes.slice(royalPalaceStartIndex)) {
+    if(mesh.name!=="world-tree-approach") mesh.position.z-=40;
+  }
+
+  // A broad carriage court with a circular turning area, clipped hedges and low topiary.
+  const courtStone=mat(scene,"palace-carriage-court-stone",new Color3(.62,.59,.51),.92);
+  const courtGrass=mat(scene,"palace-court-grass",new Color3(.16,.28,.16),.98);
+  const courtHedge=mat(scene,"palace-court-clipped-hedge",new Color3(.10,.25,.13),.98);
+  const courtRoad=MeshBuilder.CreateGround("palace-carriage-drive",{width:17,height:58,subdivisions:1},scene);
+  courtRoad.position.set(0,.005,-82.5);courtRoad.material=courtStone;
+  const turning=MeshBuilder.CreateCylinder("palace-carriage-turning-circle",{diameter:23,height:.16,tessellation:48},scene);
+  turning.position.set(0,.10,-82);turning.material=pavingLight;
+  const turningInset=MeshBuilder.CreateCylinder("palace-turning-circle-inset",{diameter:16,height:.10,tessellation:40},scene);
+  turningInset.position.set(0,.20,-82);turningInset.material=courtStone;
+  const centralIsland=MeshBuilder.CreateCylinder("palace-turning-garden-island",{diameter:7.2,height:.38,tessellation:32},scene);
+  centralIsland.position.set(0,.38,-82);centralIsland.material=courtGrass;
+  cylinder(scene,"palace-turning-island-planter",[0,.72,-82],2.4,.28,mats.trim,24);
+  for(let i=0;i<12;i++){
+    const a=i*Math.PI/6;
+    const shrub=MeshBuilder.CreateSphere("palace-turning-island-shrub",{diameter:1.05,segments:8},scene);
+    shrub.position.set(Math.cos(a)*1.55,1.18,-82+Math.sin(a)*1.55);shrub.scaling.y=.78;shrub.material=courtHedge;
+  }
+  for(const side of [-1,1]) {
+    // Long clipped borders and planted islands frame the drive without narrowing it.
+    for(let row=0;row<3;row++) {
+      const x=side*(22+row*7.2);
+      box(scene,"palace-court-hedge-border",[x,.72,-82],[1.05,1.25,48],courtHedge);
+      for(let z=-101;z<=-63;z+=9) {
+        const bed=MeshBuilder.CreateBox("palace-court-shrub-island",{width:5.8,height:.34,depth:4.6},scene);
+        bed.position.set(side*(16.0+row*7.2),.22,z);bed.material=courtGrass;
+        for(let n=0;n<5;n++) {
+          const shrub=MeshBuilder.CreateSphere("palace-court-topiary",{diameter:.92,segments:8},scene);
+          shrub.position.set(side*(14.1+row*7.2)+n*.92,.95,z+(n%2?-.55:.55));
+          shrub.scaling.y=.82;shrub.material=courtHedge;
+        }
+      }
+    }
+    for(let z=-105;z<=-60;z+=15) {
+      const lamp=MeshBuilder.CreateCylinder("palace-court-lamp-post",{diameter:.18,height:4.2,tessellation:10},scene);
+      lamp.position.set(side*11.2,2.1,z);lamp.material=castleGold;
+      const glow=MeshBuilder.CreateSphere("palace-court-lamp-globe",{diameter:.65,segments:10},scene);
+      glow.position.set(side*11.2,4.25,z);glow.material=mats.lantern;
+      const plinth=MeshBuilder.CreateCylinder("palace-court-lamp-plinth",{diameter:.75,height:.55,tessellation:10},scene);
+      plinth.position.set(side*11.2,.28,z);plinth.material=castleStone;
+    }
+  }
+
+  // The palace vestibule is a real walk-in lobby, connecting the open portico to the throne hall.
+  const lobbyFloor=mat(scene,"palace-lobby-marble",new Color3(.78,.75,.68),.32,.08);
+  const lobbyWall=mat(scene,"palace-lobby-wall",new Color3(.79,.74,.64),.88);
+  const lobbyWood=mat(scene,"palace-lobby-walnut",new Color3(.20,.105,.06),.72);
+  const lobbyVelvet=mat(scene,"palace-lobby-velvet",new Color3(.38,.08,.16),.88);
+  box(scene,"palace-lobby-floor",[0,8.62,-80],[18,.24,11],lobbyFloor);
+  box(scene,"palace-lobby-runner",[0,8.77,-80],[4.6,.06,10.2],lobbyVelvet);
+  for(const side of [-1,1]) {
+    box(scene,"palace-lobby-side-wall",[side*9,15,-80],[.55,12,11],lobbyWall);
+    for(let z=-84;z<=-76;z+=4) {
+      cylinder(scene,"palace-lobby-column-base",[side*7.8,9.0,z],.95,.38,palaceGold,16);
+      cylinder(scene,"palace-lobby-column",[side*7.8,15.0,z],.42,11.6,palaceIvory,16);
+      cylinder(scene,"palace-lobby-column-capital",[side*7.8,21.0,z],.82,.42,palaceGold,16);
+    }
+    box(scene,"palace-lobby-welcome-desk",[side*5.9,9.55,-80],[2.9,1.7,1.35],lobbyWood);
+    box(scene,"palace-lobby-desk-top",[side*5.9,10.45,-80],[3.1,.18,1.5],palaceGold);
+    box(scene,"palace-lobby-desk-front-inlay",[side*5.9,9.55,-79.29],[2.1,.9,.08],lobbyVelvet);
+    for(let j=0;j<2;j++) {
+      box(scene,"palace-lobby-waiting-seat",[side*4.8,9.1,-84+j*2.0],[2.0,.38,.82],lobbyWood);
+      box(scene,"palace-lobby-waiting-seat-back",[side*4.8,10.0,-84.4+j*2.0],[2.0,1.35,.2],lobbyVelvet);
+    }
+    box(scene,"palace-lobby-wall-panel",[side*8.68,15,-80],[.08,5.5,4.4],palaceBlue);
+    box(scene,"palace-lobby-wall-panel-frame",[side*8.58,15,-80],[.08,6.0,4.8],palaceGold);
+  }
+  // A reception chandelier and royal crest make the entrance read as a palace lobby.
+  const lobbyChandelier=MeshBuilder.CreateCylinder("palace-lobby-chandelier-ring",{diameter:4.6,height:.18,tessellation:28},scene);
+  lobbyChandelier.position.set(0,24,-80);lobbyChandelier.material=palaceGold;
+  for(let i=0;i<8;i++) {
+    const a=i*Math.PI/4;
+    const bulb=MeshBuilder.CreateSphere("palace-lobby-chandelier-bulb",{diameter:.34,segments:8},scene);
+    bulb.position.set(Math.cos(a)*1.85,24.35,-80+Math.sin(a)*1.85);bulb.material=mats.lantern;
+  }
+  box(scene,"palace-lobby-back-crest-plaque",[0,17.5,-85.1],[3.6,4.0,.28],palaceBlue);
+  const lobbyCrest=MeshBuilder.CreateCylinder("palace-lobby-national-crest",{diameter:2.1,height:.18,tessellation:8},scene);
+  lobbyCrest.position.set(0,17.6,-84.88);lobbyCrest.rotation.x=Math.PI/2;lobbyCrest.material=palaceGold;
 
   const royalGardenStartIndex=scene.meshes.length;
   // The approach is a broad carriage boulevard; formal rose gardens sit on both sides BEFORE the stair.
