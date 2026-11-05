@@ -2991,8 +2991,14 @@ export async function createRoyalCity(engine, canvas) {
   // Foundation, entrance facade (with a real opening), side walls and enclosed rear wall.
   box(scene,"public-library-foundation",[libX,.48,libZ],[libW+1.2,.9,libD+1.2],libraryTrim);
   box(scene,"public-library-floor",[libX,.96,libZ],[libW,.16,libD],libraryFloor);
-  box(scene,"public-library-east-wall-north",[-40.25,5.1,-90.8],[.55,8.3,10.4],libraryStone);
-  box(scene,"public-library-east-wall-south",[-40.25,5.1,-77.2],[.55,8.3,10.4],libraryStone);
+  // East facade windows are actual openings aligned with the interior glass at z=-94/-74.
+  for(const center of [-94,-74]) {
+    const prefix=center===-94?"north":"south";
+    box(scene,"public-library-east-wall-"+prefix+"-lower",[-40.25,2.45,center],[.55,3.0,10.4],libraryStone);
+    box(scene,"public-library-east-wall-"+prefix+"-upper",[-40.25,8.25,center],[.55,2.0,10.4],libraryStone);
+    for(const dz of [-4.0,4.0])
+      box(scene,"public-library-east-wall-"+prefix+"-window-pier",[-40.25,5.1,center+dz],[.55,5.3,2.4],libraryStone);
+  }
   box(scene,"public-library-east-wall-over-door",[-40.25,8.0,-84],[.55,2.5,3.2],libraryStone);
   // Real window openings are cut into the masonry rather than placing glass
   // on top of solid walls. Lower and upper wall bands keep the structure intact.
@@ -3014,12 +3020,15 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"public-library-roof-ridge",[libX,10.9,libZ],[.55,.45,26.5],libraryGold);
   for(const z of [-94,-74]) {
     box(scene,"public-library-east-window-recess",[-40.53,5.7,z],[.08,4.5,2.4],libraryWood);
-    box(scene,"public-library-east-window-glass",[-40.59,5.7,z],[.06,3.75,1.75],libraryGlass);
-    box(scene,"public-library-east-window-mullion",[-40.64,5.7,z],[.06,3.8,.12],libraryGold);
-    box(scene,"public-library-east-window-crossbar",[-40.64,5.7,z],[.06,.12,1.85],libraryGold);
-    box(scene,"public-library-window-sill",[-40.8,3.35,z],[.5,.18,2.7],libraryTrim);
+    box(scene,"public-library-east-window-glass",[-40.25,5.7,z],[.06,3.75,1.75],libraryGlass);
+    box(scene,"public-library-east-window-mullion",[-40.18,5.7,z],[.06,3.8,.12],libraryGold);
+    box(scene,"public-library-east-window-crossbar",[-40.18,5.7,z],[.06,.12,1.85],libraryGold);
+    box(scene,"public-library-window-sill",[-39.98,3.35,z],[.5,.18,2.7],libraryTrim);
     for(let pane=0;pane<4;pane++)
-      box(scene,"public-library-east-stained-pane",[-40.67,5.7,z-.66+pane*.44],[.035,3.25,.40],libraryStainedGlass[pane]);
+      box(scene,"public-library-east-stained-pane",[-40.16,5.7,z-.66+pane*.44],[.035,3.25,.40],libraryStainedGlass[pane]);
+    for(const dz of [-1.18,1.18])
+      box(scene,"public-library-east-window-stone-jamb",[-39.98,5.7,z+dz],[.24,4.0,.16],libraryTrim);
+    box(scene,"public-library-east-window-hood",[-39.98,7.72,z],[.32,.18,2.7],libraryGold);
   }
   for(const z of [-95,-73]) {
     box(scene,"public-library-side-window-recess",[-52,5.8,z],[3.0,4.4,.08],libraryWood);
@@ -3206,18 +3215,19 @@ export async function createRoyalCity(engine, canvas) {
   }
   box(scene,"public-library-grand-stair-landing",[-48.9,5.25,-92.35],[1.1,.28,2.0],libraryWood);
   box(scene,"public-library-mezzanine-front-beam",[-53.0,5.12,-89.85],[16.6,.34,.24],libraryGold);
-  for(const x of [-60.7,-57.8,-54.9,-52.0,-49.1,-46.2,-43.3]) {
+  for(const x of [-57.8,-54.9,-52.0,-49.1,-46.2,-43.3]) {
     box(scene,"public-library-mezzanine-baluster",[x,5.78,-89.9],[.12,.78,.12],libraryWood);
     box(scene,"public-library-mezzanine-post-cap",[x,6.2,-89.9],[.22,.12,.22],libraryGold);
   }
-  box(scene,"public-library-mezzanine-handrail",[-53.0,6.2,-89.9],[16.8,.16,.22],libraryGold);
+  box(scene,"public-library-mezzanine-handrail",[-52.6,6.2,-89.9],[15.4,.16,.22],libraryGold);
   for(const x of [-59.5,-54.5,-49.5,-44.5]) {
     box(scene,"public-library-upper-bookcase",[x,6.45,-94.5],[3.9,2.15,.62],libraryWood);
     for(let level=0;level<2;level++) {
       const y=5.65+level*.88;
-      box(scene,"public-library-upper-shelf",[x,y,-94.84],[3.72,.075,.12],libraryGold);
+      // Shelves and book spines face south into the room, not into the north wall.
+      box(scene,"public-library-upper-shelf",[x,y,-94.12],[3.72,.075,.12],libraryGold);
       for(let b=0;b<16;b++)
-        box(scene,"public-library-upper-volume",[x-1.72+b*.22,y+.14,-94.93],[.15,.24,.075],libraryBookMats[(b+level)%libraryBookCount]);
+        box(scene,"public-library-upper-volume",[x-1.72+b*.22,y+.14,-94.04],[.15,.24,.075],libraryBookMats[(b+level)%libraryBookCount]);
     }
   }
   // One continuous gallery follows the wall directly opposite the entrance.
@@ -3225,11 +3235,14 @@ export async function createRoyalCity(engine, canvas) {
   // a second overlapping balcony.
   box(scene,"public-library-west-gallery-floor",[-61.05,5.25,-81.95],[2.25,.28,17.2],libraryWood);
   box(scene,"public-library-west-gallery-inner-beam",[-59.88,5.12,-81.95],[.20,.34,16.9],libraryGold);
-  for(let z=-89.7;z<=-74.1;z+=1.05) {
+  for(let z=-88.65;z<=-74.1;z+=1.05) {
     box(scene,"public-library-west-gallery-baluster",[-59.9,5.78,z],[.12,.72,.12],libraryWood);
     box(scene,"public-library-west-gallery-post-cap",[-59.9,6.18,z],[.20,.10,.20],libraryGold);
   }
-  box(scene,"public-library-west-gallery-handrail",[-59.9,6.18,-81.95],[.20,.15,17.0],libraryGold);
+  // One corner newel joins the two railing runs without overlapping posts.
+  box(scene,"public-library-gallery-corner-newel",[-59.9,5.82,-89.9],[.20,.88,.20],libraryWood);
+  box(scene,"public-library-gallery-corner-cap",[-59.9,6.30,-89.9],[.28,.12,.28],libraryGold);
+  box(scene,"public-library-west-gallery-handrail",[-59.9,6.18,-81.95],[.20,.15,15.9],libraryGold);
   // Upper wall stacks face the entrance; matching ground-floor stacks remain below.
   for(const z of [-87.7,-85.2,-80.5,-76.0]) {
     box(scene,"public-library-upper-west-facing-bookcase",[-62.35,6.55,z],[.48,2.18,2.15],libraryWood);
@@ -4096,7 +4109,8 @@ export async function createRoyalCity(engine, canvas) {
   function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false,pose="standing") {
     const root=new TransformNode("townsperson-root",scene);
     const inPublicLibrary=x>-65&&x<-39&&z>-97&&z<-71;
-    const baseY=inPublicLibrary?(z<-92?6.97:.96):(z<-70?8.62:0);
+    // Gallery deck is y=5.39; 6.97 is visitor eye height, not floor height.
+    const baseY=inPublicLibrary?(z<-92?5.39:.96):(z<-70?8.62:0);
     root.position.set(x,baseY,z);root.rotation.y=heading;
     const outfit=role==="guard"?npcCloth[0]:role==="merchant"||role==="butler"?npcCloth[3]:role==="maid"?npcCloth[5]:role==="hostess"?npcCloth[Math.abs(Math.floor(phase*7))%npcCloth.length]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
