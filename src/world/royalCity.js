@@ -3188,7 +3188,53 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"public-library-gallery-baluster",[x,7.62,-90.2],[.12,.62,.12],libraryWood);
   // A true upper reading gallery: timber floor, carved balustrade and a second
   // tier of shelves tucked behind the stone columns, like a historic university hall.
-  box(scene,"public-library-mezzanine-floor",[-53.0,5.25,-92.7],[16.4,.28,5.6],libraryWood);
+  box(scene,"public-library-mezzanine-floor",[-53.0,5.25,-92.7],[18.5,.28,6.0],libraryWood);
+  // Upper-gallery wall stacks: books line the north and west walls above the
+  // lower-floor collections, with compact human-scale volumes and extra tiers.
+  for(const x of [-60.5,-57.0,-53.5,-50.0,-46.5]) {
+    box(scene,"public-library-upper-north-wall-case",[x,6.55,-95.35],[3.25,2.15,.48],libraryWood);
+    for(let level=0;level<3;level++) {
+      const y=5.78+level*.68;
+      box(scene,"public-library-upper-north-wall-shelf",[x,y,-95.08],[3.12,.065,.12],libraryGold);
+      for(let b=0;b<15;b++)
+        box(scene,"public-library-upper-north-wall-volume",[x-1.43+b*.205,y+.12,-95.0],[.135,.21,.075],libraryBookMats[(b+level)%libraryBookCount]);
+    }
+  }
+  for(const z of [-94.0,-91.8]) {
+    box(scene,"public-library-upper-west-wall-case",[-62.0,6.55,z],[.48,2.15,2.0],libraryWood);
+    for(let level=0;level<3;level++) {
+      const y=5.78+level*.68;
+      box(scene,"public-library-upper-west-wall-shelf",[-61.72,y,z],[.12,.065,1.88],libraryGold);
+      for(let b=0;b<9;b++)
+        box(scene,"public-library-upper-west-wall-volume",[-61.62,y+.12,z-.82+b*.205],[.075,.21,.135],libraryBookMats[(b+level+1)%libraryBookCount]);
+    }
+  }
+  // A second gallery balcony faces the entrance, completing the upper U-shaped
+  // reading gallery. Its rail leaves the stair landing open.
+  box(scene,"public-library-front-gallery-floor",[-52.0,5.25,-86.1],[17.8,.28,2.6],libraryWood);
+  box(scene,"public-library-front-gallery-beam",[-52.0,5.12,-84.75],[17.8,.34,.20],libraryGold);
+  for(let x=-60.4;x<=-43.6;x+=1.2) {
+    box(scene,"public-library-front-gallery-baluster",[x,5.78,-84.78],[.11,.72,.11],libraryWood);
+    box(scene,"public-library-front-gallery-post-cap",[x,6.18,-84.78],[.20,.10,.20],libraryGold);
+  }
+  box(scene,"public-library-front-gallery-handrail",[-52.0,6.18,-84.78],[17.9,.15,.20],libraryGold);
+  // Broad oak staircase rises from the east aisle to the gallery's north-east landing.
+  for(let i=0;i<14;i++) {
+    const t=(i+.5)/14;
+    const x=-42.55-t*6.0;
+    const y=1.72+t*3.53;
+    box(scene,"public-library-grand-stair-step",[x,y,-92.35],[.48,.34,1.55],libraryWood);
+    box(scene,"public-library-grand-stair-nosing",[x,y+.18,-92.35],[.50,.055,1.62],libraryGold);
+  }
+  for(const side of [-1,1]) {
+    const rail=box(scene,"public-library-grand-stair-stringer",[-45.55,3.55,-92.35+side*.86],[6.35,.22,.18],libraryTrim);
+    rail.rotation.z=-.53;
+    for(let i=0;i<8;i++) {
+      const t=(i+.5)/8;
+      box(scene,"public-library-grand-stair-baluster",[-42.55-t*6,1.95+t*3.53,-92.35+side*.86],[.10,.55,.10],libraryGold);
+    }
+  }
+  box(scene,"public-library-grand-stair-landing",[-48.9,5.25,-92.35],[1.1,.28,2.0],libraryWood);
   box(scene,"public-library-mezzanine-front-beam",[-53.0,5.12,-89.85],[16.6,.34,.24],libraryGold);
   for(const x of [-60.7,-57.8,-54.9,-52.0,-49.1,-46.2,-43.3]) {
     box(scene,"public-library-mezzanine-baluster",[x,5.78,-89.9],[.12,.78,.12],libraryWood);
@@ -4453,8 +4499,17 @@ export async function createRoyalCity(engine, canvas) {
   }
   let yaw=0,pitch=0,moveSource=()=>Vector3.Zero();
   const velocity=new Vector3();
+  let libraryUpperLevel=false;
   const collides=(x,z)=>{
     if(Math.abs(x)>112)return true;
+    // Thick, continuous library perimeter collision. Preserve only the east doorway.
+    if(x>-64.35&&x<-63.05&&z>-96.4&&z<-71.6)return true;
+    if(z>-96.55&&z<-95.35&&x>-64.35&&x<-40.0)return true;
+    if(z>-72.65&&z<-71.45&&x>-64.35&&x<-40.0)return true;
+    if(x>-40.85&&x<-39.65&&z>-96.4&&z<-85.95)return true;
+    if(x>-40.85&&x<-39.65&&z>-82.05&&z<-71.6)return true;
+    // Keep the stair footprint clear of walking around its sides.
+    if(z>-93.25&&z<-91.45&&x>-49.2&&x<-42.2)return true;
     // Library walls block movement, while the east-facing doorway and reading hall stay walkable.
     if(x>-40.65&&x<-40.0&&z>-96.2&&z<-85.95)return true;
     if(x>-40.65&&x<-40.0&&z>-82.05&&z<-71.8)return true;
@@ -4721,7 +4776,17 @@ export async function createRoyalCity(engine, canvas) {
       const onLobbyStairLanding=camera.position.z<-171.0&&camera.position.z>=-174.0&&Math.abs(camera.position.x)<5.2;
       const onLobbyUpperGallery=camera.position.z<-173.35&&camera.position.z>-182.4&&Math.abs(camera.position.x)<19.2;
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
-      camera.position.y=seatedAt?2.02:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
+      // Stair progression changes the camera elevation smoothly; the top landing
+      // latches the visitor onto the upper gallery until they descend again.
+      const onLibraryStair=camera.position.z>-93.25&&camera.position.z<-91.45&&camera.position.x>-49.2&&camera.position.x<-42.2;
+      if(onLibraryStair) {
+        const stairT=Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1);
+        if(stairT>.94)libraryUpperLevel=true;
+        else if(stairT<.06)libraryUpperLevel=false;
+      }
+      const onLibraryGallery=libraryUpperLevel&&camera.position.x>-62.0&&camera.position.x<-43.5&&camera.position.z>-95.8&&camera.position.z<-83.9;
+      const libraryFloorY=onLibraryStair?1.72+Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1)*3.53:(onLibraryGallery?6.97:1.72);
+      camera.position.y=seatedAt?2.02:(camera.position.x>-64.5&&camera.position.x<-39.4&&camera.position.z>-97&&camera.position.z<-71?libraryFloorY:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
         (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
