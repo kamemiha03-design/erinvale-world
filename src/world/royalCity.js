@@ -1947,7 +1947,9 @@ export async function createRoyalCity(engine, canvas) {
     () => addCC0Model(scene,"Prop_Crate",[26.8,0.02,-11.0],[.85,.85,.85],.3),
     () => addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-18.0],[1.25,1.25,1.25],Math.PI*.5),
   ];
-  setTimeout(() => {
+  // These decorative external GLTFs are intentionally skipped on touch devices:
+  // decoding them can exceed mobile Safari's memory budget after startup.
+  if(!isTouchDevice) setTimeout(() => {
     void (async () => {
       for (const loadModel of modelJobs) await loadModel();
     })().catch(error => console.warn("Optional world props could not be loaded:", error));
@@ -2130,7 +2132,7 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(94.0,-16.0,"hostess",33.3,0,false);
 
   // The animated horse is also deferred until the town is already playable.
-  setTimeout(() => { void (async () => {
+  if(!isTouchDevice) setTimeout(() => { void (async () => {
   let horseRoot=null;
   try {
     const horse=await SceneLoader.ImportMeshAsync("","https://files.innerscene.com/library/standing-horse-01d8563f/0107d59ef4ff275f0158/","horse-original.glb",scene);
@@ -2199,16 +2201,18 @@ export async function createRoyalCity(engine, canvas) {
   // A restrained cinematic pass: soft highlight bloom and edge smoothing.
   // Kept deliberately light so Safari on recent iPhones can sustain the frame rate.
 
-  const cinematic=new DefaultRenderingPipeline("erinvale-cinematic",true,scene,[camera]);
-  // FXAA remains enabled, so one hardware sample avoids the extra MSAA
-  // render-target cost without removing the scene-wide edge smoothing.
-  cinematic.samples=1;
-  cinematic.fxaaEnabled=true;
-  cinematic.bloomEnabled=true;
-  cinematic.bloomThreshold=.88;
-  cinematic.bloomWeight=.12;
-  cinematic.bloomKernel=64;
-  cinematic.imageProcessingEnabled=false;
+  // Post-processing render targets are a major memory cost on iPhone Safari.
+  // Keep the full lighting/material scene, but reserve cinematic post effects for desktop.
+  if(!isTouchDevice) {
+    const cinematic=new DefaultRenderingPipeline("erinvale-cinematic",true,scene,[camera]);
+    cinematic.samples=1;
+    cinematic.fxaaEnabled=true;
+    cinematic.bloomEnabled=true;
+    cinematic.bloomThreshold=.88;
+    cinematic.bloomWeight=.12;
+    cinematic.bloomKernel=64;
+    cinematic.imageProcessingEnabled=false;
+  }
   let yaw=0,pitch=0,moveSource=()=>Vector3.Zero();
   const velocity=new Vector3();
   const collides=(x,z)=>{
