@@ -1951,7 +1951,7 @@ export async function createRoyalCity(engine, canvas) {
     void (async () => {
       for (const loadModel of modelJobs) await loadModel();
     })().catch(error => console.warn("Optional world props could not be loaded:", error));
-  }, 1800);
+  }, 20000);
   addObstacle(32.2,-18.0,1.8);
   addObstacle(13.4,-7.4,.72);
   addObstacle(17.6,-14.2,.72);
@@ -2200,7 +2200,9 @@ export async function createRoyalCity(engine, canvas) {
   // Kept deliberately light so Safari on recent iPhones can sustain the frame rate.
 
   const cinematic=new DefaultRenderingPipeline("erinvale-cinematic",true,scene,[camera]);
-  cinematic.samples=2;
+  // FXAA remains enabled, so one hardware sample avoids the extra MSAA
+  // render-target cost without removing the scene-wide edge smoothing.
+  cinematic.samples=1;
   cinematic.fxaaEnabled=true;
   cinematic.bloomEnabled=true;
   cinematic.bloomThreshold=.88;
