@@ -107,6 +107,12 @@ export function createWorldAudio() {
 
   function scheduleMusic() {
     if(!audioContext || !musicGain || !musicEnabled) return;
+    const now=audioContext.currentTime;
+    if(nextMusicTime<now-.12) {
+      const skipped=Math.ceil((now-.12-nextMusicTime)/(beat/2));
+      musicStep+=skipped;
+      nextMusicTime+=skipped*beat/2;
+    }
     while(nextMusicTime<audioContext.currentTime+.24) {
       const step=musicStep%32;
       const bar=Math.floor(step/8);
