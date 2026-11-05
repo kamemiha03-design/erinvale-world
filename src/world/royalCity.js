@@ -2067,9 +2067,13 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"palace-upper-hall-doorway-left",[-10.15,23.0,-142.05],[.34,16.2,.42],palaceGold);
   box(scene,"palace-upper-hall-doorway-right",[10.15,23.0,-142.05],[.34,16.2,.42],palaceGold);
   box(scene,"palace-upper-hall-doorway-crown",[0,31.2,-142.05],[20.6,.48,.62],palaceGold);
-  box(scene,"palace-lobby-upper-gallery-front-rail",[0,15.65,-124.35],[12.0,.18,.18],palaceGold);
-  for(let x=-5.6;x<=5.6;x+=.8) {
-    const baluster=cylinder(scene,"palace-lobby-upper-gallery-baluster",[x,15.35,-124.35],.09,.72,lobbyPortraitGold,8);
+  // Keep the gallery balustrade, but leave two full-width openings aligned with
+  // the twin stair flights so the landing is physically walkable.
+  for(const [center,width] of [[-5.42,1.16],[0,3.55],[5.42,1.16]]) {
+    box(scene,"palace-lobby-upper-gallery-front-rail",[center,15.65,-124.35],[width,.18,.18],palaceGold);
+    for(let x=center-width/2+.18;x<=center+width/2-.12;x+=.42) {
+      cylinder(scene,"palace-lobby-upper-gallery-baluster",[x,15.35,-124.35],.09,.72,lobbyPortraitGold,12);
+    }
   }
   box(scene,"palace-lobby-back-crest-plaque",[0,17.5,-125.1],[3.6,4.0,.28],palaceBlue);
   const lobbyCrest=MeshBuilder.CreateCylinder("palace-lobby-national-crest",{diameter:2.1,height:.18,tessellation:8},scene);
@@ -3043,12 +3047,14 @@ export async function createRoyalCity(engine, canvas) {
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
       const onLobbyStair=camera.position.z<=-116.25&&camera.position.z>=-124.55&&Math.abs(Math.abs(camera.position.x)-3.35)<1.65;
       const lobbyStairProgress=onLobbyStair?(-116.25-camera.position.z)/(-116.25+124.55):0;
-      const lobbyStairFloor=onLobbyStair?Math.max(0,Math.min(6.0,lobbyStairProgress*6.0)):0;
+      // Match the actual tread tops (8.82m to 14.82m) and keep the camera
+      // 1.72m above them, rather than adding the outside stair rise twice.
+      const lobbyStairFloor=onLobbyStair?8.82+Math.max(0,Math.min(1,lobbyStairProgress))*6.0:0;
       const wasOnUpperLevel=camera.position.y>14.0;
-      const onUpperFloor=wasOnUpperLevel&&camera.position.z<-124.55&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.5;
+      const onUpperFloor=wasOnUpperLevel&&camera.position.z<-124.45&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.5;
       const onLobbyGround=camera.position.z<=-112.2&&camera.position.z>=-126.0&&Math.abs(camera.position.x)<8.5;
       const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-127;
-      camera.position.y=1.72+(onRoyalStair?stairFloor:(onLobbyStair?stairRise+lobbyStairFloor:(onUpperFloor?14.9:(onLobbyGround||onLanding?8.62:0))));
+      camera.position.y=onRoyalStair?1.72+stairFloor:(onLobbyStair?1.72+lobbyStairFloor:(onUpperFloor?16.62:((onLobbyGround||onLanding)?10.34:1.72)));
       // The monumental front doors swing open automatically as the visitor approaches.
       const mainEntryDoors=(scene.metadata?.doorLeaves||[]).filter(door=>door.name==="palace-grand-entry-double-door");
       if(Math.abs(camera.position.x)<4.8&&camera.position.z<-110.5&&camera.position.z>-117.5) {
