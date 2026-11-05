@@ -1877,6 +1877,15 @@ export async function createRoyalCity(engine, canvas) {
   for(const mesh of [...scene.meshes]) {
     if(/^(castle-approach-step|castle-step-nosing|castle-stair-side-parapet|royal-gate-landing|royal-gate-carpet|royal-stair-urn)/.test(mesh.name)) mesh.dispose(false,false);
   }
+  // Remove obsolete gatehouse leaves, arch fragments and banners that were
+  // left suspended over the new carriage stair after the palace was shifted.
+  for(const mesh of [...scene.meshes]) {
+    const oldGate=/^(gate-shadow|royal-gate-open-leaf|royal-gate-gold-strapping|gate-arch-inner-voussoir|gate-pier|gate-arch-stone|royal-crest-medallion)$/.test(mesh.name);
+    const oldGateBanner=/^(banner-pole|royal-banner)$/.test(mesh.name) &&
+      mesh.position.z>-115.2 && mesh.position.z<-112.0 &&
+      Math.abs(mesh.position.x)>6.5 && Math.abs(mesh.position.x)<10.0;
+    if(oldGate||oldGateBanner) mesh.dispose(false,false);
+  }
   // Rebuild a continuous, visible staircase from the carriage court to the raised entrance.
   for(let step=0;step<stairCount;step++) {
     const rise=stairRise/stairCount, tread=(stairStartZ-stairEndZ)/stairCount;
@@ -2601,7 +2610,7 @@ export async function createRoyalCity(engine, canvas) {
   const brookLeft=[],brookRight=[];
   for(let i=0;i<brookPoints.length;i++) {
     const tangent=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();
-    const normal=new Vector3(-tangent.z,0,tangent.x).scale(1.18);
+    const normal=new Vector3(-tangent.z,0,tangent.x).scale(3.25);
     brookLeft.push(brookPoints[i].add(normal));brookRight.push(brookPoints[i].subtract(normal));
   }
   const brook=MeshBuilder.CreateRibbon("connected-town-brook",{pathArray:[brookLeft,brookRight],sideOrientation:2},scene);
@@ -2610,7 +2619,7 @@ export async function createRoyalCity(engine, canvas) {
     const bank=[];
     for(let i=0;i<brookPoints.length;i++) {
       const tangent=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();
-      bank.push(brookPoints[i].add(new Vector3(-tangent.z,0,tangent.x).scale(side*1.48)));
+      bank.push(brookPoints[i].add(new Vector3(-tangent.z,0,tangent.x).scale(side*3.42)));
     }
     for(let i=0;i<bank.length-1;i+=2) {
       const next=bank[Math.min(i+2,bank.length-1)],mid=Vector3.Lerp(bank[i],next,.5);
@@ -2619,18 +2628,89 @@ export async function createRoyalCity(engine, canvas) {
       stone.rotation.y=Math.atan2(dz,dx);
     }
   }
-  // A broad Romanesque bridge crosses the straight western reach at right angles.
-  const bridgeX=7,bridgeZ=-36;
-  box(scene,"great-stone-bridge-deck",[bridgeX,.78,bridgeZ],[5.8,.48,5.2],brookEdge);
-  box(scene,"great-stone-bridge-roadway",[bridgeX,1.035,bridgeZ],[5.25,.08,4.75],brookStone);
-  const archPath=[];for(let i=0;i<=18;i++){const t=-Math.PI/2+i*Math.PI/18;archPath.push(new Vector3(bridgeX,.32+Math.cos(t)*.92,bridgeZ+Math.sin(t)*2.15));}
-  const arch=MeshBuilder.CreateTube("great-stone-bridge-arch",{path:archPath,radius:.34,tessellation:10},scene);arch.material=brookStone;
-  for(const side of [-1,1]){box(scene,"great-stone-bridge-parapet",[bridgeX+side*2.72,1.4,bridgeZ],[.34,.72,5.05],brookStone);box(scene,"great-stone-bridge-capstone",[bridgeX+side*2.72,1.84,bridgeZ],[.48,.16,5.25],brookEdge);for(let i=0;i<7;i++)box(scene,"great-stone-bridge-baluster",[bridgeX+side*2.72,1.48,bridgeZ-2.05+i*.68],[.4,.82,.42],brookEdge);}
-  // A smaller timber footbridge crosses the second straight reach, beyond the workshops.
-  const sx=68,sz=-43;
-  box(scene,"east-footbridge-deck",[sx,.48,sz],[4.2,.28,3.2],mats.woodLight);
-  for(const side of [-1,1]){box(scene,"east-footbridge-abutment",[sx+side*1.95,.28,sz],[.42,.55,3.55],brookStone);box(scene,"east-footbridge-handrail",[sx+side*1.72,.91,sz],[.16,.16,3.05],brookEdge);for(let i=0;i<4;i++)box(scene,"east-footbridge-post",[sx+side*1.72,.69,sz-1.25+i*.83],[.18,.62,.18],brookStone);}
-  for(let i=0;i<8;i++)box(scene,"east-footbridge-paving",[sx-1.82+i*.52,.635,sz],[.46,.045,2.75],i%2?brookEdge:mats.wood);
+  // Broad floodplains: gravel shelves, sandy shallows and grassy banks.
+  const brookGravel=mat(scene,"brook-floodplain-gravel",new Color3(.53,.49,.39),.98);
+  const brookSand=mat(scene,"brook-shallow-sand",new Color3(.66,.59,.43),.96);
+  const brookGrass=mat(scene,"brook-meadow-grass",new Color3(.24,.34,.20),.98);
+  const brookReed=mat(scene,"brook-reed-leaf",new Color3(.23,.36,.17),.9);
+  const floodLeft=[],floodRight=[];
+  for(let i=0;i<brookPoints.length;i++) {
+    const tangent=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();
+    const normal=new Vector3(-tangent.z,0,tangent.x);
+    floodLeft.push(brookPoints[i].add(normal.scale(8.2)));
+    floodRight.push(brookPoints[i].subtract(normal.scale(8.2)));
+  }
+  // The water is about 6.5m wide; the outer ribbons blend into shallow gravel shelves.
+  const leftFloodplain=MeshBuilder.CreateRibbon("brook-left-floodplain",{pathArray:[brookLeft,floodLeft],sideOrientation:2},scene);
+  leftFloodplain.material=brookGravel;leftFloodplain.isPickable=false;
+  const rightFloodplain=MeshBuilder.CreateRibbon("brook-right-floodplain",{pathArray:[brookRight,floodRight],sideOrientation:2},scene);
+  rightFloodplain.material=brookSand;rightFloodplain.isPickable=false;
+  for(const [x,z,side] of [[-11,-39,1],[-3,-32,-1],[16,-40,1],[25,-31,-1],[39,-40,1],[55,-38,-1],[73,-48,1],[88,-37,-1],[101,-25,1],[105,-5,-1]]) {
+    for(let j=0;j<4;j++) {
+      const reed=MeshBuilder.CreateCylinder("brook-reed",{diameterTop:.025,diameterBottom:.055,height:1.0+(j%2)*.45,tessellation:5},scene);
+      reed.position.set(x+(j-1.5)*.18,.5,z+side*.22);reed.rotation.z=(j-1.5)*.12;reed.material=brookReed;
+    }
+    const pebble=MeshBuilder.CreateSphere("brook-floodplain-pebble",{diameter:.65,segments:10},scene);
+    pebble.position.set(x+.8,.18,z+side*.8);pebble.scaling.set(1.25,.38,.8);pebble.material=brookEdge;
+  }
+  for(const [x,z] of [[-8,-43],[2,-30],[19,-42],[33,-30],[48,-41],[63,-47],[80,-37],[94,-31],[105,-14]]) {
+    const grass=MeshBuilder.CreateGround("brook-meadow-bank-patch",{width:4.6,height:3.2,subdivisions:1},scene);
+    grass.position.set(x,.028,z);grass.material=brookGrass;
+  }
+
+  // The great stone bridge is a true segmental arch: its roadway rises smoothly
+  // toward the crown and descends to both abutments, rather than sitting flat.
+  const bridgeX=7,bridgeZ=-36,bridgeHalf=5.0,bridgeSegments=24,bridgeRise=1.35;
+  const bridgeSurface=(z)=>.72+bridgeRise*(1-Math.pow((z-bridgeZ)/bridgeHalf,2));
+  for(let i=0;i<bridgeSegments;i++) {
+    const z0=bridgeZ-bridgeHalf+i*(2*bridgeHalf/bridgeSegments);
+    const z1=z0+2*bridgeHalf/bridgeSegments;
+    const mid=(z0+z1)/2, slope=(bridgeSurface(z1)-bridgeSurface(z0))/(z1-z0);
+    const deck=box(scene,"great-stone-bridge-arched-deck",[bridgeX,bridgeSurface(mid)-.25,mid],[6.1,.5,(z1-z0)+.035],brookEdge);
+    deck.rotation.x=-Math.atan(slope);deck.receiveShadows=true;
+    const road=box(scene,"great-stone-bridge-arched-roadway",[bridgeX,bridgeSurface(mid)+.025,mid],[5.55,.07,(z1-z0)+.035],brookStone);
+    road.rotation.x=-Math.atan(slope);
+  }
+  for(const side of [-1,1]) {
+    const archPath=[];
+    for(let i=0;i<=28;i++) {
+      const z=bridgeZ-bridgeHalf+i*(2*bridgeHalf/28);
+      const u=(z-bridgeZ)/bridgeHalf;
+      archPath.push(new Vector3(bridgeX+side*2.62,.20+.95*Math.sqrt(Math.max(0,1-u*u)),z));
+    }
+    const arch=MeshBuilder.CreateTube("great-stone-bridge-true-arch",{path:archPath,radius:.34,tessellation:14},scene);
+    arch.material=brookStone;
+    for(let i=0;i<20;i++) {
+      const z=bridgeZ-bridgeHalf+.25+i*.5,u=(z-bridgeZ)/bridgeHalf;
+      const archTop=.20+.95*Math.sqrt(Math.max(0,1-u*u))+.22;
+      const deckBottom=bridgeSurface(z)-.25;
+      const h=Math.max(.12,deckBottom-archTop);
+      const spandrel=box(scene,"great-stone-bridge-spandrel",[bridgeX+side*2.62,(archTop+deckBottom)/2,z],[.48,h,.53],brookStone);
+      spandrel.receiveShadows=true;
+    }
+    for(let i=0;i<=10;i++) {
+      const z=bridgeZ-bridgeHalf+i;
+      const y=bridgeSurface(z);
+      box(scene,"great-stone-bridge-parapet",[bridgeX+side*3.02,y+.63,z],[.38,1.18,1.02],brookStone);
+      box(scene,"great-stone-bridge-capstone",[bridgeX+side*3.02,y+1.25,z],[.52,.16,1.05],brookEdge);
+    }
+  }
+  // A smaller timber footbridge also receives a gentle arched camber.
+  const sx=68,sz=-43,smallHalf=4.35,smallRise=.58,smallSegments=14;
+  const smallSurface=(z)=>.52+smallRise*(1-Math.pow((z-sz)/smallHalf,2));
+  for(let i=0;i<smallSegments;i++) {
+    const z0=sz-smallHalf+i*(2*smallHalf/smallSegments),z1=z0+2*smallHalf/smallSegments;
+    const mid=(z0+z1)/2,slope=(smallSurface(z1)-smallSurface(z0))/(z1-z0);
+    const plank=box(scene,"east-footbridge-arched-plank",[sx,smallSurface(mid),mid],[4.6,.22,(z1-z0)+.04],mats.woodLight);
+    plank.rotation.x=-Math.atan(slope);
+  }
+  for(const side of [-1,1]) {
+    for(let i=0;i<=8;i++) {
+      const z=sz-smallHalf+i*(2*smallHalf/8),y=smallSurface(z);
+      box(scene,"east-footbridge-arched-railing",[sx+side*2.18,y+.48,z],[.16,.16,1.1],brookEdge);
+      box(scene,"east-footbridge-arched-post",[sx+side*2.18,y+.23,z],[.20,.58,.20],brookStone);
+    }
+  }
   for(const [x,z] of [[-11,-38],[-7,-35.8],[15,-34.9],[28,-34.9],[43,-36],[56,-43.9],[74,-43.9],[87,-30],[102,-22],[107,-3]]){const p=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1,height:.18,tessellation:8},scene);p.position.set(x,.16,z);p.scaling.z=.72;p.material=brookEdge;}
 
   // Full-height townspeople are assembled locally so their proportions never depend
@@ -2967,10 +3047,13 @@ export async function createRoyalCity(engine, canvas) {
     // Fountain basin, market counters, and castle cliff are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
+    // Palace ground-floor lobby: leave the central walkable volume free of
+    // legacy town obstacles and the old invisible rear barrier.
+    if(camera.position.y<14 && z<-114.0 && z>-128.75 && Math.abs(x)<10.2)return false;
+    // The old rear wall has a broad central opening; only its two stone wings collide.
+    if(z<=-128.75 && z>-130.0 && Math.abs(x)>4.35)return true;
     // Keep the central stair corridor open; the cliff shoulders remain solid.
     if(z<-78 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
-    // The lower lobby ends at its rear wall; the upper corridor is reached from the stairs.
-    if(camera.position.y<14 && z<-128.0 && z>-129.1 && Math.abs(x)<10.5)return true;
     // Second-floor corridor and ballroom boundaries, with a wide central doorway.
     if(z<-128.25 && z>-142.2 && Math.abs(x)>6.5)return true;
     if(z<=-142 && z>-176 && Math.abs(x)>21.35)return true;
