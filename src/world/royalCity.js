@@ -1869,14 +1869,14 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"palace-lobby-runner",[0,8.77,-120],[4.6,.06,10.2],lobbyVelvet);
   for(const side of [-1,1]) {
     box(scene,"palace-lobby-side-wall",[side*9,15,-120],[.55,12,11],lobbyWall);
-    for(let z=-84;z<=-76;z+=4) {
+    for(let z=-124;z<=-116;z+=4) {
       cylinder(scene,"palace-lobby-column-base",[side*7.8,9.0,z],.95,.38,palaceGold,16);
       cylinder(scene,"palace-lobby-column",[side*7.8,15.0,z],.42,11.6,palaceIvory,16);
       cylinder(scene,"palace-lobby-column-capital",[side*7.8,21.0,z],.82,.42,palaceGold,16);
     }
     box(scene,"palace-lobby-welcome-desk",[side*5.9,9.55,-120],[2.9,1.7,1.35],lobbyWood);
     box(scene,"palace-lobby-desk-top",[side*5.9,10.45,-120],[3.1,.18,1.5],palaceGold);
-    box(scene,"palace-lobby-desk-front-inlay",[side*5.9,9.55,-79.29],[2.1,.9,.08],lobbyVelvet);
+    box(scene,"palace-lobby-desk-front-inlay",[side*5.9,9.55,-120.71],[2.1,.9,.08],lobbyVelvet);
     for(let j=0;j<2;j++) {
       box(scene,"palace-lobby-waiting-seat",[side*4.8,9.1,-124+j*2.0],[2.0,.38,.82],lobbyWood);
       box(scene,"palace-lobby-waiting-seat-back",[side*4.8,10.0,-124.4+j*2.0],[2.0,1.35,.2],lobbyVelvet);
