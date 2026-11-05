@@ -345,6 +345,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       const beam=box(scene,name+"-exposed-ceiling-beam",[x,h-.18,zz],[w-.4,.32,.42],mats.wood);
       beam.receiveShadows=true;
     }
+    if(name!=="The Velvet Rose") {
     for(let i=0;i<4;i++) {
       const tx=x-4.5+i*3;
       box(scene,name+"-interior-table",[tx,.98,z+1.25],[1.85,.20,1.35],mats.woodLight);
@@ -375,7 +376,80 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       const candle=MeshBuilder.CreateSphere(name+"-chandelier-candle",{diameter:.22,segments:8},scene);
       candle.position.set(x+Math.cos(a)*1.18,h-1.0,z+Math.sin(a)*1.18);candle.material=mats.lantern;
     }
-    if(name==="The Copper Stag Tavern" || name==="The Lantern and Lark" || name==="The Fox and Fir") {
+    }
+    if(name==="The Velvet Rose") {
+      // A mysterious candlelit lounge with velvet, antique brass and private curtained alcoves.
+      const wine=mat(scene,"velvet-rose-wine",new Color3(.24,.018,.055),.72);
+      const wineLight=mat(scene,"velvet-rose-highlight",new Color3(.48,.055,.12),.62);
+      const plum=mat(scene,"velvet-rose-plum",new Color3(.105,.045,.105),.48);
+      const black=mat(scene,"velvet-rose-ebony",new Color3(.035,.027,.034),.36,.25);
+      const brass=mat(scene,"velvet-rose-brass",new Color3(.66,.43,.19),.28,.78);
+      const candleGlow=mat(scene,"velvet-rose-candle-glow",new Color3(1,.29,.09),.25);
+      candleGlow.emissiveColor=new Color3(.95,.16,.035);
+      const mirror=mat(scene,"velvet-rose-smoked-mirror",new Color3(.12,.075,.095),.12,.85);
+      mirror.emissiveColor=new Color3(.045,.012,.025);
+      box(scene,"velvet-rose-carpet",[x,.17,z+1.0],[w-1,.10,d-1.1],wine);
+      box(scene,"velvet-rose-runner",[x,.235,z+1.0],[3.2,.035,d-1.5],wineLight);
+      for(let zz=z-d*.34;zz<z+d*.30;zz+=1.35)
+        box(scene,"velvet-rose-runner-motif",[x,.26,zz],[2.55,.025,.045],brass);
+      box(scene,"velvet-rose-reception-desk",[x,1.18,z-d*.34],[5.8,1.45,.95],black);
+      box(scene,"velvet-rose-desk-inlay",[x,1.12,z-d*.34-.49],[4.9,.72,.055],brass);
+      box(scene,"velvet-rose-desk-top",[x,1.96,z-d*.34],[6.2,.16,1.18],wineLight);
+      for(let j=-2;j<=2;j++) box(scene,"velvet-rose-desk-lattice",[x+j*.86,1.18,z-d*.34-.53],[.055,.92,.06],brass);
+      // Four private lounge bays with deep sofas and heavy curtains.
+      for(let side of [-1,1]) for(let row=0;row<2;row++) {
+        const ax=x+side*5.35, az=z-1.1-row*4.25;
+        box(scene,"velvet-rose-alcove-platform",[ax,.36,az],[5.0,.22,3.25],black);
+        box(scene,"velvet-rose-settee-seat",[ax,.78,az+.25],[3.5,.58,1.25],wine);
+        box(scene,"velvet-rose-settee-back",[ax,1.35,az-.28],[3.55,1.05,.42],wineLight);
+        for(let dx of [-1.35,1.35]) {
+          box(scene,"velvet-rose-settee-arm",[ax+dx,1.02,az+.25],[.42,.72,1.28],wine);
+          cylinder(scene,"velvet-rose-brass-foot",[ax+dx,.43,az+.25],.075,.5,brass,8);
+        }
+        box(scene,"velvet-rose-low-table",[ax,.68,az+1.45],[1.35,.16,.8],brass);
+        box(scene,"velvet-rose-table-inset",[ax,.775,az+1.45],[1.08,.035,.58],black);
+        box(scene,"velvet-rose-screen-frame",[ax+side*2.35,2.05,az-.1],[.16,3.6,2.8],brass);
+        box(scene,"velvet-rose-screen-panel",[ax+side*2.35,2.05,az-.1],[.10,3.35,2.55],plum);
+        box(scene,"velvet-rose-curtain-valance",[ax,3.65,az-1.0],[4.9,.22,.35],brass);
+        for(let fold=0;fold<9;fold++)
+          box(scene,"velvet-rose-curtain-fold",[ax-2.1+fold*.525,2.55,az-1.0],[.48,2.15,.16],wine);
+      }
+      // Smoked mirrors and gilt sconces along both side walls.
+      for(let side of [-1,1]) for(let row=0;row<3;row++) {
+        const mx=x+side*(w/2-.42), mz=z-4.3+row*3.7;
+        box(scene,"velvet-rose-mirror-frame",[mx,3.9,mz],[.22,2.45,1.75],brass);
+        box(scene,"velvet-rose-mirror-glass",[mx-side*.13,3.9,mz],[.055,2.12,1.42],mirror);
+        box(scene,"velvet-rose-wall-sconce-base",[mx-side*.25,3.35,mz+1.05],[.22,.55,.22],brass);
+        const glow=MeshBuilder.CreateSphere("velvet-rose-wall-sconce-glow",{diameter:.27,segments:10},scene);
+        glow.position.set(mx-side*.42,3.55,mz+1.05);glow.material=candleGlow;
+      }
+      // Sideboard, decanters and a warm chandelier.
+      box(scene,"velvet-rose-sideboard",[x-2.0,1.25,z-d*.28],[4.5,1.55,.85],black);
+      box(scene,"velvet-rose-sideboard-top",[x-2.0,2.08,z-d*.28],[4.8,.16,1.0],brass);
+      for(let j=0;j<6;j++) {
+        const bx=x-3.7+j*.68;
+        cylinder(scene,"velvet-rose-decanter",[bx,2.48,z-d*.28],.19,.62,j%2?wineLight:plum,12);
+        cylinder(scene,"velvet-rose-decanter-neck",[bx,2.88,z-d*.28],.075,.25,brass,10);
+      }
+      const pendant=MeshBuilder.CreateTorus("velvet-rose-pendant-ring",{diameter:3.5,thickness:.12,tessellation:24},scene);
+      pendant.position.set(x,h-1.0,z);pendant.material=brass;
+      cylinder(scene,"velvet-rose-pendant-chain",[x,h-.42,z],.055,1.0,black,10);
+      for(let j=0;j<8;j++) {
+        const a=j*Math.PI/4;
+        const bulb=MeshBuilder.CreateSphere("velvet-rose-pendant-bulb",{diameter:.24,segments:10},scene);
+        bulb.position.set(x+Math.cos(a)*1.65,h-1.0,z+Math.sin(a)*1.65);bulb.material=candleGlow;
+      }
+      // Closed private-room doors hint at a larger establishment beyond the lounge.
+      for(let side of [-1,1]) {
+        const dx=x+side*3.8, dz=z-d/2+.55;
+        box(scene,"velvet-rose-private-door-frame",[dx,2.05,dz],[2.5,4.0,.28],brass);
+        box(scene,"velvet-rose-private-door",[dx,2.0,dz+.18],[2.18,3.72,.16],wine);
+        box(scene,"velvet-rose-private-door-panel",[dx,2.0,dz+.075],[1.55,2.8,.08],black);
+        const knob=MeshBuilder.CreateSphere("velvet-rose-private-door-knob",{diameter:.16,segments:10},scene);
+        knob.position.set(dx+.72,1.8,dz-.02);knob.material=brass;
+      }
+      obstacles.push({x:x,z:z-d*.34,r:2.5});
+    } else if(name==="The Copper Stag Tavern" || name==="The Lantern and Lark" || name==="The Fox and Fir") {
       // Tavern-specific hearth, chimney breast, glowing embers and beer service details.
       const hx=x-w*.30, hz=z-d/2+.95;
       box(scene,name+"-massive-hearth-surround",[hx,.95,hz],[3.8,1.9,.72],mats.trim);
@@ -1927,7 +2001,7 @@ export async function createRoyalCity(engine, canvas) {
     const root=new TransformNode("townsperson-root",scene);
     const baseY=role==="guard"&&z<-70?7.63:0;
     root.position.set(x,baseY,z);root.rotation.y=heading;
-    const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:role==="hostess"?npcCloth[4]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
+    const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:role==="hostess"?npcCloth[Math.abs(Math.floor(phase*7))%npcCloth.length]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
     const part=(name,pos,size,material,kind="box")=>{
@@ -2046,6 +2120,14 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(-21,4.6,"hostess",22.4,Math.PI,false);
   makeTownsperson(52,10.0,"hostess",23.6,Math.PI,false);
   makeTownsperson(72,10.0,"hostess",24.8,Math.PI,false);
+  // Adult hostess staff for the Velvet Rose, stationed throughout its lounge.
+  makeTownsperson(86.0,-10.0,"hostess",26.1,Math.PI,false);
+  makeTownsperson(96.0,-10.0,"hostess",27.3,Math.PI,false);
+  makeTownsperson(86.0,-14.2,"hostess",28.5,Math.PI/2,false);
+  makeTownsperson(96.0,-14.2,"hostess",29.7,-Math.PI/2,false);
+  makeTownsperson(91.0,-8.0,"hostess",30.9,Math.PI,false);
+  makeTownsperson(88.5,-16.0,"hostess",32.1,0,false);
+  makeTownsperson(94.0,-16.0,"hostess",33.3,0,false);
 
   // The animated horse is also deferred until the town is already playable.
   setTimeout(() => { void (async () => {
