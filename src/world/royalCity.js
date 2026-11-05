@@ -730,6 +730,23 @@ export async function createRoyalCity(engine, canvas) {
   const addObstacle=(x,z,r)=>obstacles.push({x,z,r});
   addBuilding(scene,{x:-21,z:6,w:15,d:10,h:9,name:"The Copper Stag Tavern",sign:"COPPER STAG • TAVERN",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:-23,z:-20,w:28,d:20,h:15,name:"Adventurers Guild",sign:"ADVENTURERS GUILD",interior:true},{...mats},shadow,colliders,obstacles);
+  // Guild identity: a broad home-plate gable, carved timber truss and swallow-tail pennants.
+  const guildFront=-10;
+  for(const side of [-1,1]) {
+    const beam=MeshBuilder.CreateTube("guild-homeplate-gable-beam",{path:[new Vector3(-23+side*13.7,15.1,guildFront-.34),new Vector3(-23,20.1,guildFront-.34)],radius:.22,tessellation:8},scene);
+    beam.material=mats.woodLight;
+  }
+  box(scene,"guild-gable-crossbeam",[-23,15.35,guildFront-.38],[27.8,.28,.34],mats.gold);
+  const guildShield=MeshBuilder.CreateCylinder("guild-crest-shield",{diameter:2.0,height:.22,tessellation:6},scene);
+  guildShield.position.set(-23,12.2,guildFront-.68);guildShield.rotation.x=Math.PI/2;guildShield.material=mats.banner;
+  const guildCrest=MeshBuilder.CreateCylinder("guild-crest-mark",{diameter:.82,height:.25,tessellation:6},scene);
+  guildCrest.position.set(-23,12.2,guildFront-.84);guildCrest.rotation.x=Math.PI/2;guildCrest.material=mats.gold;
+  for(const side of [-1,1]) {
+    const pennant=MeshBuilder.CreatePlane("guild-swallowtail-pennant",{width:1.25,height:2.0,sideOrientation:2},scene);
+    pennant.position.set(-23+side*11.4,12.4,guildFront-.42);pennant.rotation.y=Math.PI/2;pennant.material=mats.banner;
+    const notch=MeshBuilder.CreateCylinder("guild-pennant-finial",{diameter:.18,height:.24,tessellation:6},scene);
+    notch.position.set(-23+side*11.4,11.35,guildFront-.46);notch.rotation.z=Math.PI/2;notch.material=mats.gold;
+  }
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
   // Landmark dressing: make the tavern and guild unmistakable from the square.
   // Copper Stag: oversized hanging sign, steep timber gable, warm windows and a beer emblem.
@@ -1066,34 +1083,83 @@ export async function createRoyalCity(engine, canvas) {
   }
   // Decorative troughs and urns are omitted so the fountain approach stays clear.
 
-  // Market stalls, cloth roofs, produce crates and baskets.
+  // Market stalls: carved counters, striped awnings, stacked crates and wicker baskets.
   for(let i=0;i<4;i++) {
     const x=14+i*4.5,z=-10-(i%2)*3;
     addObstacle(x,z,1.9);
     addObstacle(x-1.3,z+1.5,.68);
     box(scene,"market-counter",[x,1,z],[3.3,1.6,2.1],mats.wood);
+    box(scene,"market-counter-front-inlay",[x,1,z-1.065],[2.9,.82,.07],mats.gold);
     box(scene,"market-canopy",[x,2.65,z],[3.8,.18,2.7],i%2?mats.banner:mats.flowers);
-    for(const dx of [-1.65,1.65]) for(const dz of [-1.05,1.05])
+    for(const dx of [-1.65,1.65]) for(const dz of [-1.05,1.05]) {
       box(scene,"market-post",[x+dx,1.8,z+dz],[.12,2.0,.12],mats.woodLight);
-    for(let j=0;j<5;j++) {
-      const fruit=MeshBuilder.CreateSphere("market-produce",{diameter:.42,segments:10},scene);
-      fruit.position.set(x-1.1+(j%3)*.75,1.92,z-.35+Math.floor(j/3)*.65);
-      fruit.material=[mats.flowers,mats.green,mats.gold][j%3];
+      for(let k=0;k<3;k++)box(scene,"market-post-carving",[x+dx,1.12+k*.48,z+dz-.075],[.17,.055,.16],mats.gold);
+    }
+    for(let crate=0;crate<2;crate++) {
+      const cx=x-1.05+crate*1.65,cz=z+.55;
+      box(scene,"market-display-crate",[cx,1.83,cz],[1.35,.42,1.0],mats.woodLight);
+      for(let slat=0;slat<5;slat++)box(scene,"market-crate-slat",[cx- .55+slat*.275,2.07,cz],[.045,.12,1.0],mats.wood);
+    }
+    // Wicker baskets and a folded linen cloth give each counter a lived-in market feel.
+    const basket=MeshBuilder.CreateCylinder("market-wicker-basket",{diameter:.78,height:.42,tessellation:12},scene);
+    basket.position.set(x+1.1,1.91,z+.25);basket.scaling.y=.72;basket.material=mats.woodLight;
+    for(let band=0;band<3;band++) {
+      const hoop=MeshBuilder.CreateTorus("market-basket-weave",{diameter:.70+band*.025,thickness:.025,tessellation:16},scene);
+      hoop.position.set(x+1.1,1.77+band*.14,z+.25);hoop.material=mats.gold;
     }
     addBarrel(scene,x-1.3,z+1.5,mats.wood,mats.gold);
   }
 
-  // Each market stall has a readable hanging sign and a distinct display.
+  // Each stall has a legible hanging sign and carefully modeled wares rather than generic balls.
   const marketLabels=["野菜・果物","焼きたてパン","宝飾品","薬草・香辛料"];
+  const produceRed=mat(scene,"market-tomato-red",new Color3(.72,.075,.035),.76);
+  const produceOrange=mat(scene,"market-carrot-orange",new Color3(.92,.30,.045),.78);
+  const produceGreen=mat(scene,"market-leaf-green",new Color3(.16,.34,.105),.9);
+  const producePale=mat(scene,"market-cabbage-green",new Color3(.48,.62,.25),.92);
+  const breadCrust=mat(scene,"market-bread-crust",new Color3(.62,.32,.12),.92);
+  const breadScore=mat(scene,"market-bread-score",new Color3(.91,.72,.46),.9);
+  const herbLeaf=mat(scene,"market-herb-leaf",new Color3(.25,.39,.16),.92);
+  const gemBlue=mat(scene,"market-gem-blue",new Color3(.12,.40,.62),.24,.55);
+  const gemRed=mat(scene,"market-gem-red",new Color3(.58,.075,.16),.24,.55);
   for(let i=0;i<4;i++){
     const x=14+i*4.5,z=-10-(i%2)*3,tex=new DynamicTexture("market-sign-texture-"+i,{width:384,height:144},scene,false),ctx=tex.getContext();
     ctx.fillStyle="#34271c";ctx.fillRect(0,0,384,144);ctx.strokeStyle="#d8b66f";ctx.lineWidth=9;ctx.strokeRect(7,7,370,130);ctx.fillStyle="#fff0cc";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 37px sans-serif";ctx.fillText(marketLabels[i],192,72);tex.update();
     box(scene,"market-hanging-sign-board",[x,3.12,z-1.55],[2.75,.95,.14],mats.wood);
     const face=MeshBuilder.CreatePlane("market-hanging-sign-face",{width:2.58,height:.78},scene);face.position.set(x,3.12,z-1.64);const sm=new StandardMaterial("market-sign-mat-"+i,scene);sm.diffuseTexture=tex;sm.emissiveColor=new Color3(.12,.085,.04);face.material=sm;
-    if(i===0)for(let j=0;j<5;j++){const v=MeshBuilder.CreateSphere("market-vegetable",{diameter:.38,segments:10},scene);v.position.set(x-1+j*.48,1.92,z-.78);v.scaling.set(.75,1,.75);v.material=j%2?mats.green:mats.flowers;}
-    if(i===1)for(let j=0;j<4;j++){const v=MeshBuilder.CreateSphere("market-bread-loaf",{diameter:.52,segments:12},scene);v.position.set(x-.85+j*.55,1.92,z-.68);v.scaling.set(1,.58,.72);v.material=mats.trim;}
-    if(i===2)for(let j=0;j<4;j++){const v=MeshBuilder.CreateCylinder("market-jewel-display",{diameterTop:.12,diameterBottom:.38,height:.42,tessellation:6},scene);v.position.set(x-.75+j*.5,1.95,z-.72);v.material=j%2?mats.gold:mats.glass;}
-    if(i===3)for(let j=0;j<4;j++){const v=MeshBuilder.CreateCylinder("market-herb-bundle",{diameterTop:.24,diameterBottom:.42,height:.65,tessellation:8},scene);v.position.set(x-.75+j*.5,1.95,z-.72);v.material=mats.green;}
+    if(i===0) {
+      // Leafy cabbages: overlapping lobes and visible central ribs.
+      for(let j=0;j<3;j++) {
+        const cx=x-1.0+j*.82,cz=z-.72;
+        for(let leaf=0;leaf<5;leaf++){const a=leaf*Math.PI*2/5;const l=MeshBuilder.CreateSphere("market-cabbage-leaf",{diameter:.34,segments:10},scene);l.position.set(cx+Math.cos(a)*.13,1.95,cz+Math.sin(a)*.13);l.scaling.set(1,.72,.8);l.material=producePale;}
+        const heart=MeshBuilder.CreateSphere("market-cabbage-heart",{diameter:.28,segments:12},scene);heart.position.set(cx,2.02,cz);heart.scaling.set(.9,1,.9);heart.material=produceGreen;
+      }
+      // Carrots with tapered roots and feathery tops.
+      for(let j=0;j<4;j++) {
+        const cx=x-.95+j*.62,cz=z-.18;
+        const carrot=MeshBuilder.CreateCylinder("market-carrot",{diameterTop:.30,diameterBottom:.035,height:.72,tessellation:10},scene);
+        carrot.position.set(cx,1.98,cz);carrot.rotation.z=(j%2?-.22:.22);carrot.material=produceOrange;
+        for(let leaf=0;leaf<3;leaf++){const sprig=MeshBuilder.CreateCylinder("market-carrot-top",{diameterTop:.025,diameterBottom:.09,height:.35,tessellation:6},scene);sprig.position.set(cx+(leaf-1)*.08,2.42,cz);sprig.rotation.z=(leaf-1)*.48;sprig.material=produceGreen;}
+      }
+      // Tomatoes have small green calyxes and short stems.
+      for(let j=0;j<3;j++){const cx=x-.85+j*.78;const tomato=MeshBuilder.CreateSphere("market-tomato",{diameter:.34,segments:12},scene);tomato.position.set(cx,2.0,z-.95);tomato.scaling.y=.86;tomato.material=produceRed;const stem=MeshBuilder.CreateCylinder("market-tomato-stem",{diameter:.045,height:.18,tessellation:6},scene);stem.position.set(cx,2.19,z-.95);stem.material=produceGreen;}
+    }
+    if(i===1) {
+      // Oval country loaves, scored round breads and long golden baguettes.
+      for(let j=0;j<2;j++){const loaf=MeshBuilder.CreateSphere("market-country-loaf",{diameter:1,segments:16},scene);loaf.position.set(x-.78+j*1.55,2.0,z-.72);loaf.scaling.set(.68,.34,.48);loaf.material=breadCrust;for(let cut=0;cut<3;cut++){const score=MeshBuilder.CreateCylinder("market-loaf-score",{diameter:.035,height:.42,tessellation:6},scene);score.position.set(x-.96+j*1.55+cut*.18,2.27,z-.72);score.rotation.z=.9;score.material=breadScore;}}
+      for(let j=0;j<2;j++){const baguette=MeshBuilder.CreateCylinder("market-baguette",{diameterTop:.20,diameterBottom:.24,height:1.45,tessellation:12},scene);baguette.position.set(x-.55+j*1.05,2.03,z-.10);baguette.rotation.z=Math.PI/2;baguette.material=breadCrust;for(let cut=0;cut<4;cut++){const slash=MeshBuilder.CreateCylinder("market-baguette-score",{diameter:.028,height:.22,tessellation:6},scene);slash.position.set(x-1.1+j*1.05+cut*.25,2.15,z-.10);slash.rotation.z=.8;slash.material=breadScore;}}
+      const croissant=MeshBuilder.CreateTorus("market-croissant",{diameter:.62,thickness:.18,tessellation:16},scene);croissant.position.set(x+.9,2.0,z-.98);croissant.scaling.set(1,.65,.7);croissant.material=breadCrust;
+    }
+    if(i===2) {
+      // Velvet-lined jewellery trays, faceted gemstones and fine gold chains.
+      box(scene,"market-jewellery-tray",[x,1.88,z-.75],[2.7,.12,.72],mats.banner);
+      for(let j=0;j<4;j++){const ring=MeshBuilder.CreateTorus("market-gold-ring",{diameter:.28,thickness:.045,tessellation:16},scene);ring.position.set(x-1+j*.62,2.05,z-.78);ring.material=mats.gold;const gem=MeshBuilder.CreatePolyhedron("market-faceted-gem",{type:1,size:.20},scene);gem.position.set(x-1+j*.62,2.18,z-.78);gem.material=j%2?gemBlue:gemRed;}
+      for(let j=0;j<3;j++){const chain=MeshBuilder.CreateTorus("market-necklace-chain",{diameter:.62+j*.16,thickness:.025,tessellation:24},scene);chain.position.set(x-.65+j*.65,2.12,z-.25);chain.scaling.x=1.2;chain.material=mats.gold;}
+    }
+    if(i===3) {
+      // Bundled stems, broad herb leaves, dried flowers and corked apothecary jars.
+      for(let j=0;j<5;j++){const stem=MeshBuilder.CreateCylinder("market-herb-stem",{diameterTop:.025,diameterBottom:.055,height:.8,tessellation:6},scene);stem.position.set(x-.95+j*.45,2.1,z-.75);stem.rotation.z=(j%2?-.18:.18);stem.material=mats.woodLight;for(let side of [-1,1]){const leaf=MeshBuilder.CreateSphere("market-herb-leaf",{diameter:.28,segments:8},scene);leaf.position.set(x-.95+j*.45+side*.13,2.16,z-.75);leaf.scaling.set(1,.3,.65);leaf.rotation.z=side*.5;leaf.material=herbLeaf;}}
+      for(let j=0;j<3;j++){const jar=MeshBuilder.CreateCylinder("market-apothecary-jar",{diameterTop:.24,diameterBottom:.34,height:.58,tessellation:12},scene);jar.position.set(x-.7+j*.68,1.98,z-.15);jar.material=mats.glass;const cork=MeshBuilder.CreateCylinder("market-jar-cork",{diameter:.13,height:.12,tessellation:8},scene);cork.position.set(x-.7+j*.68,2.32,z-.15);cork.material=mats.wood;}
+    }
   }
   // Blacksmith workshop with open forge, anvil, tools and a large wall sign.
   const smithStone=mat(scene,"blacksmith-stone",new Color3(.30,.29,.27),.96),smithWood=mat(scene,"blacksmith-oak",new Color3(.24,.13,.07),.9),smithIron=mat(scene,"blacksmith-iron",new Color3(.16,.18,.19),.42,.72),smithEmber=mat(scene,"blacksmith-embers",new Color3(.95,.28,.045),.35,.1);
@@ -1144,6 +1210,35 @@ export async function createRoyalCity(engine, canvas) {
   }
   const approach=MeshBuilder.CreateGround("world-tree-approach",{width:15,height:68,subdivisions:1},scene);
   approach.position.set(0,-.08,-88);approach.material=mats.floor;
+  // The national standard of Erinvale: midnight blue, ivory, forest green and a golden sun-tree.
+  const erinvaleFlagTexture=new DynamicTexture("erinvale-national-flag-texture",{width:512,height:320},scene,false);
+  const flagCtx=erinvaleFlagTexture.getContext();
+  flagCtx.fillStyle="#172b42";flagCtx.fillRect(0,0,512,320);
+  flagCtx.fillStyle="#e8dfc7";flagCtx.fillRect(0,112,512,96);
+  flagCtx.fillStyle="#31543d";flagCtx.fillRect(0,208,512,112);
+  flagCtx.fillStyle="#c89a45";flagCtx.beginPath();flagCtx.arc(256,160,54,0,Math.PI*2);flagCtx.fill();
+  flagCtx.fillStyle="#172b42";flagCtx.beginPath();flagCtx.arc(256,160,39,0,Math.PI*2);flagCtx.fill();
+  flagCtx.strokeStyle="#c89a45";flagCtx.lineWidth=10;flagCtx.lineCap="round";
+  flagCtx.beginPath();flagCtx.moveTo(256,188);flagCtx.lineTo(256,128);flagCtx.moveTo(256,151);flagCtx.lineTo(224,132);flagCtx.moveTo(256,151);flagCtx.lineTo(288,132);flagCtx.stroke();
+  for(const side of [-1,1]){flagCtx.beginPath();flagCtx.moveTo(256,137);flagCtx.lineTo(256+side*12,119);flagCtx.lineTo(256+side*7,143);flagCtx.fillStyle="#c89a45";flagCtx.fill();}
+  erinvaleFlagTexture.update();
+  const erinvaleFlagMat=new StandardMaterial("erinvale-national-flag-material",scene);
+  erinvaleFlagMat.diffuseTexture=erinvaleFlagTexture;erinvaleFlagMat.emissiveColor=new Color3(.08,.07,.04);erinvaleFlagMat.backFaceCulling=false;
+  const palaceStandard=MeshBuilder.CreatePlane("erinvale-national-standard",{width:3.3,height:2.05,sideOrientation:2},scene);
+  palaceStandard.position.set(0,34.5,-74.45);palaceStandard.material=erinvaleFlagMat;
+  const gateStandard=MeshBuilder.CreatePlane("erinvale-gate-standard",{width:2.0,height:1.25,sideOrientation:2},scene);
+  gateStandard.position.set(0,12.8,-47.75);gateStandard.material=erinvaleFlagMat;
+  // Home-plate silhouette and steep blue-slate roof make the royal keep unmistakable.
+  const keepFront=-75.7;
+  for(const side of [-1,1]) {
+    const gable=MeshBuilder.CreateTube("royal-keep-homeplate-gable",{path:[new Vector3(side*8.35,44.1,keepFront),new Vector3(0,49.5,keepFront)],radius:.32,tessellation:10},scene);
+    gable.material=castleGold;
+  }
+  const keepRoofLeft=box(scene,"royal-keep-gabled-roof-left",[-4.1,45.7,-82],[9.3,.65,14.8],castleRoof);keepRoofLeft.rotation.z=.52;
+  const keepRoofRight=box(scene,"royal-keep-gabled-roof-right",[4.1,45.7,-82],[9.3,.65,14.8],castleRoof);keepRoofRight.rotation.z=-.52;
+  box(scene,"royal-keep-gold-ridge",[0,48.1,-82],[.72,.5,15.2],castleGold);
+  const royalCrest=MeshBuilder.CreateCylinder("royal-keep-crown-crest",{diameter:2.2,height:.28,tessellation:8},scene);
+  royalCrest.position.set(0,39.8,-75.55);royalCrest.rotation.x=Math.PI/2;royalCrest.material=castleGold;
   // Main curtain wall and its raised central gatehouse.
   box(scene,"citadel-front-wall",[0,17,-77],[53,17,3.2],castleStone);
   box(scene,"citadel-wall-base-course",[0,9.1,-75.25],[54,1.0,.75],mats.trim);
@@ -2014,29 +2109,30 @@ export async function createRoyalCity(engine, canvas) {
     glow.position.set(x,3.8,z);glow.material=mats.lantern;
   }
 
-  // Continuous brook: it winds from the western garden edge behind the guild lane
-  // and onward into the eastern artisan quarter.
+  // The brook now follows the open southern greenway, outside every building footprint.
+  // It begins beside the rose garden, passes the guild and market from their open side,
+  // then bends around the artisan quarter rather than cutting through walls or interiors.
   const brookWater=mat(scene,"guildside-brook-water",new Color3(.12,.39,.47),.16,.22);brookWater.alpha=.88;
   const brookStone=mat(scene,"guildside-brook-stone",new Color3(.48,.45,.37),.92);
   const brookEdge=mat(scene,"guildside-brook-edge",new Color3(.68,.62,.49),.78);
-  const brookPoints=[[-18,-45],[-14,-41],[-10,-37],[-7,-33],[-2,-30.5],[4,-30],[10,-27.5],[15,-23],[20,-18.5],[25,-13],[29,-7],[32,0],[35,7],[39,13]].map(([x,z])=>new Vector3(x,.055,z));
+  const brookPoints=[[-18,-45],[-14,-41],[-10,-37],[-5,-36],[7,-36],[20,-36],[34,-36],[46,-36],[53,-43],[68,-43],[79,-43],[84,-32],[96,-27],[106,-22],[108,-8],[105,10],[96,27]].map(([x,z])=>new Vector3(x,.055,z));
   const brookLeft=[],brookRight=[];
   for(let i=0;i<brookPoints.length;i++){const t=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize(),n=new Vector3(-t.z,0,t.x).scale(1.05);brookLeft.push(brookPoints[i].add(n));brookRight.push(brookPoints[i].subtract(n));}
   const brook=MeshBuilder.CreateRibbon("connected-town-brook",{pathArray:[brookLeft,brookRight],sideOrientation:2},scene);brook.material=brookWater;brook.isPickable=false;
   for(const side of [-1,1]){const bank=[];for(let i=0;i<brookPoints.length;i++){const t=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();bank.push(brookPoints[i].add(new Vector3(-t.z,0,t.x).scale(side*1.38)));}for(let i=0;i<bank.length-1;i++){const m=Vector3.Lerp(bank[i],bank[i+1],.5),len=bank[i].subtract(bank[i+1]).length(),stone=box(scene,"brook-rounded-bank-stone",[m.x,.16,m.z],[len+.42,.30,.48],i%2?brookStone:brookEdge);stone.rotation.y=Math.atan2(bank[i+1].z-bank[i].z,bank[i+1].x-bank[i].x);}}
-  // Large Romanesque arch bridge: broad deck, curved stone arch and balustrades.
-  const bridgeX=1,bridgeZ=-30.1;
-  box(scene,"great-stone-bridge-deck",[bridgeX,.78,bridgeZ],[5.8,.48,5],brookEdge);
-  box(scene,"great-stone-bridge-roadway",[bridgeX,1.035,bridgeZ],[5.25,.08,4.55],brookStone);
+  // A broad Romanesque bridge crosses the straight western reach at right angles.
+  const bridgeX=7,bridgeZ=-36;
+  box(scene,"great-stone-bridge-deck",[bridgeX,.78,bridgeZ],[5.8,.48,5.2],brookEdge);
+  box(scene,"great-stone-bridge-roadway",[bridgeX,1.035,bridgeZ],[5.25,.08,4.75],brookStone);
   const archPath=[];for(let i=0;i<=18;i++){const t=-Math.PI/2+i*Math.PI/18;archPath.push(new Vector3(bridgeX,.32+Math.cos(t)*.92,bridgeZ+Math.sin(t)*2.15));}
   const arch=MeshBuilder.CreateTube("great-stone-bridge-arch",{path:archPath,radius:.34,tessellation:10},scene);arch.material=brookStone;
-  for(const side of [-1,1]){box(scene,"great-stone-bridge-parapet",[bridgeX+side*2.72,1.4,bridgeZ],[.34,.72,4.85],brookStone);box(scene,"great-stone-bridge-capstone",[bridgeX+side*2.72,1.84,bridgeZ],[.48,.16,5.05],brookEdge);for(let i=0;i<7;i++)box(scene,"great-stone-bridge-baluster",[bridgeX+side*2.72,1.48,bridgeZ-1.95+i*.65],[.4,.82,.42],brookEdge);}
-  // Smaller timber footbridge at the eastern bend.
-  const sx=23.5,sz=-15;
-  box(scene,"east-footbridge-deck",[sx,.48,sz],[4.2,.28,3],mats.woodLight);
-  for(const side of [-1,1]){box(scene,"east-footbridge-abutment",[sx+side*1.95,.28,sz],[.42,.55,3.35],brookStone);box(scene,"east-footbridge-handrail",[sx+side*1.72,.91,sz],[.16,.16,2.9],brookEdge);for(let i=0;i<4;i++)box(scene,"east-footbridge-post",[sx+side*1.72,.69,sz-1.15+i*.76],[.18,.62,.18],brookStone);}
-  for(let i=0;i<8;i++)box(scene,"east-footbridge-paving",[sx-1.82+i*.52,.635,sz],[.46,.045,2.55],i%2?brookEdge:mats.wood);
-  for(const [x,z] of [[-11,-34],[-8,-30.8],[8,-29],[13,-24.8],[29,-10.2],[34,4]]){const p=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1,height:.18,tessellation:8},scene);p.position.set(x,.16,z);p.scaling.z=.72;p.material=brookEdge;}
+  for(const side of [-1,1]){box(scene,"great-stone-bridge-parapet",[bridgeX+side*2.72,1.4,bridgeZ],[.34,.72,5.05],brookStone);box(scene,"great-stone-bridge-capstone",[bridgeX+side*2.72,1.84,bridgeZ],[.48,.16,5.25],brookEdge);for(let i=0;i<7;i++)box(scene,"great-stone-bridge-baluster",[bridgeX+side*2.72,1.48,bridgeZ-2.05+i*.68],[.4,.82,.42],brookEdge);}
+  // A smaller timber footbridge crosses the second straight reach, beyond the workshops.
+  const sx=68,sz=-43;
+  box(scene,"east-footbridge-deck",[sx,.48,sz],[4.2,.28,3.2],mats.woodLight);
+  for(const side of [-1,1]){box(scene,"east-footbridge-abutment",[sx+side*1.95,.28,sz],[.42,.55,3.55],brookStone);box(scene,"east-footbridge-handrail",[sx+side*1.72,.91,sz],[.16,.16,3.05],brookEdge);for(let i=0;i<4;i++)box(scene,"east-footbridge-post",[sx+side*1.72,.69,sz-1.25+i*.83],[.18,.62,.18],brookStone);}
+  for(let i=0;i<8;i++)box(scene,"east-footbridge-paving",[sx-1.82+i*.52,.635,sz],[.46,.045,2.75],i%2?brookEdge:mats.wood);
+  for(const [x,z] of [[-11,-38],[-7,-35.8],[15,-34.9],[28,-34.9],[43,-36],[56,-43.9],[74,-43.9],[87,-30],[102,-22],[107,-3]]){const p=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1,height:.18,tessellation:8},scene);p.position.set(x,.16,z);p.scaling.z=.72;p.material=brookEdge;}
 
   // Full-height townspeople are assembled locally so their proportions never depend
   // on third-party model downloads. Head height is kept close to one-seventh of stature.
@@ -2440,6 +2536,22 @@ export async function createRoyalCity(engine, canvas) {
       merged.material = material;
       merged.isPickable = false;
     }
+  }
+
+  // Batch the detailed market props by their original materials; keep sign faces and
+  // translucent wares separate so labels and glass remain crisp.
+  const marketBatches=new Map();
+  for(const mesh of [...scene.meshes]) {
+    if(!mesh.name.startsWith("market-")||mesh.name.includes("sign-face")||mesh.name.includes("apothecary-jar"))continue;
+    if(mesh.parent||mesh.isDisposed()||!mesh.material||Array.isArray(mesh.material))continue;
+    if(!marketBatches.has(mesh.material))marketBatches.set(mesh.material,[]);
+    marketBatches.get(mesh.material).push(mesh);
+  }
+  let marketBatchIndex=0;
+  for(const [material,parts] of marketBatches) {
+    if(parts.length<2)continue;
+    const merged=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+    if(merged){merged.name="market-detail-batch-"+marketBatchIndex++;merged.material=material;merged.isPickable=false;}
   }
 
   const shadowNames = /facade-|side-wall-|rear-wall|roof-left|roof-right|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-trunk|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
