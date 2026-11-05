@@ -4222,6 +4222,25 @@ export async function createRoyalCity(engine, canvas) {
     if(merged){merged.name="market-detail-batch-"+marketBatchIndex++;merged.material=material;merged.isPickable=false;}
   }
 
+  // iPhone emergency profile: the bath's layered transparent steam and
+  // close-up guest models are the largest burst when the camera faces the pools.
+  // Keep the architecture, pools, water, dome and all town geometry; omit only
+  // those optional bath effects/figures on touch devices and disable its point lights.
+  if(isTouchDevice) {
+    for(const mesh of [...scene.meshes]) {
+      if(/imperial-bath-(?:rising-steam|treatment-steam|dense-steam-bank|fine-steam-wisp)|bath-guest-|bath-treatment-|bath-attendant-/.test(mesh.name)) {
+        mesh.dispose(false,false);
+      }
+    }
+    for(const light of scene.lights) {
+      if(light.name==="imperial-bath-oculus-daylight"||light.name==="imperial-bath-warm-wall-light") {
+        light.setEnabled(false);
+      }
+    }
+    bathSteamPuffs.length=0;
+    bathActors.length=0;
+  }
+
   // Spatial octree culling preserves every detailed mesh while reducing
   // work for distant and off-screen districts.
   scene.createOrUpdateSelectionOctree(64, 2);
