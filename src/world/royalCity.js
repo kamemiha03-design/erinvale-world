@@ -1918,8 +1918,8 @@ export async function createRoyalCity(engine, canvas) {
     finial.position.set(x,level+4.12,z);finial.material=castleGold;
   }
   // Level threshold between the last tread, the open gate and the lobby.
-  box(scene,"palace-entry-landing",[0,8.44,-114.3],[18,.36,4.2],castleStone);
-  box(scene,"palace-entry-landing-runner",[0,8.64,-114.3],[5.6,.035,4.0],mats.banner);
+  box(scene,"palace-entry-landing",[0,8.44,-120.2],[28,.36,18.0],castleStone);
+  // An open, empty terrace remains where the palace will be redesigned later.
 
   // A broad carriage court with a circular turning area, clipped hedges and low topiary.
   const courtStone=mat(scene,"palace-carriage-court-stone",new Color3(.62,.59,.51),.92);
@@ -2447,6 +2447,21 @@ export async function createRoyalCity(engine, canvas) {
     if(mesh.name.startsWith("rose-tunnel")||mesh.name.startsWith("inner-rose")||mesh.name.startsWith("palace-inner-rose")) {
       mesh.receiveShadows=true;mesh.isPickable=false;
     }
+  }
+
+  // Temporary reset: remove the palace building shell and all interior architecture.
+  // Keep the outdoor approach stair, lanterns, carriage court, carriages, and rose garden.
+  const keepPalaceExterior = name =>
+    /^(palace-entry-step|palace-entry-step-nosing|palace-entry-stair-parapet|palace-entry-landing|palace-stair-lantern-|palace-carriage-|palace-court-|palace-turning-|palace-inner-rose-|rose-tunnel|inner-rose)/.test(name) ||
+    name === "palace-carriage-drive";
+  const palaceBuildingNames = /^(citadel-|royal-keep-|palace-|royal-hall-|royal-throne-|royal-suite-|royal-conservatory-|royal-chapel-|royal-wall-relief|castle-tower|castle-spire|castle-roof-finial|gate-|gatehouse-|royal-gate-|royal-crest-|state-ballroom-|erinvale-gate-standard|erinvale-national-standard)/;
+  for(const mesh of [...scene.meshes.slice(royalPalaceStartIndex)]) {
+    if(palaceBuildingNames.test(mesh.name) && !keepPalaceExterior(mesh.name)) mesh.dispose(false,false);
+  }
+  if(scene.metadata?.doorLeaves) {
+    scene.metadata.doorLeaves = scene.metadata.doorLeaves.filter(door =>
+      !/^(palace-|royal-suite-|palace-gallery-)/.test(door.name)
+    );
   }
 
   // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
@@ -3044,21 +3059,10 @@ export async function createRoyalCity(engine, canvas) {
         if(!inDoor)return true;
       }
     }
-    // Palace ground-floor lobby: ignore legacy obstacle volumes inside the
-    // open hall so counters/old town props cannot create invisible walls.
-    if(camera.position.y<14 && z<-114.0 && z>-128.75 && Math.abs(x)<10.2)return false;
-    // Fountain basin, market counters, and castle cliff are solid.
+    // Fountain basin, market counters, and the remaining cliff shoulders are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
-    // The old rear wall has a broad central opening; only its two stone wings collide.
-    if(z<=-128.75 && z>-130.0 && Math.abs(x)>4.35)return true;
-    // Keep the central stair corridor open; the cliff shoulders remain solid.
     if(z<-78 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
-    // Second-floor corridor and ballroom boundaries, with a wide central doorway.
-    if(z<-128.25 && z>-142.2 && Math.abs(x)>6.5)return true;
-    if(z<=-142 && z>-176 && Math.abs(x)>21.35)return true;
-    if(z<-141.5 && z>-143.0 && Math.abs(x)>10.0)return true;
-    if(z<=-176 && z>-178.5)return true;
     return false;
   };
   const location=document.querySelector("#location-name");
@@ -3215,24 +3219,12 @@ export async function createRoyalCity(engine, canvas) {
       const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
-      const onLobbyStair=camera.position.z<=-117.25&&camera.position.z>=-128.55&&Math.abs(camera.position.x)<4.35;
-      const lobbyStairProgress=onLobbyStair?(-117.25-camera.position.z)/(-117.25+128.55):0;
-      const lobbyStairFloor=onLobbyStair?8.82+Math.max(0,Math.min(1,lobbyStairProgress))*6.08:0;
-      const wasOnUpperLevel=camera.position.y>14.0;
-      const onUpperFloor=wasOnUpperLevel&&camera.position.z<-128.25&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.5;
-      const onLobbyGround=camera.position.z<=-112.2&&camera.position.z>=-128.0&&Math.abs(camera.position.x)<10.5;
-      const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-129.0;
-      camera.position.y=onRoyalStair?1.72+stairFloor:(onLobbyStair?1.72+lobbyStairFloor:(onUpperFloor?16.62:((onLobbyGround||onLanding)?10.34:1.72)));
-      // The monumental front doors swing open automatically as the visitor approaches.
-      const mainEntryDoors=(scene.metadata?.doorLeaves||[]).filter(door=>door.name==="palace-grand-entry-double-door");
-      if(Math.abs(camera.position.x)<4.8&&camera.position.z<-110.5&&camera.position.z>-117.5) {
-        for(const door of mainEntryDoors) if(!door.open) {
-          door.open=true;
-          const target=door.home+(door.pivot.position.x<camera.position.x?-.95:.95);
-          Animation.CreateAndStartAnimation("palace-entry-auto-open",door.pivot,"rotation.y",30,18,door.pivot.rotation.y,target,Animation.ANIMATIONLOOPMODE_CONSTANT);
-          if(this.onDoor)this.onDoor();
-        }
-      }
+      const onLanding=camera.position.z<stairEndZ&&camera.position.z>=-129.0&&Math.abs(camera.position.x)<14.0;
+      const onGreatBridge=Math.abs(camera.position.x-bridgeX)<2.7&&camera.position.z>=bridgeZ-bridgeHalf&&camera.position.z<=bridgeZ+bridgeHalf;
+      const onSmallBridge=Math.abs(camera.position.x-sx)<2.0&&camera.position.z>=sz-smallHalf&&camera.position.z<=sz+smallHalf;
+      camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
+        (onSmallBridge?smallSurface(camera.position.z)+1.72:
+        (onRoyalStair?1.72+stairFloor:(onLanding?10.16:1.72)));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
