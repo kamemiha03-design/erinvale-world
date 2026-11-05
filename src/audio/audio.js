@@ -236,23 +236,38 @@ export function createWorldAudio() {
     }
   }
 
-  function playDoor() {
+  function playDoor(opening=true) {
     try {
       if(!audioContext) startWind();
       if(!audioContext)return;
       audioContext.resume?.();
       const now=audioContext.currentTime;
-      const noiseBuffer=audioContext.createBuffer(1,audioContext.sampleRate*.42,audioContext.sampleRate);
+      const duration=opening?.48:.24;
+      const noiseBuffer=audioContext.createBuffer(1,audioContext.sampleRate*duration,audioContext.sampleRate);
       const data=noiseBuffer.getChannelData(0);
-      for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,2);
+      for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,opening?2:1.5);
       const noise=audioContext.createBufferSource();noise.buffer=noiseBuffer;
-      const filter=audioContext.createBiquadFilter();filter.type="lowpass";filter.frequency.setValueAtTime(850,now);filter.frequency.exponentialRampToValueAtTime(180,now+.38);
-      const gain=audioContext.createGain();gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.16,now+.035);gain.gain.exponentialRampToValueAtTime(.0001,now+.42);
-      noise.connect(filter);filter.connect(gain);gain.connect(audioContext.destination);noise.start(now);noise.stop(now+.44);
+      const filter=audioContext.createBiquadFilter();filter.type="lowpass";
+      filter.frequency.setValueAtTime(opening?900:520,now);
+      filter.frequency.exponentialRampToValueAtTime(opening?170:110,now+duration*.9);
+      const gain=audioContext.createGain();gain.gain.setValueAtTime(.0001,now);
+      gain.gain.exponentialRampToValueAtTime(opening?.17:.22,now+.012);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+      noise.connect(filter);filter.connect(gain);gain.connect(audioContext.destination);noise.start(now);noise.stop(now+duration+.02);
       const creak=audioContext.createOscillator(),creakGain=audioContext.createGain();
-      creak.type="sawtooth";creak.frequency.setValueAtTime(118,now);creak.frequency.linearRampToValueAtTime(74,now+.34);
-      creakGain.gain.setValueAtTime(.0001,now);creakGain.gain.exponentialRampToValueAtTime(.045,now+.05);creakGain.gain.exponentialRampToValueAtTime(.0001,now+.36);
-      creak.connect(creakGain);creakGain.connect(audioContext.destination);creak.start(now);creak.stop(now+.38);
+      creak.type="sawtooth";
+      creak.frequency.setValueAtTime(opening?126:88,now);
+      creak.frequency.linearRampToValueAtTime(opening?68:54,now+(opening?.42:.16));
+      creakGain.gain.setValueAtTime(.0001,now);
+      creakGain.gain.exponentialRampToValueAtTime(opening?.042:.025,now+.025);
+      creakGain.gain.exponentialRampToValueAtTime(.0001,now+(opening?.43:.18));
+      creak.connect(creakGain);creakGain.connect(audioContext.destination);creak.start(now);creak.stop(now+(opening?.45:.2));
+      if(!opening) {
+        const latch=audioContext.createOscillator(),latchGain=audioContext.createGain();
+        latch.type="triangle";latch.frequency.setValueAtTime(740,now+.13);latch.frequency.exponentialRampToValueAtTime(260,now+.19);
+        latchGain.gain.setValueAtTime(.0001,now);latchGain.gain.exponentialRampToValueAtTime(.055,now+.135);latchGain.gain.exponentialRampToValueAtTime(.0001,now+.23);
+        latch.connect(latchGain);latchGain.connect(audioContext.destination);latch.start(now+.13);latch.stop(now+.24);
+      }
     } catch(error) { console.warn("Door sound unavailable",error); }
   }
 
