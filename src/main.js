@@ -35,8 +35,16 @@ async function boot() {
   if(isTouch)mobileControls.classList.remove("hidden");
   else desktopHint.classList.remove("hidden");
 
+  // Keep full scene detail, but cap mobile rendering at 30 FPS. This halves
+  // continuous GPU work on iPhone without reducing geometry, textures, shadows,
+  // or post-processing quality. Desktop keeps the normal refresh rate.
+  let lastMobileFrame=0;
   engine.runRenderLoop(()=>{
-    world.update(engine.getDeltaTime()/1000);
+    const now=performance.now();
+    if(isTouch && now-lastMobileFrame<1000/30)return;
+    const elapsed=lastMobileFrame?Math.min((now-lastMobileFrame)/1000,.1):engine.getDeltaTime()/1000;
+    lastMobileFrame=now;
+    world.update(elapsed);
     world.scene.render();
   });
   window.addEventListener("resize",()=>engine.resize(),{passive:true});
