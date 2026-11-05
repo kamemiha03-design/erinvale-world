@@ -2991,14 +2991,21 @@ export async function createRoyalCity(engine, canvas) {
   // Foundation, entrance facade (with a real opening), side walls and enclosed rear wall.
   box(scene,"public-library-foundation",[libX,.48,libZ],[libW+1.2,.9,libD+1.2],libraryTrim);
   box(scene,"public-library-floor",[libX,.96,libZ],[libW,.16,libD],libraryFloor);
-  // East facade windows are actual openings aligned with the interior glass at z=-94/-74.
+  // East facade: keep only the two intended window openings and the main doorway.
+  // Fill the narrow wall returns between each window and its stone piers so no
+  // accidental full-height gaps remain beside the windows.
   for(const center of [-94,-74]) {
     const prefix=center===-94?"north":"south";
     box(scene,"public-library-east-wall-"+prefix+"-lower",[-40.25,2.45,center],[.55,3.0,10.4],libraryStone);
     box(scene,"public-library-east-wall-"+prefix+"-upper",[-40.25,8.25,center],[.55,2.0,10.4],libraryStone);
     for(const dz of [-4.0,4.0])
       box(scene,"public-library-east-wall-"+prefix+"-window-pier",[-40.25,5.1,center+dz],[.55,5.3,2.4],libraryStone);
+    for(const dz of [-2.8,2.8])
+      box(scene,"public-library-east-wall-"+prefix+"-window-return",[-40.25,5.1,center+dz],[.55,5.3,1.6],libraryStone);
   }
+  // Solid masonry beside the entrance; the only doorway gap is z=-86 to -82.
+  box(scene,"public-library-east-wall-door-north-return",[-40.25,4.95,-87.4],[.55,8.0,2.8],libraryStone);
+  box(scene,"public-library-east-wall-door-south-return",[-40.25,4.95,-80.6],[.55,8.0,2.8],libraryStone);
   box(scene,"public-library-east-wall-over-door",[-40.25,8.0,-84],[.55,2.5,3.2],libraryStone);
   // Real window openings are cut into the masonry rather than placing glass
   // on top of solid walls. Lower and upper wall bands keep the structure intact.
