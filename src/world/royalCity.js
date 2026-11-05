@@ -1372,6 +1372,7 @@ export async function createRoyalCity(engine, canvas) {
   }
 
 
+  const royalGardenStartIndex=scene.meshes.length;
   // Symmetrical royal rose gardens flank the palace approach, with parterre beds and pergolas.
   const gardenSoil=mat(scene,"royal-garden-soil",new Color3(.18,.15,.10),.98);
   const gardenHedge=mat(scene,"royal-garden-boxwood",new Color3(.12,.27,.13),.95);
@@ -1402,12 +1403,15 @@ export async function createRoyalCity(engine, canvas) {
     const urn=MeshBuilder.CreateCylinder("royal-garden-entry-urn",{diameterTop:.55,diameterBottom:1.05,height:1.5,tessellation:14},scene);
     urn.position.set(gx,9.5,-91);urn.material=mats.trim;
   }
-  // Three shallow reflecting pools form the centreline of the formal garden.
-  for(const z of [-114,-105,-96]) {
-    cylinder(scene,"royal-garden-pool-basin",[0,8.85,z],2.5,.48,castleGold,24);
-    cylinder(scene,"royal-garden-pool-water",[0,9.12,z],2.1,.06,mats.glass,24);
-    cylinder(scene,"royal-garden-pool-spout",[0,9.8,z],.5,1.3,mats.trim,16);
+  // A small fountain anchors each garden without intruding into palace rooms.
+  for(const side of [-1,1]) {
+    const gx=side*42;
+    cylinder(scene,"royal-garden-pool-basin",[gx,8.85,-105],2.5,.48,castleGold,24);
+    cylinder(scene,"royal-garden-pool-water",[gx,9.12,-105],2.1,.06,mats.glass,24);
+    cylinder(scene,"royal-garden-pool-spout",[gx,9.8,-105],.5,1.3,mats.trim,16);
+    box(scene,"royal-garden-access-walk",[side*34,8.53,-91],[14,.08,2.8],mats.trim);
   }
+  for(const mesh of scene.meshes.slice(royalGardenStartIndex)) mesh.position.y-=8.4;
 
   // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
   // It now floats on a vast suspended island, rather than growing out of the castle grounds.
