@@ -3428,7 +3428,7 @@ export async function createRoyalCity(engine, canvas) {
       nearest.open=!nearest.open;
       const target=nearest.home+(nearest.open?(nearest.pivot.position.x<camera.position.x?-.95:.95):0);
       Animation.CreateAndStartAnimation("door-swing",nearest.pivot,"rotation.y",30,18,nearest.pivot.rotation.y,target,Animation.ANIMATIONLOOPMODE_CONSTANT);
-      if(this.onDoor)this.onDoor();
+      if(this.onDoor)this.onDoor(nearest.open);
       document.querySelector("#hint").textContent=nearest.open?"重厚な木の扉が軋みながら開いた。":"扉を閉めた。";
       return;
     }
