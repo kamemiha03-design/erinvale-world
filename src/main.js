@@ -20,9 +20,9 @@ async function boot() {
     powerPreference:isTouch?"low-power":"high-performance",
     adaptToDeviceRatio:!isTouch,
   });
-  // Mobile renders at 40% of CSS resolution per axis to reduce GPU fill cost.
+  // Mobile keeps a sharper 50% internal resolution per axis; scene culling reduces CPU/GPU work.
   // Antialiasing and desktop post-processing are disabled separately for touch devices.
-  engine.setHardwareScalingLevel(isTouch?2.8:1);
+  engine.setHardwareScalingLevel(isTouch?2.0:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
