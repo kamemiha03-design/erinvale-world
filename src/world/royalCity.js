@@ -2102,13 +2102,24 @@ export async function createRoyalCity(engine, canvas) {
   const openHallBalconyCream=mat(scene,"royal-entry-cross-balcony-cream",new Color3(.94,.86,.70),.86);
   const crossBalconyZ=-117.0;
   box(scene,"royal-entry-cross-balcony-floor",[0,8.68,crossBalconyZ],[49.2,.22,6.8],openHallBalconyStone);
-  // Front and rear balustrades are split at the central passage; the balcony runs left-to-right.
-  for(const [z,railName] of [[-113.65,"front"],[-120.35,"rear"]]) {
-    for(const [start,end] of [[-24.3,-5.3],[5.3,24.3]]) {
-      box(scene,"royal-entry-cross-balcony-"+railName+"-rail",[(start+end)/2,9.48,z],[end-start,.22,.22],openHallStairGold);
-      for(let x=start+.28;x<end-.1;x+=.88)cylinder(scene,"royal-entry-cross-balcony-"+railName+"-baluster",[x,9.06,z],.14,.82,openHallRailStone,12);
-    }
+  // The garden-facing edge keeps a light balustrade; the inner edge becomes a
+  // continuous white palace wall with a grand central double doorway.
+  for(const [start,end] of [[-24.3,-5.3],[5.3,24.3]]) {
+    box(scene,"royal-entry-cross-balcony-front-rail",[(start+end)/2,9.48,-113.65],[end-start,.22,.22],openHallStairGold);
+    for(let x=start+.28;x<end-.1;x+=.88)cylinder(scene,"royal-entry-cross-balcony-front-baluster",[x,9.06,-113.65],.14,.82,openHallRailStone,12);
   }
+  const crossWallZ=-120.35, crossWallBase=8.79, crossWallHeight=8.55, crossDoorWidth=9.2;
+  const crossWallY=crossWallBase+crossWallHeight/2;
+  for(const [start,end] of [[-24.3,-crossDoorWidth/2-.35],[crossDoorWidth/2+.35,24.3]]) {
+    const width=end-start,center=(start+end)/2;
+    box(scene,"royal-entry-cross-balcony-inner-white-wall",[center,crossWallY,crossWallZ],[width,crossWallHeight,.72],openHallBalconyStone);
+    box(scene,"royal-entry-cross-balcony-inner-wall-baseboard",[center,9.02,crossWallZ-.39],[width,.34,.16],openHallLobbyTrim);
+    box(scene,"royal-entry-cross-balcony-inner-wall-cornice",[center,17.22,crossWallZ-.39],[width,.32,.22],openHallLobbyTrim);
+  }
+  // A generous opening leads directly into the chandelier hall.
+  addAntiqueDoor(scene,"royal-entry-chandelier-double-door",0,8.78,crossWallZ,crossDoorWidth,8.15,mats,0);
+  const crossDoorCrest=MeshBuilder.CreateCylinder("royal-entry-chandelier-door-crest",{diameter:1.45,height:.16,tessellation:24},scene);
+  crossDoorCrest.position.set(0,17.05,crossWallZ-.48);crossDoorCrest.rotation.x=Math.PI/2;crossDoorCrest.material=openHallLobbyTrim;
   // End rails protect both exposed ends without closing the walkable cross-axis.
   for(const side of [-1,1]) {
     box(scene,"royal-entry-cross-balcony-end-rail",[side*24.45,9.48,crossBalconyZ],[.22,.22,6.45],openHallStairGold);
@@ -3374,6 +3385,8 @@ export async function createRoyalCity(engine, canvas) {
       if(Math.abs(x)>25.9||z<-182.5)return true;
       for(const columnX of [-23.2,23.2])for(const columnZ of [-166,-148.5,-131])
         if(Math.hypot(x-columnX,z-columnZ)<1.32)return true;
+      // The white cross-balcony wall is solid, but its central double doorway stays open.
+      if(Math.abs(z+120.35)<.82&&Math.abs(x)>4.95)return true;
       for(const deskX of [-9.2,9.2])if(Math.abs(x-deskX)<3.65&&z>-173.25&&z<-171.15)return true;
       return false;
     }
