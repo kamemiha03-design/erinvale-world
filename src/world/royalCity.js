@@ -1189,13 +1189,6 @@ export async function createRoyalCity(engine, canvas) {
   const marketCloths=[mats.banner,mats.flowers,mats.banner,mats.flowers,mats.banner];
   const marketWood=mat(scene,"market-stall-oak",new Color3(.30,.17,.085),.92);
   const marketWoodLight=mat(scene,"market-stall-honey-wood",new Color3(.52,.34,.18),.94);
-  const marketFruitMats=[
-    mat(scene,"market-fruit-red",new Color3(.78,.10,.055),.72),
-    mat(scene,"market-fruit-gold",new Color3(.94,.62,.10),.72),
-    mat(scene,"market-fruit-green",new Color3(.28,.52,.13),.82),
-    mat(scene,"market-fruit-purple",new Color3(.38,.16,.48),.78),
-    mat(scene,"market-fruit-cream",new Color3(.90,.79,.55),.82)
-  ];
   const marketLeaf=mat(scene,"market-fruit-leaf",new Color3(.17,.36,.12),.92);
   const marketSignInk=mat(scene,"market-sign-ink",new Color3(.19,.12,.075),.92);
   const marketSphereTemplates=new Map();
