@@ -2154,9 +2154,24 @@ export async function createRoyalCity(engine, canvas) {
     document.querySelector("#hint").textContent=message;
   }
 
-  const shadowNames = /facade-|side-wall-|rear-wall|roof-|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
+  const shadowNames = /facade-|side-wall-|rear-wall|roof-left|roof-right|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-trunk|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
   for (const mesh of scene.meshes) {
     if (shadowNames.test(mesh.name)) shadow.addShadowCaster(mesh, false);
+  }
+
+  // Static world geometry never changes after construction. Freeze its world
+  // matrices so Babylon does not recalculate thousands of transforms every frame.
+  // Keep the animated foliage and water live; actor parts and doors are parented
+  // and are intentionally excluded from this pass.
+  const animatedMeshes = new Set([
+    ...canopy.map(item => item.mesh),
+    waterRing,
+    basinInnerBand,
+  ]);
+  for (const mesh of scene.meshes) {
+    if (!mesh.parent && !animatedMeshes.has(mesh) && !mesh.isDisposed()) {
+      mesh.freezeWorldMatrix();
+    }
   }
 
   return {
