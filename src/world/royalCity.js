@@ -1934,9 +1934,10 @@ export async function createRoyalCity(engine, canvas) {
     mesh.position.y+=6.28;
     mesh.position.z+=47;
   }
-  // Remove obsolete gatehouse fragments and detached ornaments from the old layout.
+  // Remove obsolete gatehouse fragments and the dark cliff shoulders that
+  // remained directly behind the new transverse palace balcony.
   for(const mesh of [...scene.meshes]) {
-    if(/^(gatehouse-tower-window|gatehouse-window-sill|gatehouse-tower-balcony|gatehouse-baluster|gatehouse-side-stringcourse|distant-waterfall)$/.test(mesh.name)) mesh.dispose(false,false);
+    if(/^(gatehouse-tower-window|gatehouse-window-sill|gatehouse-tower-balcony|gatehouse-baluster|gatehouse-side-stringcourse|distant-waterfall|castle-cliff-shoulder)$/.test(mesh.name)) mesh.dispose(false,false);
   }
   // Discard the former staircase/landing that was shifted with the palace.
   // It used to leave a phantom climb in the old coordinates.
