@@ -115,32 +115,56 @@ function addLantern(scene, x, y, z, metal, glow) {
 
 
 function addAntiqueDoor(scene,name,x,y,z,width,height,mats,angle=0.98,axis="z") {
-  const leafW=width*.48, leafH=height*.91, cy=y+height*.455;
+  const leafW=width*.49,leafH=height*.91,cy=y+height*.455;
+  scene.metadata=scene.metadata||{};
+  scene.metadata.doorLeaves=scene.metadata.doorLeaves||[];
   for(const side of [-1,1]) {
-    const px=axis==="x"?x:x+side*width*.25;
-    const pz=axis==="x"?z+side*width*.25:z;
-    const rot=(axis==="x"?Math.PI/2:0)+side*angle;
-    const leaf=box(scene,name+"-leaf",[px,cy,pz],[leafW,leafH,.20],mats.woodLight); leaf.rotation.y=rot;
+    const hinge=new TransformNode(name+"-hinge-"+side,scene);
+    hinge.position.set(axis==="x"?x:x+side*width*.5,cy,axis==="x"?z+side*width*.5:z);
+    hinge.rotation.y=(axis==="x"?Math.PI/2:0);
+    const leaf=box(scene,name+"-leaf",[0,0,0],[leafW,leafH,.22],mats.woodLight);
+    leaf.parent=hinge;leaf.position.set(-side*leafW*.5,0,0);
+    const localX=-side*leafW*.5;
     for(const level of [-1,1]) {
-      const panel=box(scene,name+"-panel",[px,cy+level*leafH*.23,pz-.13],[leafW*.68,leafH*.28,.05],mats.wood); panel.rotation.y=rot;
-      const inset=box(scene,name+"-panel-inset",[px,cy+level*leafH*.23,pz-.16],[leafW*.52,leafH*.20,.04],mats.woodLight); inset.rotation.y=rot;
+      const panel=box(scene,name+"-raised-panel",[0,0,0],[leafW*.70,leafH*.28,.055],mats.wood);
+      panel.parent=hinge;panel.position.set(localX,level*leafH*.23,-.135);
+      const inset=box(scene,name+"-panel-inset",[0,0,0],[leafW*.52,leafH*.19,.035],mats.woodLight);
+      inset.parent=hinge;inset.position.set(localX,level*leafH*.23,-.17);
+      const mould=box(scene,name+"-panel-moulding",[0,0,0],[leafW*.78,.075,.045],mats.gold);
+      mould.parent=hinge;mould.position.set(localX,level*leafH*.39,-.17);
     }
-    for(const yy of [cy-leafH*.32,cy,cy+leafH*.32]) {
-      const strap=box(scene,name+"-iron-strap",[px,yy,pz-.18],[leafW*.95,.10,.07],mats.gold); strap.rotation.y=rot;
+    for(const yy of [-leafH*.36,0,leafH*.36]) {
+      const strap=box(scene,name+"-forged-iron-strap",[0,0,0],[leafW*.94,.105,.065],mats.gold);
+      strap.parent=hinge;strap.position.set(localX,yy,-.19);
+      for(let n=0;n<5;n++) {
+        const rivet=MeshBuilder.CreateSphere(name+"-iron-rivet",{diameter:.065,segments:8},scene);
+        rivet.parent=hinge;rivet.position.set(localX-leafW*.39+n*leafW*.195,yy,-.235);rivet.material=mats.trim;
+      }
     }
-    const handle=MeshBuilder.CreateTorus(name+"-ring-handle",{diameter:.22,thickness:.045,tessellation:12},scene);
-    handle.position.set(px-side*.1,cy,pz-.23); handle.rotation.y=rot; handle.material=mats.gold;
-    for(const yy of [cy-leafH*.35,cy+leafH*.35]) {
-      const stud=MeshBuilder.CreateSphere(name+"-stud",{diameter:.10,segments:8},scene);
-      stud.position.set(px,yy,pz-.19); stud.material=mats.gold;
+    const handle=MeshBuilder.CreateTorus(name+"-ring-handle",{diameter:.24,thickness:.045,tessellation:20},scene);
+    handle.parent=hinge;handle.position.set(localX-side*.12,0,-.25);handle.rotation.x=Math.PI/2;handle.material=mats.gold;
+    const backplate=MeshBuilder.CreateCylinder(name+"-handle-backplate",{diameter:.32,height:.045,tessellation:16},scene);
+    backplate.parent=hinge;backplate.position.set(localX-side*.12,.18,-.22);backplate.rotation.x=Math.PI/2;backplate.material=mats.gold;
+    for(const yy of [-leafH*.42,leafH*.42]) {
+      const hingeBar=box(scene,name+"-hinge-plate",[0,0,0],[.18,.42,.07],mats.gold);
+      hingeBar.parent=hinge;hingeBar.position.set(-side*leafW*.43,yy,-.17);
+      const hingePin=MeshBuilder.CreateCylinder(name+"-hinge-pin",{diameter:.095,height:.5,tessellation:10},scene);
+      hingePin.parent=hinge;hingePin.position.set(-side*leafW*.43,yy,-.20);hingePin.material=mats.trim;
     }
+    hinge.rotation.y+=(side*angle);
+    scene.metadata.doorLeaves.push({pivot:hinge,home:hinge.rotation.y,open:false,position:hinge.position.clone(),name});
   }
-  for(const side of [-1,1]) {
-    const jamb=box(scene,name+"-stone-jamb",axis==="x"?[x,y+height*.46,z+side*width*.53]:[x+side*width*.53,y+height*.46,z],axis==="x"?[.62,height+.35,.28]:[.28,height+.35,.62],mats.trim);
+  for(const side of [-1,1]) box(scene,name+"-carved-stone-jamb",
+    axis==="x"?[x,y+height*.46,z+side*width*.53]:[x+side*width*.53,y+height*.46,z],
+    axis==="x"?[.62,height+.35,.32]:[.32,height+.35,.62],mats.trim);
+  box(scene,name+"-carved-stone-lintel",[x,y+height+.20,z],
+    axis==="x"?[.72,.42,width+1]:[width+1,.42,.72],mats.trim);
+  for(let i=0;i<7;i++) {
+    const rosette=MeshBuilder.CreateSphere(name+"-lintel-carving",{diameter:.11,segments:8},scene);
+    rosette.position.set(x-width*.38+i*width*.127,y+height+.22,z-.39);rosette.scaling.y=.55;rosette.material=mats.gold;
   }
-  box(scene,name+"-stone-lintel",[x,y+height+.20,z],axis==="x"?[.66,.36,width+1]:[width+1,.36,.66],mats.trim);
-  const crest=MeshBuilder.CreateCylinder(name+"-crest",{diameter:Math.min(.72,width*.34),height:.12,tessellation:8},scene);
-  crest.position.set(axis==="x"?x-.25:x,y+height+.62,axis==="x"?z:z-.25); crest.rotation.x=Math.PI/2; crest.material=mats.gold;
+  const crest=MeshBuilder.CreateCylinder(name+"-door-crest",{diameter:Math.min(.82,width*.34),height:.14,tessellation:8},scene);
+  crest.position.set(axis==="x"?x-.25:x,y+height+.68,axis==="x"?z-.25:z-.25);crest.rotation.x=Math.PI/2;crest.material=mats.gold;
 }
 function addBarrel(scene, x, z, wood, hoop) {
   const b = cylinder(scene, "oak-barrel", [x,0.65,z], 0.9, 1.3, wood, 16);
@@ -617,6 +641,33 @@ export async function createRoyalCity(engine, canvas) {
   pubLink.position.set(35,-.03,15);pubLink.rotation.y=-.48;pubLink.material=pubLaneMat;
   addBuilding(scene,{x:48,z:5,w:20,d:15,h:11,name:"The Lantern and Lark",sign:"THE LANTERN & LARK",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:72,z:5,w:20,d:15,h:11.5,name:"The Fox and Fir",sign:"THE FOX & FIR",interior:true},{...mats},shadow,colliders,obstacles);
+  // New branching lanes behind the fountain square: a discreet lantern-lit pleasure house and artisan row.
+  const alleyStone=mat(scene,"old-quarter-alley-stone",new Color3(.31,.29,.25),.98);
+  for(const [x,z,w,d] of [[83,-15,18,8],[86,-29,8,22],[63,-30,18,8]]) {
+    const lane=MeshBuilder.CreateGround("old-quarter-branching-lane",{width:w,height:d,subdivisions:1},scene);
+    lane.position.set(x,-.035,z);lane.material=alleyStone;
+  }
+  addBuilding(scene,{x:91,z:-12,w:17,d:13,h:10,name:"The Velvet Rose",sign:"THE VELVET ROSE",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:66,z:-31,w:17,d:13,h:9.5,name:"The Moonlit Atelier",sign:"MOONLIT ATELIER",interior:true},{...mats},shadow,colliders,obstacles);
+  // Carved balconies, stained glass, red velvet awnings and brass lanterns distinguish the night house.
+  const velvet=mat(scene,"velvet-awning",new Color3(.34,.035,.095),.78);
+  box(scene,"velvet-rose-balcony",[91,6.8,-5.0],[18.2,.22,.95],mats.gold);
+  for(let i=0;i<19;i++) {
+    const x=82.5+i;
+    box(scene,"velvet-rose-baluster",[x,7.35,-5.0],[.09,.92,.10],mats.gold);
+  }
+  box(scene,"velvet-rose-canopy",[91,8.4,-4.2],[15.5,.22,2.2],velvet);
+  for(let i=0;i<9;i++) box(scene,"velvet-rose-canopy-stripe",[83.5+i*1.85,8.42,-4.2],[.06,.24,2.25],mats.trim);
+  for(const x of [84,91,98]) addLantern(scene,x,5.2,-4.5,mats.gold,mats.lantern);
+  // Decorative shopfronts create a sense that the side streets continue beyond the main square.
+  for(const [x,z] of [[57,-28],[76,-29],[102,-31],[101,18],[84,22]]) {
+    const frontage=box(scene,"alley-shopfront",[x,3.0,z],[8,6,6],mats.wall);
+    const roof=MeshBuilder.CreateCylinder("alley-shop-roof",{diameterTop:0,diameterBottom:10,height:3.2,tessellation:4},scene);
+    roof.position.set(x,7.2,z);roof.material=mats.roof;
+    box(scene,"alley-shop-door",[x,1.4,z+3.05],[1.5,2.8,.2],mats.wood);
+    addLantern(scene,x-2.8,4.0,z+3.4,mats.gold,mats.lantern);
+    addLantern(scene,x+2.8,4.0,z+3.4,mats.gold,mats.lantern);
+  }
   // Dense lower-town frontage: projecting upper floors, timber braces, shutters, flower boxes and shop awnings.
   const streetWood=mat(scene,"lower-town-dark-oak",new Color3(.22,.13,.075),.9);
   const streetTrim=mat(scene,"lower-town-honey-oak",new Color3(.48,.31,.16),.82);
@@ -1505,45 +1556,132 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"state-ballroom-ceiling-coffer",[x,33.68,z],[5.5,.12,6.5],ballroomGold);
 
   const royalGardenStartIndex=scene.meshes.length;
-  // Symmetrical royal rose gardens flank the palace approach, with parterre beds and pergolas.
-  const gardenSoil=mat(scene,"royal-garden-soil",new Color3(.18,.15,.10),.98);
-  const gardenHedge=mat(scene,"royal-garden-boxwood",new Color3(.12,.27,.13),.95);
-  const gardenRed=mat(scene,"royal-garden-red-rose",new Color3(.68,.11,.19),.62);
-  const gardenPink=mat(scene,"royal-garden-pink-rose",new Color3(.9,.39,.5),.62);
-  for(const side of [-1,1]) {
-    const gx=side*42, gz=-105;
-    box(scene,"royal-garden-paving",[gx,8.48,gz],[22,.16,30],mats.trim);
-    box(scene,"royal-garden-central-walk",[gx,8.59,gz],[2.8,.05,29],mats.trim);
-    for(const dx of [-7,7]) for(const dz of [-9,0,9]) {
-      box(scene,"royal-garden-rose-bed",[gx+dx,8.78,gz+dz],[5.4,.36,6.8],gardenSoil);
-      for(let row=0;row<4;row++) for(let col=0;col<5;col++) {
-        const bush=MeshBuilder.CreateSphere("royal-garden-rose-bush",{diameter:.66,segments:8},scene);
-        bush.position.set(gx+dx-2+col,gz*0+9.2,gz+dz-2.3+row*1.5);
-        bush.scaling.y=.8;bush.material=(row+col)%3===0?gardenPink:gardenRed;
+  // The approach is a broad carriage boulevard; formal rose gardens sit on both sides BEFORE the stair.
+  const gardenSoil=mat(scene,"royal-garden-rich-earth",new Color3(.16,.115,.075),.98);
+  const gardenHedge=mat(scene,"royal-garden-clipped-boxwood",new Color3(.075,.20,.105),.96);
+  const leafMats=[new Color3(.10,.27,.12),new Color3(.16,.36,.16),new Color3(.23,.42,.19)].map((c,i)=>mat(scene,"rose-leaf-"+i,c,.94));
+  const stemMat=mat(scene,"rose-stem",new Color3(.12,.25,.10),.96);
+  const roseMats=[
+    mat(scene,"rose-crimson",new Color3(.56,.035,.095),.68),
+    mat(scene,"rose-blush",new Color3(.91,.38,.49),.68),
+    mat(scene,"rose-ivory",new Color3(.96,.84,.67),.72)
+  ];
+  function leafBlade(name,base,tip,width,material) {
+    const axis=tip.subtract(base),side=Vector3.Cross(axis,new Vector3(.18,1,.12)).normalize().scale(width*.5);
+    const mid=Vector3.Lerp(base,tip,.5).add(new Vector3(0,width*.18,0));
+    const left=[base,Vector3.Lerp(base,mid,.5).add(side.scale(.72)),mid.add(side.scale(.45)),tip];
+    const right=[base,Vector3.Lerp(base,mid,.5).subtract(side.scale(.72)),mid.subtract(side.scale(.45)),tip];
+    const mesh=MeshBuilder.CreateRibbon(name,{pathArray:[left,right],sideOrientation:2},scene);
+    mesh.material=material;mesh.isPickable=false;
+    const vein=MeshBuilder.CreateTube(name+"-vein",{path:[base,mid,tip],radius:.012,tessellation:5},scene);
+    vein.material=stemMat;vein.isPickable=false;
+    return mesh;
+  }
+  function roseFlower(name,center,radius,material,phase=0) {
+    // Individual cupped petals: every petal is a separate curved ribbon, not a sphere.
+    for(let layer=0;layer<3;layer++) {
+      const count=layer===0?7:layer===1?6:5;
+      for(let p=0;p<count;p++) {
+        const a=phase+p*Math.PI*2/count+layer*.31;
+        const inner=radius*(layer===0?.08:layer===1?.28:.48);
+        const outer=radius*(layer===0?1:.78);
+        const left=[],right=[];
+        for(let k=0;k<5;k++) {
+          const t=k/4,rr=inner+(outer-inner)*t;
+          const spread=(.08+Math.sin(t*Math.PI)*.34)*radius;
+          const px=center.x+Math.cos(a)*rr, pz=center.z+Math.sin(a)*rr;
+          const tangentX=-Math.sin(a),tangentZ=Math.cos(a);
+          const y=center.y+Math.sin(t*Math.PI)*radius*.25+layer*.025;
+          left.push(new Vector3(px+tangentX*spread,y,pz+tangentZ*spread));
+          right.push(new Vector3(px-tangentX*spread,y,pz-tangentZ*spread));
+        }
+        const petal=MeshBuilder.CreateRibbon(name+"-petal-"+layer+"-"+p,{pathArray:[left,right],sideOrientation:2},scene);
+        petal.material=material;petal.isPickable=false;
       }
     }
-    for(const dx of [-10,10]) box(scene,"royal-garden-long-hedge",[gx+dx,9.0,gz],[.72,1.0,29],gardenHedge);
-    for(const dz of [-14,14]) box(scene,"royal-garden-cross-hedge",[gx,9.0,gz+dz],[20,1,.72],gardenHedge);
-    for(let z=-115;z<=-95;z+=10) {
-      for(const dx of [-1.7,1.7]) box(scene,"royal-garden-pergola-post",[gx+dx,11.1,z],[.22,5,.22],castleGold);
-      box(scene,"royal-garden-pergola-beam",[gx,13.65,z],[3.7,.24,.28],castleGold);
-      for(let j=0;j<7;j++) {
-        const vine=MeshBuilder.CreateSphere("royal-garden-pergola-rose",{diameter:.44,segments:8},scene);
-        vine.position.set(gx-1.5+j*.5,13.35,z);vine.material=j%2?gardenPink:gardenRed;
+    const heart=MeshBuilder.CreateDisc(name+"-pollen-heart",{radius:radius*.16,tessellation:12},scene);
+    heart.position.copyFrom(center);heart.position.y+=radius*.22;heart.material=roseMats[2];
+  }
+  function roseBush(x,z,scale,variant=0) {
+    const baseY=.48;
+    for(let stem=0;stem<4;stem++) {
+      const a=stem*Math.PI*.5+variant*.7;
+      const h=scale*(.62+(stem%2)*.18);
+      const tip=new Vector3(x+Math.cos(a)*.22*scale,baseY+h,z+Math.sin(a)*.22*scale);
+      const branch=MeshBuilder.CreateTube("rose-branch",{path:[new Vector3(x,baseY,z),new Vector3(x+Math.cos(a)*.12*scale,baseY+h*.48,z+Math.sin(a)*.12*scale),tip],radius:.025*scale,tessellation:6},scene);
+      branch.material=stemMat;
+      for(let l=0;l<3;l++) {
+        const t=.25+l*.23;
+        const anchor=Vector3.Lerp(new Vector3(x,baseY,z),tip,t);
+        const dir=new Vector3(Math.cos(a+(l%2?1:-1)*.8),.24,Math.sin(a+(l%2?1:-1)*.8)).normalize();
+        leafBlade("individual-rose-leaf",anchor,anchor.add(dir.scale(.32*scale)),.16*scale,leafMats[(l+stem)%3]);
+      }
+      if(stem===0||stem===2) roseFlower("hand-built-rose",tip,.25*scale,roseMats[(variant+stem)%3],a);
+    }
+  }
+  // Central carriage road: wide enough for a wagon, with separate pedestrian promenades.
+  const carriageMat=texturedMat(scene,"royal-carriage-cobble",new Color3(.62,.58,.49),"#a99d86","#554d41",.92);
+  const carriage=MeshBuilder.CreateGround("royal-palace-carriage-boulevard",{width:18,height:48,subdivisions:2},scene);
+  carriage.position.set(0,-.025,-39);carriage.material=carriageMat;
+  for(const side of [-1,1]) {
+    const gx=side*27,gz=-39;
+    box(scene,"royal-rose-garden-terrace",[gx,.12,gz],[29,.24,34],mats.trim);
+    box(scene,"royal-rose-garden-soil",[gx,.27,gz],[26,.12,31],gardenSoil);
+    // Geometric parterre beds with clipped hedges and ornamental stone borders.
+    for(const dx of [-7,7]) for(const dz of [-9,3]) {
+      const bx=gx+dx,bz=gz+dz;
+      box(scene,"formal-rose-bed-border",[bx,.38,bz],[10.2,.28,8.6],castleGold);
+      box(scene,"formal-rose-bed-earth",[bx,.54,bz],[9.7,.10,8.1],gardenSoil);
+      for(let row=0;row<3;row++) for(let col=0;col<4;col++)
+        roseBush(bx-3.5+col*2.3,bz-2.5+row*2.5,.95,(row+col+side+2)%3);
+      for(const edge of [-1,1]) {
+        box(scene,"parterre-clipped-hedge",[bx+edge*4.9,.92,bz],[.36,.8,8.4],gardenHedge);
+        box(scene,"parterre-clipped-hedge",[bx,.92,bz+edge*4.1],[9.9,.8,.36],gardenHedge);
       }
     }
-    const urn=MeshBuilder.CreateCylinder("royal-garden-entry-urn",{diameterTop:.55,diameterBottom:1.05,height:1.5,tessellation:14},scene);
-    urn.position.set(gx,9.5,-91);urn.material=mats.trim;
+    // Stone balustrade, clipped yew topiary and rose-covered trellis arches.
+    for(let z=-53;z<=-25;z+=7) {
+      for(const dx of [-2.1,2.1]) {
+        cylinder(scene,"rose-garden-pergola-column-base",[gx+dx,.42,z],.72,.5,mats.trim,16);
+        cylinder(scene,"rose-garden-pergola-column",[gx+dx,2.45,z],.30,4.0,mats.trim,16);
+        cylinder(scene,"rose-garden-pergola-capital",[gx+dx,4.55,z],.62,.3,castleGold,16);
+      }
+      box(scene,"rose-garden-pergola-crossbeam",[gx,4.7,z],[4.8,.26,.3],castleGold);
+      for(let j=0;j<9;j++) {
+        const vineX=gx-1.9+j*.48;
+        leafBlade("pergola-vine-leaf",new Vector3(vineX,4.45,z),new Vector3(vineX+.16,4.72,z+.12),.13,leafMats[j%3]);
+        if(j%2===0) roseFlower("climbing-rose",new Vector3(vineX,4.55,z-.08),.18*1.0,roseMats[j%3],j*.7);
+      }
+    }
+    for(let i=0;i<5;i++) {
+      const tx=gx+(i%2? -10:10),tz=-50+i*5.5;
+      cylinder(scene,"garden-topiary-planter",[tx,.45,tz],1.6,.7,mats.trim,16);
+      for(let l=0;l<10;l++) {
+        const a=l*Math.PI*.2;
+        leafBlade("topiary-leaf",new Vector3(tx,.82,tz),new Vector3(tx+Math.cos(a)*.62,1.55,tz+Math.sin(a)*.62),.26,leafMats[l%3]);
+      }
+    }
+    // A formal fountain anchors the garden's outer court.
+    cylinder(scene,"rose-garden-fountain-basin",[gx,.38,-39],4.0,.62,castleGold,32);
+    cylinder(scene,"rose-garden-fountain-water",[gx,.71,-39],3.45,.05,mats.glass,32);
+    cylinder(scene,"rose-garden-fountain-stem",[gx,1.35,-39],.72,1.25,mats.trim,20);
+    cylinder(scene,"rose-garden-fountain-bowl",[gx,2.0,-39],2.0,.34,mats.trim,24);
   }
-  // A small fountain anchors each garden without intruding into palace rooms.
+  // Ornate wrought-iron gates open from the boulevard into each garden promenade.
   for(const side of [-1,1]) {
-    const gx=side*42;
-    cylinder(scene,"royal-garden-pool-basin",[gx,8.85,-105],2.5,.48,castleGold,24);
-    cylinder(scene,"royal-garden-pool-water",[gx,9.12,-105],2.1,.06,mats.glass,24);
-    cylinder(scene,"royal-garden-pool-spout",[gx,9.8,-105],.5,1.3,mats.trim,16);
-    box(scene,"royal-garden-access-walk",[side*34,8.53,-91],[14,.08,2.8],mats.trim);
+    const gx=side*17.4;
+    for(const dx of [-2.1,2.1]) cylinder(scene,"garden-gate-pillar",[gx+dx,1.4,-39],.75,2.8,mats.trim,16);
+    for(let j=-8;j<=8;j++) {
+      const rail=box(scene,"garden-gate-ironwork",[gx+j*.25,1.55,-39],[.055,2.0,.06],castleGold);
+      if(j%4===0) { const spear=MeshBuilder.CreateCylinder("garden-gate-spear",{diameterTop:0,diameterBottom:.16,height:.42,tessellation:4},scene);spear.position.set(gx+j*.25,2.72,-39);spear.material=castleGold; }
+    }
   }
-  for(const mesh of scene.meshes.slice(royalGardenStartIndex)) mesh.position.y-=8.4;
+  // Link the gardens to the gate stair with a continuous paved apron; no stairs interrupt the carriage lane.
+  const gardenApron=MeshBuilder.CreateGround("royal-garden-carriage-apron",{width:18,height:18,subdivisions:1},scene);
+  gardenApron.position.set(0,-.03,-60);gardenApron.material=carriageMat;
+  for(const mesh of scene.meshes.slice(royalGardenStartIndex)) {
+    if(mesh.name.startsWith("royal-rose")||mesh.name.startsWith("formal-")||mesh.name.startsWith("parterre-")||mesh.name.startsWith("rose-garden")||mesh.name.startsWith("garden-")||mesh.name.startsWith("individual-")||mesh.name.startsWith("hand-built-")||mesh.name.startsWith("climbing-")||mesh.name.startsWith("pergola-")||mesh.name.startsWith("topiary-")) mesh.receiveShadows=true;
+  }
 
   // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
   // It now floats on a vast suspended island, rather than growing out of the castle grounds.
@@ -1696,7 +1834,7 @@ export async function createRoyalCity(engine, canvas) {
     const root=new TransformNode("townsperson-root",scene);
     const baseY=role==="guard"&&z<-70?7.63:0;
     root.position.set(x,baseY,z);root.rotation.y=heading;
-    const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
+    const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:role==="hostess"?npcCloth[4]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
     const part=(name,pos,size,material,kind="box")=>{
@@ -1721,7 +1859,7 @@ export async function createRoyalCity(engine, canvas) {
     }
     part("npc-hips",[0,.86,0],[.43,.25,.28],npcLeather,"sphere");
     part("npc-tunic",[0,1.23,0],[.58,.70,.34],outfit,"sphere");
-    part("npc-tunic-hem",[0,.91,0],[.59,.12,.35],outfit);
+    part("npc-tunic-hem",[0,.91,0],[.59,.12,.35],outfit);\n    if(role==="hostess"){part("hostess-skirt",[0,.91,0],[.62,.62,.42],outfit,"sphere");part("hostess-bodice",[0,1.32,-.015],[.43,.44,.36],npcCloth[4],"sphere");part("hostess-apron",[0,1.05,-.205],[.40,.48,.035],npcCloth[5]);}
     part("npc-belt",[0,1.00,-.012],[.56,.085,.37],npcLeather);
     part("npc-belt-buckle",[0,1.01,-.205],[.09,.10,.035],npcGold);
     part("npc-neck",[0,1.61,0],[.14,.16,.14],skin,"cylinder");
@@ -1730,7 +1868,7 @@ export async function createRoyalCity(engine, canvas) {
     part("npc-ear-left",[-.175,1.78,0],[.075,.12,.09],skin,"sphere");
     part("npc-ear-right",[.175,1.78,0],[.075,.12,.09],skin,"sphere");
     part("npc-hair-cap",[0,1.94,.005],[.365,.19,.34],hair,"sphere");
-    part("npc-hair-back",[0,1.80,.105],[.32,.28,.18],hair,"sphere");
+    part("npc-hair-back",[0,1.80,.105],[.32,.28,.18],hair,"sphere");\n    if(role==="hostess"){part("hostess-long-hair",[0,1.68,.20],[.29,.72,.17],hair,"sphere");part("hostess-hair-lock-left",[-.17,1.70,-.04],[.11,.48,.12],hair,"sphere");part("hostess-hair-lock-right",[.17,1.70,-.04],[.11,.48,.12],hair,"sphere");}
     for(const side of [-1,1]) {
       part("npc-eye",[side*.075,1.80,-.148],[.045,.035,.025],npcWhite,"sphere");
       part("npc-pupil",[side*.075,1.80,-.168],[.019,.025,.012],npcDark,"sphere");
@@ -1776,7 +1914,7 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(17,17,"merchant",17.1,Math.PI/2,false);
   makeTownsperson(21,-4,"villager",18.2,-.7,true);
   makeTownsperson(-9,-12,"villager",19.3,.5,true);
-  makeTownsperson(2,8,"villager",20.4,Math.PI,false);
+  makeTownsperson(2,8,"villager",20.4,Math.PI,false);\n  // Staff: a guild receptionist, tavern server and welcoming adult hostesses.\n  makeTownsperson(-20,-15.4,"hostess",21.2,Math.PI,false);\n  makeTownsperson(-21,4.6,"hostess",22.4,Math.PI,false);\n  makeTownsperson(52,10.0,"hostess",23.6,Math.PI,false);\n  makeTownsperson(72,10.0,"hostess",24.8,Math.PI,false);
 
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
@@ -1904,7 +2042,7 @@ export async function createRoyalCity(engine, canvas) {
   return {
     scene,
     setMovementSource(fn){moveSource=fn;},
-    onMovement:null,
+    onMovement:null,\n    onDoor:null,
     turn(dx,dy){yaw+=dx;pitch=Scalar.Clamp(pitch+dy,-1.05,1.05);camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;},
     interact,
     update(dt){
