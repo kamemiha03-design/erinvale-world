@@ -2453,8 +2453,8 @@ export async function createRoyalCity(engine, canvas) {
   cylinder(scene,"rose-garden-fountain-pedestal-lower",[0,9.35,-164],.72,.68,roseFountainGold,24);
   cylinder(scene,"rose-garden-fountain-pedestal-upper",[0,9.77,-164],.48,.32,roseFountainStone,24);
   cylinder(scene,"rose-garden-fountain-upper-bowl",[0,9.98,-164],1.42,.22,roseFountainStone,32);
-  const upperRim=MeshBuilder.CreateTorus("rose-garden-fountain-upper-rim",{diameter:1.48,thickness:.09,tessellation:32},scene);
-  upperRim.position.set(0,10.10,-164);upperRim.material=roseFountainGold;
+  const roseFountainUpperRim=MeshBuilder.CreateTorus("rose-garden-fountain-upper-rim",{diameter:1.48,thickness:.09,tessellation:32},scene);
+  roseFountainUpperRim.position.set(0,10.10,-164);roseFountainUpperRim.material=roseFountainGold;
   cylinder(scene,"rose-garden-fountain-finial",[0,10.32,-164],.24,.48,roseFountainGold,20);
   for(let i=0;i<6;i++) {
     const a=i*Math.PI/3;
