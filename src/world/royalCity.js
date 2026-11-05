@@ -337,6 +337,117 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       for(let side of [-1,1]) for(let i=0;i<3;i++) {
         box(scene,"guild-framed-notice",[x+side*13.25,5.8,z-5+i*4.2],[.12,1.8,2.2],mats.gold);
       }
+      // Rich, lived-in guild interior: communal tables, bench seating, food, drink and gear.
+      const guildOak=mat(scene,"guild-dark-oak",new Color3(.19,.105,.058),.82);
+      const guildLeather=mat(scene,"guild-worn-leather",new Color3(.28,.105,.055),.9);
+      const guildIron=mat(scene,"guild-blackened-iron",new Color3(.12,.13,.13),.42,.72);
+      const guildParchment=mat(scene,"guild-aged-parchment",new Color3(.79,.68,.48),.98);
+      const guildCopper=mat(scene,"guild-copper",new Color3(.55,.29,.12),.34,.72);
+      // Four communal tables form the social heart of the guild, leaving a central aisle.
+      for(let row=0;row<2;row++) for(let side of [-1,1]) {
+        const tx=x+side*4.0, tz=z+2.0-row*6.2;
+        box(scene,"guild-communal-table-top",[tx,1.08,tz],[3.9,.24,1.75],guildOak);
+        box(scene,"guild-table-inlay",[tx,1.205,tz],[3.35,.025,1.28],mats.woodLight);
+        for(let dx of [-1.55,1.55]) for(let dz of [-.62,.62])
+          box(scene,"guild-table-leg",[tx+dx,.55,tz+dz],[.2,1.0,.2],guildOak);
+        for(let side2 of [-1,1]) {
+          box(scene,"guild-long-bench-seat",[tx, .66,tz+side2*1.28],[3.55,.22,.48],guildOak);
+          for(let dx of [-1.35,0,1.35])
+            box(scene,"guild-bench-support",[tx+dx,.34,tz+side2*1.28],[.16,.65,.16],guildOak);
+        }
+        // Tankards, plates, bread and a small candle make the tables feel occupied.
+        for(let place=0;place<3;place++) {
+          const px=tx-1.25+place*1.25;
+          const mug=MeshBuilder.CreateCylinder("guild-pewter-tankard",{diameterTop:.28,diameterBottom:.22,height:.42,tessellation:12},scene);
+          mug.position.set(px,1.43,tz-.36);mug.material=guildCopper;
+          const handle=MeshBuilder.CreateTorus("guild-tankard-handle",{diameter:.22,thickness:.055,tessellation:12},scene);
+          handle.position.set(px+.17,1.46,tz-.36);handle.rotation.y=Math.PI/2;handle.material=guildCopper;
+          const plate=MeshBuilder.CreateCylinder("guild-ceramic-plate",{diameter:.52,height:.055,tessellation:16},scene);
+          plate.position.set(px,1.25,tz+.35);plate.material=mats.trim;
+          box(scene,"guild-loaf-of-bread",[px,1.39,tz+.35],[.42,.18,.2],guildParchment);
+        }
+        const candle=MeshBuilder.CreateCylinder("guild-table-candle",{diameter:.10,height:.42,tessellation:8},scene);
+        candle.position.set(tx,1.43,tz);candle.material=mats.trim;
+        const glow=MeshBuilder.CreateSphere("guild-table-candle-flame",{diameter:.14,segments:8},scene);
+        glow.position.set(tx,1.70,tz);glow.material=mats.lantern;
+      }
+      // A side-wall drinks cabinet with casks, bottles and shelves.
+      box(scene,"guild-drinks-cabinet",[x+12.65,3.0,z+1.4],[.48,5.5,5.8],guildOak);
+      for(let level=0;level<3;level++) {
+        box(scene,"guild-drinks-shelf",[x+12.3,1.35+level*1.65,z+1.4],[.8,.16,5.6],mats.woodLight);
+        for(let bottle=0;bottle<5;bottle++) {
+          const bx=x+12.05, bz=z-.65+bottle*1.0;
+          const bottleMesh=MeshBuilder.CreateCylinder("guild-potion-bottle",{diameterTop:.16,diameterBottom:.28,height:.72,tessellation:10},scene);
+          bottleMesh.position.set(bx,1.82+level*1.65,bz);bottleMesh.material=[mats.green,mats.glass,guildCopper][(bottle+level)%3];
+          const stopper=MeshBuilder.CreateSphere("guild-bottle-stopper",{diameter:.16,segments:8},scene);
+          stopper.position.set(bx,2.22+level*1.65,bz);stopper.material=guildOak;
+        }
+      }
+      // A proper guildmaster's desk beside the reception, with ledgers and a bell.
+      box(scene,"guildmaster-writing-desk",[x-9.0,1.05,z-d/2+5.4],[3.5,.24,1.65],guildOak);
+      for(let dx of [-1.45,1.45]) for(let dz of [-.62,.62])
+        box(scene,"guildmaster-desk-leg",[x-9+dx,.52,z-d/2+5.4+dz],[.16,1.0,.16],guildOak);
+      box(scene,"guildmaster-ledger",[x-9,1.22,z-d/2+5.25],[.8,.12,.62],guildParchment);
+      const bell=MeshBuilder.CreateSphere("guildmaster-bell",{diameter:.24,segments:12},scene);
+      bell.position.set(x-7.9,1.38,z-d/2+5.65);bell.material=guildCopper;
+      // Fireplace details: stone hearth, stacked logs, iron tools and a carved mantel crest.
+      for(let log=0;log<3;log++) {
+        const woodLog=MeshBuilder.CreateCylinder("guild-hearth-log",{diameter:.18,height:1.6,tessellation:8},scene);
+        woodLog.position.set(x+8.8+(log-1)*.25,1.12,z+7.0);woodLog.rotation.z=Math.PI/2;woodLog.material=guildOak;
+      }
+      for(let side of [-1,1]) {
+        const poker=MeshBuilder.CreateCylinder("guild-fireplace-tool",{diameter:.055,height:1.75,tessellation:8},scene);
+        poker.position.set(x+8.8+side*2.5,1.45,z+7.05);poker.rotation.z=side*.12;poker.material=guildIron;
+      }
+      box(scene,"guild-fireplace-stone-hearth",[x+8.8,.32,z+7.1],[5.0,.35,1.5],mats.trim);
+      const crest=MeshBuilder.CreateCylinder("guild-hearth-crest",{diameter:1.25,height:.18,tessellation:6},scene);
+      crest.position.set(x+8.8,5.35,z+7.28);crest.rotation.x=Math.PI/2;crest.material=mats.gold;
+      // Carved timber trusses, diagonal braces and a high central ridge.
+      for(let zz=z-d/2+2.8;zz<=z+d/2-2.8;zz+=4.5) {
+        for(let side of [-1,1]) {
+          const brace=box(scene,"guild-roof-truss-brace",[x+side*5.2,h-2.0,zz],[.28,4.2,.32],guildOak);
+          brace.rotation.z=side*.62;
+        }
+        box(scene,"guild-roof-truss-crossbeam",[x,h-3.9,zz],[w-1.2,.32,.42],guildOak);
+      }
+      // Hanging iron lanterns and warm wall sconces add pools of amber light.
+      for(let side of [-1,1]) for(let zz of [z-5,z+2,z+7]) {
+        box(scene,"guild-wall-sconce-bracket",[x+side*13.1,5.4,zz],[.8,.14,.14],guildIron);
+        const sconce=MeshBuilder.CreateSphere("guild-wall-sconce-glow",{diameter:.38,segments:10},scene);
+        sconce.position.set(x+side*12.7,5.05,zz);sconce.material=mats.lantern;
+      }
+      for(let i=0;i<3;i++) {
+        const chain=MeshBuilder.CreateCylinder("guild-pendant-chain",{diameter:.055,height:2.2,tessellation:8},scene);
+        chain.position.set(x-7+i*7,h-2.0,z-1.5);chain.material=guildIron;
+        const lamp=MeshBuilder.CreateCylinder("guild-pendant-lantern",{diameterTop:.35,diameterBottom:.72,height:.72,tessellation:8},scene);
+        lamp.position.set(x-7+i*7,h-3.25,z-1.5);lamp.material=mats.gold;
+        const lampGlow=MeshBuilder.CreateSphere("guild-pendant-glow",{diameter:.26,segments:8},scene);
+        lampGlow.position.set(x-7+i*7,h-3.72,z-1.5);lampGlow.material=mats.lantern;
+      }
+      // Trophy details: monster claws, horns and a framed adventurer's map.
+      for(let side of [-1,1]) {
+        const trophyPlaque=box(scene,"guild-trophy-plaque",[x+side*13.0,8.6,z+5.0],[.18,1.5,2.2],guildOak);
+        for(let horn=0;horn<2;horn++) {
+          const tusk=MeshBuilder.CreateCylinder("guild-monster-trophy-horn",{diameterTop:.025,diameterBottom:.22,height:1.15,tessellation:8},scene);
+          tusk.position.set(x+side*12.82,8.8,z+4.55+horn*.85);tusk.rotation.z=horn===0?.28:-.28;tusk.material=guildParchment;
+        }
+      }
+      // Decorative timber posts and carved capitals frame the quest wall.
+      for(let side of [-1,1]) {
+        box(scene,"guild-quest-wall-pillar",[x+side*5.4,7.0,z-d/2+.75],[.34,9.5,.42],guildOak);
+        box(scene,"guild-quest-wall-capital",[x+side*5.4,11.8,z-d/2+.75],[.8,.35,.72],mats.gold);
+      }
+      // Scrolls pinned to the board get wooden rollers and colored wax seals.
+      for(let i=0;i<5;i++) {
+        const px=x-3.8+(i%3)*3.8, py=6.5+Math.floor(i/3)*1.45;
+        box(scene,"guild-notice-parchment",[px,py,z-d/2+.095],[1.75,1.55,.055],guildParchment);
+        for(let edge of [-1,1]) {
+          const roller=MeshBuilder.CreateCylinder("guild-scroll-roller",{diameter:.10,height:1.9,tessellation:8},scene);
+          roller.position.set(px,py+edge*.78,z-d/2+.045);roller.rotation.z=Math.PI/2;roller.material=guildOak;
+        }
+        for(let line=0;line<4;line++)
+          box(scene,"guild-scroll-writing",[px-.15,py+.34-line*.22,z-d/2+.04],[.95-(line%2)*.2,.025,.035],guildOak);
+      }
     }
     for(let zz=z-d/2+.7;zz<=z+d/2-.7;zz+=1.35) {
       obstacles.push({x:x-w/2+.12,z:zz,r:.68});
