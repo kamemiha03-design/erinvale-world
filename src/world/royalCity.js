@@ -3533,15 +3533,36 @@ export async function createRoyalCity(engine, canvas) {
   const bathSkin=mat(scene,"imperial-bath-skin",new Color3(.70,.48,.35),.96);
   const bathHair=mat(scene,"imperial-bath-hair",new Color3(.12,.075,.05),.96);
   const bathActors=[];
+  // Reuse identical high-resolution primitive geometry for every resident.
+  // Each actor still gets its own mesh, transform and material; only the immutable
+  // vertex/index buffers are shared. This avoids allocating hundreds of duplicate
+  // sphere/cylinder buffers during iPhone Safari startup without lowering detail.
+  const actorGeometryTemplates=new Map();
+  function sharedActorPrimitive(name,kind,segments) {
+    const key=kind+":"+segments;
+    let template=actorGeometryTemplates.get(key);
+    if(!template) {
+      if(kind==="sphere") template=MeshBuilder.CreateSphere("shared-actor-geometry-"+key,{diameter:1,segments},scene);
+      else if(kind==="cylinder") template=MeshBuilder.CreateCylinder("shared-actor-geometry-"+key,{diameter:1,height:1,tessellation:segments},scene);
+      else template=MeshBuilder.CreateBox("shared-actor-geometry-"+key,{size:1},scene);
+      template.isVisible=false;
+      template.isPickable=false;
+      template.setEnabled(false);
+      actorGeometryTemplates.set(key,template);
+    }
+    const mesh=template.clone(name);
+    mesh.isVisible=true;
+    mesh.setEnabled(true);
+    mesh.isPickable=false;
+    return mesh;
+  }
   function makeBathGuest(x,y,z,pose="soaking",heading=0,phase=0) {
     const root=new TransformNode("imperial-bath-guest",scene);
     root.position.set(x,y,z);root.rotation.y=heading;
     const part=(name,pos,scale,material,kind="sphere")=>{
       // Bath guests are viewed at close range, so use a much finer mesh than
       // distant town NPCs: smooth silhouettes on faces, shoulders and limbs.
-      const mesh=kind==="cylinder"
-        ?MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:64},scene)
-        :MeshBuilder.CreateSphere(name,{diameter:1,segments:72},scene);
+      const mesh=sharedActorPrimitive(name,kind==="cylinder"?"cylinder":"sphere",kind==="cylinder"?64:72);
       mesh.parent=root;mesh.position.set(...pos);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
     };
     const workingArms=[];
@@ -3581,10 +3602,7 @@ export async function createRoyalCity(engine, canvas) {
     const skin=phase%2?npcSkin:npcSkinLight;
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
     const part=(name,pos,size,material,kind="box")=>{
-      let mesh;
-      if(kind==="sphere") mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:40},scene);
-      else if(kind==="cylinder") mesh=MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:48},scene);
-      else mesh=MeshBuilder.CreateBox(name,{size:1},scene);
+      const mesh=sharedActorPrimitive(name,kind==="sphere"?"sphere":kind==="cylinder"?"cylinder":"box",kind==="sphere"?40:kind==="cylinder"?48:1);
       mesh.position.set(pos[0],pos[1],pos[2]);mesh.scaling.set(size[0],size[1],size[2]);
       mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
     };
@@ -3741,7 +3759,7 @@ export async function createRoyalCity(engine, canvas) {
   function makeMarketDog(x,z,scale,heading) {
     const dog=new TransformNode("market-dog",scene);dog.position.set(x,.02,z);dog.rotation.y=heading;dog.scaling.setAll(scale);
     const part=(name,p,size,material)=>{
-      const m=MeshBuilder.CreateSphere(name,{diameter:1,segments:20},scene);
+      const m=sharedActorPrimitive(name,"sphere",20);
       m.parent=dog;m.position.set(p[0],p[1],p[2]);m.scaling.set(size[0],size[1],size[2]);m.material=material;m.isPickable=false;return m;
     };
     part("market-dog-body",[0,.43,0],[.78,.48,.40],dogCoat);
