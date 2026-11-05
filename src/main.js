@@ -16,13 +16,13 @@ async function boot() {
   const engine=new Engine(canvas,true,{
     preserveDrawingBuffer:false,
     stencil:false,
-    antialias:!isTouch,
-    powerPreference:isTouch?"low-power":"high-performance",
-    adaptToDeviceRatio:!isTouch,
+    antialias:true,
+    powerPreference:"high-performance",
+    adaptToDeviceRatio:true,
   });
-  // Mobile keeps a sharper 50% internal resolution per axis; scene culling reduces CPU/GPU work.
-  // Antialiasing and desktop post-processing are disabled separately for touch devices.
-  engine.setHardwareScalingLevel(isTouch?2.0:1);
+  // Render mobile at a higher device-pixel density with MSAA enabled.
+  // Keep the 24 FPS cap and optimize scene submission instead of lowering geometry detail.
+  engine.setHardwareScalingLevel(isTouch?1.5:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
@@ -47,9 +47,8 @@ async function boot() {
   if(isTouch)mobileControls.classList.remove("hidden");
   else desktopHint.classList.remove("hidden");
 
-  // Keep full scene detail, but cap mobile rendering at 24 FPS and use a lower internal resolution. Static geometry,
-  // textures and shadow-map quality remain unchanged; optional model downloads
-  // are deferred by the world builder.
+  // Keep full scene detail and a 24 FPS mobile cap. Static geometry,
+  // textures remain unchanged; optional model downloads are deferred by the world builder.
   let lastMobileFrame=0;
   engine.runRenderLoop(()=>{
     const now=performance.now();
