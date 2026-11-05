@@ -596,12 +596,14 @@ export async function createRoyalCity(engine, canvas) {
   scene.imageProcessingConfiguration.contrast=1.16;
 
   const mats={
-    wall:texturedMat(scene,"aged-limestone",C.stone,"#a99a7d","#594d3d"),
+    // These three materials receive real tile maps immediately below; do not
+    // allocate temporary DynamicTextures that would be replaced unused.
+    wall:mat(scene,"aged-limestone",C.stone,.9),
     trim:mat(scene,"carved-stone",C.paleStone,.92),
     dark:mat(scene,"deep-arch-shadow",new Color3(.09,.085,.075)),
-    wood:texturedMat(scene,"weathered-oak",C.wood,"#69452b","#24170e"),
+    wood:mat(scene,"weathered-oak",C.wood,.9),
     woodLight:mat(scene,"polished-oak",C.woodLight,.72),
-    roof:texturedMat(scene,"slate-roof",C.roof,"#514641","#1c1715"),
+    roof:mat(scene,"slate-roof",C.roof,.9),
     floor:mat(scene,"interior-floor",new Color3(.29,.23,.17)),
     glass:mat(scene,"blue-glass",new Color3(.12,.24,.29),.2,.35),
     gold:mat(scene,"aged-brass",C.gold,.35,.72),
@@ -632,11 +634,21 @@ export async function createRoyalCity(engine, canvas) {
 
   // Cobblestone plaza with a repeating hand-laid pattern.
   const ground=MeshBuilder.CreateGround("plaza-ground",{width:380,height:380,subdivisions:2},scene);
-  ground.position.y=-.12;ground.material=texturedMat(scene,"cobblestone",new Color3(.53,.50,.43),"#8c8475","#39362f");
+  ground.position.y=-.12;ground.material=mat(scene,"cobblestone",new Color3(.53,.50,.43),.96);
   surfaceMaps(ground.material,"T_UnevenBrick_BaseColor.png","T_UnevenBrick_Normal.png",9,9);
+  // Preserve every cobble and its alternating stone finish, but combine the
+  // static blocks by material. This turns nearly 200 draw calls into two.
+  const cobbleGroups=new Map();
   for(let z=-39;z<=33;z+=6) for(let x=-39;x<=39;x+=6) {
     const p=MeshBuilder.CreateBox("individual-cobble",{width:5.78,height:.055,depth:5.78},scene);
-    p.position.set(x,-.055,z);p.material=(Math.floor((x+39)/6+z/6)%6===0)?mats.trim:ground.material;
+    p.position.set(x,-.055,z);
+    p.material=(Math.floor((x+39)/6+z/6)%6===0)?mats.trim:ground.material;
+    if(!cobbleGroups.has(p.material))cobbleGroups.set(p.material,[]);
+    cobbleGroups.get(p.material).push(p);
+  }
+  for(const [material,parts] of cobbleGroups) {
+    const merged=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+    if(merged){merged.name="plaza-cobblestones-batched";merged.material=material;merged.isPickable=false;}
   }
 
   const colliders=[];
@@ -1178,13 +1190,29 @@ export async function createRoyalCity(engine, canvas) {
     const col=cylinder(scene,"royal-hall-column",[side*8.5,16.5,z],.62,14.5,mats.trim,20);
     cylinder(scene,"royal-hall-column-capital",[side*8.5,24.0,z],1.15,.55,castleGold,16);
   }
+  // A raised, layered dais gives the throne hall a clear ceremonial focal point.
+  box(scene,"royal-throne-dais-lower",[0,8.98,-87.0],[8.2,.42,4.9],castleStone);
+  box(scene,"royal-throne-dais-gilt-step",[0,9.24,-87.55],[7.1,.18,4.2],castleGold);
+  box(scene,"royal-throne-dais-upper",[0,9.43,-87.75],[5.8,.28,3.5],castleStone);
+  box(scene,"royal-throne-dais-runner",[0,9.59,-86.95],[3.8,.055,2.0],mats.banner);
   const throne=box(scene,"royal-throne-seat",[0,10.2,-87.6],[3.4,.55,2.0],castleGold);
   box(scene,"royal-throne-back",[0,12.1,-88.4],[3.3,4.0,.55],castleStone);
+  box(scene,"royal-throne-back-inset",[0,12.35,-88.08],[2.35,3.15,.10],mats.banner);
+  // Carved canopy, gilded supports and a heraldic crest frame the royal seat.
   for(let side of [-1,1]) {
     box(scene,"royal-throne-arm",[side*1.65,11.0,-87.7],[.42,1.4,1.8],castleGold);
     const finial=MeshBuilder.CreateSphere("royal-throne-finial",{diameter:.42,segments:12},scene);
     finial.position.set(side*1.65,14.2,-88.4);finial.material=castleGold;
+    cylinder(scene,"royal-throne-canopy-post",[side*2.25,13.4,-88.0],.20,7.0,castleGold,12);
+    const spear=MeshBuilder.CreateCylinder("royal-throne-canopy-finial",{diameterTop:0,diameterBottom:.34,height:.9,tessellation:8},scene);
+    spear.position.set(side*2.25,17.35,-88.0);spear.material=castleGold;
   }
+  box(scene,"royal-throne-canopy",[0,17.0,-88.0],[5.2,.34,2.0],castleGold);
+  box(scene,"royal-throne-canopy-underside",[0,16.78,-87.92],[4.65,.12,1.65],mats.banner);
+  const throneCrest=MeshBuilder.CreateCylinder("royal-throne-heraldic-crest",{diameter:1.35,height:.22,tessellation:8},scene);
+  throneCrest.position.set(0,15.35,-88.05);throneCrest.rotation.x=Math.PI/2;throneCrest.material=castleGold;
+  const throneCrestCore=MeshBuilder.CreateSphere("royal-throne-crest-jewel",{diameter:.42,segments:12},scene);
+  throneCrestCore.position.set(0,15.35,-88.22);throneCrestCore.material=mats.lantern;
   // A grand suspended chandelier, paired royal standards and visitor benches.
   const chandelier=MeshBuilder.CreateCylinder("royal-hall-chandelier-ring",{diameter:5.8,height:.22,tessellation:32},scene);
   chandelier.position.set(0,29.0,-82);chandelier.material=castleGold;
