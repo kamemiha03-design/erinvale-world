@@ -238,6 +238,24 @@ function addTree(scene,x,z,scale,trunk,leaves) {
   }
 }
 
+
+function addPetalBloom(scene,name,center,radius,material,count=7) {
+  for(let p=0;p<count;p++) {
+    const a=p*Math.PI*2/count;
+    const left=[],right=[];
+    for(let k=0;k<5;k++) {
+      const t=k/4,r=radius*(.12+t*.88),spread=radius*(.025+Math.sin(t*Math.PI)*.24);
+      const x=center.x+Math.cos(a)*r,z=center.z+Math.sin(a)*r,y=center.y+Math.sin(t*Math.PI)*radius*.22;
+      left.push(new Vector3(x-Math.sin(a)*spread,y,z+Math.cos(a)*spread));
+      right.push(new Vector3(x+Math.sin(a)*spread,y,z-Math.cos(a)*spread));
+    }
+    const petal=MeshBuilder.CreateRibbon(name+"-separate-petal",{pathArray:[left,right],sideOrientation:2},scene);
+    petal.material=material;petal.isPickable=false;
+  }
+  const heart=MeshBuilder.CreateDisc(name+"-flower-heart",{radius:radius*.18,tessellation:12},scene);
+  heart.position.copyFrom(center);heart.position.y+=radius*.12;heart.material=material;
+}
+
 function addBanner(scene, x, y, z, wood, cloth, phase=0) {
   cylinder(scene,"banner-pole",[x,y/2,z],0.13,y,wood,12);
   const flag=MeshBuilder.CreatePlane("royal-banner",{width:1.55,height:2.25,sideOrientation:2},scene);
@@ -733,10 +751,8 @@ export async function createRoyalCity(engine, canvas) {
         for(let k=0;k<4;k++) box(scene,"lower-town-shutter-slat",[bx+wx+side*1.0,y-.58+k*.38,z-.27],[.29,.07,.06],streetTrim);
       }
       box(scene,"lower-town-flower-box",[bx+wx,y-.98,z-.42],[1.9,.34,.52],streetWood);
-      for(let k=0;k<5;k++) {
-        const bloom=MeshBuilder.CreateSphere("lower-town-window-geranium",{diameter:.28,segments:8},scene);
-        bloom.position.set(bx+wx-.72+k*.36,y-.69,z-.48);bloom.material=k%2?flowerPink:flowerRed;
-      }
+      for(let k=0;k<5;k++)
+        addPetalBloom(scene,"lower-town-window-geranium",new Vector3(bx+wx-.72+k*.36,y-.69,z-.48),.14,k%2?flowerPink:flowerRed,6);
     }
     // Striped canvas awning over the shopfront and small hanging sign.
     box(scene,"lower-town-awning-valance",[bx,4.8,frontZ-.95],[8.6,.18,.22],streetTrim);
@@ -1345,15 +1361,11 @@ export async function createRoyalCity(engine, canvas) {
       for(let xx=-29;xx<=-16;xx+=3.2) box(scene,"royal-conservatory-roof-rib",[xx,29.35,galleryZ],[.14,.3,18],castleGold);
       for(let z=-142;z<=-128;z+=4) {
         box(scene,"conservatory-rose-trellis",[-29,15,z],[.16,11,2.8],castleGold);
-        for(let j=0;j<8;j++) {
-          const rose=MeshBuilder.CreateSphere("conservatory-climbing-rose",{diameter:.34,segments:8},scene);
-          rose.position.set(-28.8,10.5+j*.95,z+(j%2)*.55);rose.material=j%3===0?mats.flowers:mats.green;
-        }
+        for(let j=0;j<8;j++)
+          addPetalBloom(scene,"conservatory-climbing-rose",new Vector3(-28.8,10.5+j*.95,z+(j%2)*.55),.18,mats.flowers,7);
         box(scene,"conservatory-planter",[-22,9.05,z],[10,.7,1.5],mats.trim);
-        for(let j=0;j<8;j++) {
-          const bloom=MeshBuilder.CreateSphere("conservatory-rose-bloom",{diameter:.4,segments:8},scene);
-          bloom.position.set(-26+j*1.1,9.9,z+(j%2)*.25);bloom.material=j%3===0?mats.flowers:mats.green;
-        }
+        for(let j=0;j<8;j++)
+          addPetalBloom(scene,"conservatory-rose-bloom",new Vector3(-26+j*1.1,9.9,z+(j%2)*.25),.22,mats.flowers,8);
       }
       cylinder(scene,"conservatory-fountain-basin",[-22.5,9.0,-135],4.0,.45,mats.trim,28);
       cylinder(scene,"conservatory-fountain-water",[-22.5,9.25,-135],3.5,.06,mats.glass,28);
@@ -1510,11 +1522,8 @@ export async function createRoyalCity(engine, canvas) {
   for(let side of [-1,1]) {
     box(scene,"citadel-courtyard-flowerbed",[side*6.15,8.82,-81.4],[2.2,.5,5.6],mats.trim);
     box(scene,"citadel-courtyard-soil",[side*6.15,9.09,-81.4],[1.85,.08,5.2],mats.floor);
-    for(let j=0;j<9;j++) {
-      const flower=MeshBuilder.CreateSphere("citadel-courtyard-rose",{diameter:.48,segments:10},scene);
-      flower.position.set(side*6.15+(Math.random()-.5)*1.5,9.48,-83.7+j*.58);
-      flower.scaling.y=1.25;flower.material=j%3===0?mats.gold:mats.flowers;
-    }
+    for(let j=0;j<9;j++)
+      addPetalBloom(scene,"citadel-courtyard-rose",new Vector3(side*6.15+(Math.random()-.5)*1.5,9.48,-83.7+j*.58),.24,j%3===0?mats.gold:mats.flowers,8);
     for(let j=0;j<3;j++) {
       cylinder(scene,"courtyard-arcade-pillar",[side*8.2,11.1,-79.4+j*2.8],.62,5.2,mats.trim,16);
       cylinder(scene,"courtyard-pillar-cap",[side*8.2,13.75,-79.4+j*2.8],1.0,.28,castleGold,16);
