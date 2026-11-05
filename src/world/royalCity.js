@@ -3079,7 +3079,7 @@ export async function createRoyalCity(engine, canvas) {
         box(scene,"public-library-chair-leg",[x+lx,1.12,chairZ+lz],[.10,.48,.10],libraryWood);
       // A brass foot rail and carved side rails make the chair feel like real furniture.
       box(scene,"public-library-chair-back-rail",[x,2.12,chairZ+side*.34],[.78,.10,.20],libraryGold);
-      librarySeats.push({x,z:chairZ,yaw:side>0?Math.PI:0});
+      librarySeats.push({x,z:chairZ,yaw:side>0?0:Math.PI});
     }
     const lamp=MeshBuilder.CreateCylinder("public-library-reading-lamp",{diameter:.16,height:.9,tessellation:12},scene);
     lamp.position.set(-47.2,2.56,z);lamp.material=libraryGold;
