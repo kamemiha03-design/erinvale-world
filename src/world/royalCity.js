@@ -1875,6 +1875,24 @@ export async function createRoyalCity(engine, canvas) {
       parapet.receiveShadows=true;
     }
   }
+  // Ornate lantern standards line both sides of the grand approach, stepping up with the stair.
+  for(const side of [-1,1]) for(const z of [-88,-96,-104,-110]) {
+    const progress=(stairStartZ-z)/(stairStartZ-stairEndZ);
+    const level=stairRise*progress,x=side*9.45;
+    cylinder(scene,"palace-stair-lantern-stone-foot",[x,level+.28,z],.92,.56,castleStone,16);
+    cylinder(scene,"palace-stair-lantern-gilt-column",[x,level+1.48,z],.22,2.0,castleGold,14);
+    cylinder(scene,"palace-stair-lantern-capital",[x,level+2.48,z],.62,.22,castleGold,16);
+    const housing=MeshBuilder.CreateBox("palace-stair-lantern-housing",{width:.86,height:1.08,depth:.86},scene);
+    housing.position.set(x,level+3.02,z);housing.material=castleGold;
+    const glass=MeshBuilder.CreateBox("palace-stair-lantern-glass",{width:.60,height:.80,depth:.60},scene);
+    glass.position.set(x,level+3.02,z);glass.material=mats.glass;
+    const flame=MeshBuilder.CreateSphere("palace-stair-lantern-glow",{diameter:.34,segments:12},scene);
+    flame.position.set(x,level+3.02,z);flame.material=mats.lantern;
+    const roof=MeshBuilder.CreateCylinder("palace-stair-lantern-roof",{diameterTop:.12,diameterBottom:1.12,height:.48,tessellation:8},scene);
+    roof.position.set(x,level+3.80,z);roof.material=castleGold;
+    const finial=MeshBuilder.CreateSphere("palace-stair-lantern-finial",{diameter:.22,segments:10},scene);
+    finial.position.set(x,level+4.12,z);finial.material=castleGold;
+  }
   // Level threshold between the last tread, the open gate and the lobby.
   box(scene,"palace-entry-landing",[0,8.44,-114.3],[18,.36,4.2],castleStone);
   box(scene,"palace-entry-landing-runner",[0,8.64,-114.3],[5.6,.035,4.0],mats.banner);
@@ -1929,12 +1947,43 @@ export async function createRoyalCity(engine, canvas) {
   const lobbyVelvet=mat(scene,"palace-lobby-velvet",new Color3(.38,.08,.16),.88);
   box(scene,"palace-lobby-floor",[0,8.62,-120],[18,.24,11],lobbyFloor);
   box(scene,"palace-lobby-runner",[0,8.77,-120],[4.6,.06,10.2],lobbyVelvet);
+  // A monumental pair of carved walnut doors closes the main entrance.
+  addAntiqueDoor(scene,"palace-grand-entry-double-door",0,8.72,-114.58,5.8,7.25,mats,1.02);
+  // Raised clerestory walls and taller columns open the lobby into a true two-storey hall.
+  const lobbyPortraitGold=mat(scene,"palace-portrait-gilt-frame",new Color3(.78,.57,.25),.28,.72);
+  const lobbyPortraitDark=mat(scene,"palace-portrait-shadow-frame",new Color3(.20,.12,.075),.58,.12);
+  const royalPortraitNames=["Aldric I","Queen Elowen","King Cedric II","Queen Isolde","King Rowan III","Queen Aurelia"];
+  const royalPortraitBacks=["#263d52","#57303a","#314a3a","#493b59","#72502e","#284b55"];
+  for(let i=0;i<royalPortraitNames.length;i++) {
+    const side=i<3?-1:1,slot=i%3,z=-123.2+slot*3.55,y=18.7;
+    const tex=new DynamicTexture("royal-portrait-canvas-"+i,{width:320,height:420},scene,false);
+    const ctx=tex.getContext();
+    ctx.fillStyle="#d8c49b";ctx.fillRect(0,0,320,420);
+    ctx.fillStyle=royalPortraitBacks[i];ctx.fillRect(18,18,284,384);
+    ctx.strokeStyle="#d6b56f";ctx.lineWidth=7;ctx.strokeRect(28,28,264,364);
+    ctx.fillStyle="#e2cda8";ctx.beginPath();ctx.ellipse(160,166,66,82,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=i%2?"#3a241c":"#241b17";
+    ctx.beginPath();ctx.ellipse(160,132,76,66,0,Math.PI,Math.PI*2);ctx.fill();
+    ctx.fillRect(87,130,25,65);ctx.fillRect(208,130,25,65);
+    ctx.fillStyle="#33231d";ctx.beginPath();ctx.arc(137,166,6,0,Math.PI*2);ctx.arc(183,166,6,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#8d5140";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(143,207);ctx.quadraticCurveTo(160,218,177,207);ctx.stroke();
+    ctx.fillStyle=i%2?"#f0e7d2":"#9e2833";ctx.beginPath();ctx.moveTo(70,370);ctx.quadraticCurveTo(82,264,160,258);ctx.quadraticCurveTo(238,264,250,370);ctx.fill();
+    ctx.fillStyle="#d8b45e";ctx.beginPath();ctx.moveTo(108,95);ctx.lineTo(118,58);ctx.lineTo(145,82);ctx.lineTo(160,48);ctx.lineTo(178,82);ctx.lineTo(205,58);ctx.lineTo(212,95);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#f2dfb8";ctx.font="bold 20px Georgia";ctx.textAlign="center";ctx.fillText(royalPortraitNames[i],160,397);
+    tex.update();
+    const portraitMat=new StandardMaterial("royal-portrait-painting-"+i,scene);portraitMat.diffuseTexture=tex;portraitMat.emissiveColor=new Color3(.08,.06,.035);
+    const frame=box(scene,"palace-royal-portrait-gilt-frame",[side*8.56,y,z],[.22,3.65,2.55],lobbyPortraitGold);
+    const inner=box(scene,"palace-royal-portrait-dark-rebate",[side*8.42,y,z],[.10,3.35,2.25],lobbyPortraitDark);
+    const painting=MeshBuilder.CreatePlane("palace-royal-portrait-canvas",{width:2.08,height:3.12},scene);
+    painting.position.set(side*8.35,y,z);painting.rotation.y=side===1?-Math.PI/2:Math.PI/2;painting.material=portraitMat;
+    const plaque=box(scene,"palace-royal-portrait-nameplate",[side*8.40,y-1.98,z],[.10,.22,1.45],lobbyPortraitGold);
+  }
   for(const side of [-1,1]) {
-    box(scene,"palace-lobby-side-wall",[side*9,15,-120],[.55,12,11],lobbyWall);
+    box(scene,"palace-lobby-side-wall",[side*9,18,-120],[.55,18,11],lobbyWall);
     for(let z=-124;z<=-116;z+=4) {
       cylinder(scene,"palace-lobby-column-base",[side*7.8,9.0,z],.95,.38,palaceGold,16);
-      cylinder(scene,"palace-lobby-column",[side*7.8,15.0,z],.42,11.6,palaceIvory,16);
-      cylinder(scene,"palace-lobby-column-capital",[side*7.8,21.0,z],.82,.42,palaceGold,16);
+      cylinder(scene,"palace-lobby-column",[side*7.8,18.0,z],.42,17.6,palaceIvory,20);
+      cylinder(scene,"palace-lobby-column-capital",[side*7.8,27.1,z],.92,.52,palaceGold,20);
     }
     box(scene,"palace-lobby-welcome-desk",[side*5.9,9.55,-120],[2.9,1.7,1.35],lobbyWood);
     box(scene,"palace-lobby-desk-top",[side*5.9,10.45,-120],[3.1,.18,1.5],palaceGold);
@@ -1943,16 +1992,52 @@ export async function createRoyalCity(engine, canvas) {
       box(scene,"palace-lobby-waiting-seat",[side*4.8,9.1,-124+j*2.0],[2.0,.38,.82],lobbyWood);
       box(scene,"palace-lobby-waiting-seat-back",[side*4.8,10.0,-124.4+j*2.0],[2.0,1.35,.2],lobbyVelvet);
     }
-    box(scene,"palace-lobby-wall-panel",[side*8.68,15,-120],[.08,5.5,4.4],palaceBlue);
-    box(scene,"palace-lobby-wall-panel-frame",[side*8.58,15,-120],[.08,6.0,4.8],palaceGold);
+    box(scene,"palace-lobby-wall-panel",[side*8.68,19.0,-120],[.08,7.0,4.4],palaceBlue);
+    box(scene,"palace-lobby-wall-panel-frame",[side*8.58,19.0,-120],[.08,7.5,4.8],palaceGold);
   }
-  // A reception chandelier and royal crest make the entrance read as a palace lobby.
-  const lobbyChandelier=MeshBuilder.CreateCylinder("palace-lobby-chandelier-ring",{diameter:4.6,height:.18,tessellation:28},scene);
-  lobbyChandelier.position.set(0,24,-120);lobbyChandelier.material=palaceGold;
-  for(let i=0;i<8;i++) {
-    const a=i*Math.PI/4;
-    const bulb=MeshBuilder.CreateSphere("palace-lobby-chandelier-bulb",{diameter:.34,segments:8},scene);
-    bulb.position.set(Math.cos(a)*1.85,24.35,-120+Math.sin(a)*1.85);bulb.material=mats.lantern;
+  // A suspended multi-tier chandelier fills the tall central volume with warm light.
+  const lobbyChandelier=MeshBuilder.CreateTorus("palace-lobby-chandelier-ring",{diameter:5.8,thickness:.18,tessellation:36},scene);
+  lobbyChandelier.position.set(0,24.5,-120);lobbyChandelier.material=palaceGold;
+  const chandelierChain=MeshBuilder.CreateCylinder("palace-lobby-chandelier-chain",{diameter:.09,height:3.0,tessellation:10},scene);
+  chandelierChain.position.set(0,26.1,-120);chandelierChain.material=palaceGold;
+  for(let i=0;i<12;i++) {
+    const a=i*Math.PI/6;
+    const arm=MeshBuilder.CreateTube("palace-lobby-chandelier-arm",{path:[new Vector3(0,24.5,-120),new Vector3(Math.cos(a)*2.25,24.5,-120+Math.sin(a)*2.25)],radius:.075,tessellation:8},scene);
+    arm.material=palaceGold;
+    const candle=MeshBuilder.CreateCylinder("palace-lobby-chandelier-candle",{diameter:.13,height:.55,tessellation:8},scene);
+    candle.position.set(Math.cos(a)*2.25,24.82,-120+Math.sin(a)*2.25);candle.material=palaceIvory;
+    const bulb=MeshBuilder.CreateSphere("palace-lobby-chandelier-bulb",{diameter:.28,segments:10},scene);
+    bulb.position.set(Math.cos(a)*2.25,25.18,-120+Math.sin(a)*2.25);bulb.material=mats.lantern;
+  }
+  // Twin grand stair flights rise from the lobby to an open upper gallery.
+  const upperStairStart=-116.25,upperStairEnd=-124.55,upperStairRise=6.0,upperStairCount=15;
+  for(const side of [-1,1]) {
+    const stairX=side*3.35,tread=(upperStairStart-upperStairEnd)/upperStairCount;
+    for(let i=0;i<upperStairCount;i++) {
+      const progress=(i+.5)/upperStairCount,y=8.82+upperStairRise*progress,z=upperStairStart-(i+.5)*tread;
+      const step=box(scene,"palace-lobby-upper-stair-step",[stairX,y,z],[2.65,.24,tread+.05],lobbyFloor);
+      step.receiveShadows=true;
+      for(const railSide of [-1,1]) {
+        const post=cylinder(scene,"palace-lobby-stair-baluster",[stairX+railSide*1.38,8.95+upperStairRise*progress/2,z],.10,1.0,lobbyPortraitGold,8);
+        post.position.y=8.95+(upperStairRise*progress)-.35;
+      }
+    }
+    const handrail=MeshBuilder.CreateTube("palace-lobby-stair-handrail",{path:[
+      new Vector3(stairX-side*1.48,9.55,upperStairStart),
+      new Vector3(stairX-side*1.48,15.15,upperStairEnd)
+    ],radius:.095,tessellation:10},scene);
+    handrail.material=palaceGold;
+    const outerRail=MeshBuilder.CreateTube("palace-lobby-stair-outer-handrail",{path:[
+      new Vector3(stairX+side*1.48,9.55,upperStairStart),
+      new Vector3(stairX+side*1.48,15.15,upperStairEnd)
+    ],radius:.095,tessellation:10},scene);
+    outerRail.material=palaceGold;
+  }
+  box(scene,"palace-lobby-upper-gallery-floor",[0,14.9,-127.0],[12.5,.3,5.2],lobbyFloor);
+  box(scene,"palace-lobby-upper-gallery-runner",[0,15.08,-127.0],[5.0,.05,4.7],lobbyVelvet);
+  box(scene,"palace-lobby-upper-gallery-front-rail",[0,15.65,-124.35],[12.0,.18,.18],palaceGold);
+  for(let x=-5.6;x<=5.6;x+=.8) {
+    const baluster=cylinder(scene,"palace-lobby-upper-gallery-baluster",[x,15.35,-124.35],.09,.72,lobbyPortraitGold,8);
   }
   box(scene,"palace-lobby-back-crest-plaque",[0,17.5,-125.1],[3.6,4.0,.28],palaceBlue);
   const lobbyCrest=MeshBuilder.CreateCylinder("palace-lobby-national-crest",{diameter:2.1,height:.18,tessellation:8},scene);
@@ -2220,7 +2305,12 @@ export async function createRoyalCity(engine, canvas) {
     new Vector3(-4.0,8.75,-134),new Vector3(-4.0,12.8,-134),new Vector3(0,14.0,-134),new Vector3(4.0,12.8,-134),new Vector3(4.0,8.75,-134)
   ],radius:.22,tessellation:12},scene);
   gardenPortal.material=castleGold;
+  // This tunnel belongs in the OUTDOOR forecourt garden, not inside the palace.
+  // Move the complete detailed garden to the right-hand exterior parterre beside the carriage court.
   for(const mesh of scene.meshes.slice(royalGardenStartIndex)) {
+    mesh.position.x+=48;
+    mesh.position.y-=8.48;
+    mesh.position.z+=74;
     if(mesh.name.startsWith("rose-tunnel")||mesh.name.startsWith("inner-rose")||mesh.name.startsWith("palace-inner-rose")) {
       mesh.receiveShadows=true;mesh.isPickable=false;
     }
@@ -2438,9 +2528,9 @@ export async function createRoyalCity(engine, canvas) {
 
   function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
     const root=new TransformNode("townsperson-root",scene);
-    const baseY=role==="guard"&&z<-70?8.62:0;
+    const baseY=z<-70?8.62:0;
     root.position.set(x,baseY,z);root.rotation.y=heading;
-    const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:role==="hostess"?npcCloth[Math.abs(Math.floor(phase*7))%npcCloth.length]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
+    const outfit=role==="guard"?npcCloth[0]:role==="merchant"||role==="butler"?npcCloth[3]:role==="maid"?npcCloth[5]:role==="hostess"?npcCloth[Math.abs(Math.floor(phase*7))%npcCloth.length]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
     const part=(name,pos,size,material,kind="box")=>{
@@ -2467,6 +2557,8 @@ export async function createRoyalCity(engine, canvas) {
     part("npc-tunic",[0,1.23,0],[.58,.70,.34],outfit,"sphere");
     part("npc-tunic-hem",[0,.91,0],[.59,.12,.35],outfit);
     if(role==="hostess"){part("hostess-skirt",[0,.91,0],[.62,.62,.42],outfit,"sphere");part("hostess-bodice",[0,1.32,-.015],[.43,.44,.36],npcCloth[4],"sphere");part("hostess-apron",[0,1.05,-.205],[.40,.48,.035],npcCloth[5]);}
+    if(role==="maid"){part("palace-maid-long-apron",[0,1.05,-.205],[.43,.56,.045],npcWhite);part("palace-maid-collar",[0,1.55,-.17],[.34,.12,.10],npcWhite);part("palace-maid-cap",[0,2.06,-.01],[.38,.09,.32],npcWhite);part("palace-maid-hair-bun",[0,1.91,.18],[.22,.22,.22],hair,"sphere");}
+    if(role==="butler"){part("palace-butler-waistcoat",[0,1.25,-.19],[.39,.48,.08],npcDark);part("palace-butler-shirt-front",[0,1.27,-.245],[.16,.42,.035],npcWhite);part("palace-butler-bowtie",[0,1.56,-.22],[.22,.10,.08],npcGold);for(let b=0;b<3;b++)part("palace-butler-button-"+b,[0,1.36-b*.12,-.29],[.045,.045,.025],npcGold,"sphere");}
     part("npc-belt",[0,1.00,-.012],[.56,.085,.37],npcLeather);
     part("npc-belt-buckle",[0,1.01,-.205],[.09,.10,.035],npcGold);
     part("npc-neck",[0,1.61,0],[.14,.16,.14],skin,"cylinder");
@@ -2492,6 +2584,10 @@ export async function createRoyalCity(engine, canvas) {
       part("npc-apron",[0,1.17,-.19],[.43,.53,.045],npcCloth[5]);
       part("npc-hat-brim",[0,2.00,0],[.43,.07,.40],npcCloth[3]);
       part("npc-hat-top",[0,2.10,0],[.27,.18,.25],npcCloth[3],"sphere");
+    } else if(role==="maid") {
+      part("palace-maid-back-bow",[0,1.52,.22],[.34,.22,.10],npcWhite);
+    } else if(role==="butler") {
+      part("palace-butler-tailcoat",[0,1.22,.20],[.50,.68,.07],npcDark);
     } else {
       part("npc-cloak",[0,1.25,.19],[.49,.65,.06],npcCloth[(Math.floor(phase*7)+2)%npcCloth.length]);
     }
@@ -2533,6 +2629,12 @@ export async function createRoyalCity(engine, canvas) {
     }
     return root;
   }
+
+  // Palace attendants welcome visitors and keep the reception hall lived-in.
+  makeTownsperson(-6.35,-117.6,"maid",21.1,Math.PI/2,false);
+  makeTownsperson(6.35,-117.6,"butler",22.4,-Math.PI/2,false);
+  makeTownsperson(-6.35,-122.1,"butler",23.7,Math.PI/2,false);
+  makeTownsperson(6.35,-122.1,"maid",24.8,-Math.PI/2,false);
 
   // A varied crowd around the square, market, guild and tavern.
   makeTownsperson(-5,24,"villager",1.2,.4,true);
@@ -2899,8 +3001,12 @@ export async function createRoyalCity(engine, canvas) {
       const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
+      const onLobbyStair=camera.position.z<=-116.25&&camera.position.z>=-124.55&&Math.abs(Math.abs(camera.position.x)-3.35)<1.65;
+      const lobbyStairProgress=onLobbyStair?(-116.25-camera.position.z)/(-116.25+124.55):0;
+      const lobbyStairFloor=onLobbyStair?Math.floor(lobbyStairProgress*15)*6.0/15:0;
+      const onLobbyUpperLanding=camera.position.z<-124.55&&camera.position.z>-130.0&&Math.abs(camera.position.x)<6.3;
       const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-127;
-      camera.position.y=1.72+(onRoyalStair?stairFloor:(onLanding?stairRise:0));
+      camera.position.y=1.72+(onRoyalStair?stairFloor:(onLobbyStair?stairRise+lobbyStairFloor:(onLobbyUpperLanding?stairRise+6.0:(onLanding?stairRise:0))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
