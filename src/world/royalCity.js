@@ -4242,7 +4242,10 @@ export async function createRoyalCity(engine, canvas) {
     // Fountain basin, market counters, and the remaining cliff shoulders are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
-    if(z<-68 && z>-86 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
+    // Keep the palace garden's old hedge/terrace barrier everywhere except
+    // the deliberately opened public-library route on the west side.
+    const onLibraryApproach=x>-44.5&&x<-9.0&&z>-87.5&&z<-77.0;
+    if(z<-68 && z>-86 && Math.abs(x)>7.5 && Math.abs(x)<32 && !onLibraryApproach)return true;
     return false;
   };
   const location=document.querySelector("#location-name");
