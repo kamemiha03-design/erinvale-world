@@ -3502,9 +3502,11 @@ export async function createRoyalCity(engine, canvas) {
     const root=new TransformNode("imperial-bath-guest",scene);
     root.position.set(x,y,z);root.rotation.y=heading;
     const part=(name,pos,scale,material,kind="sphere")=>{
+      // Bath guests are viewed at close range, so use a much finer mesh than
+      // distant town NPCs: smooth silhouettes on faces, shoulders and limbs.
       const mesh=kind==="cylinder"
-        ?MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:14},scene)
-        :MeshBuilder.CreateSphere(name,{diameter:1,segments:14},scene);
+        ?MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:32},scene)
+        :MeshBuilder.CreateSphere(name,{diameter:1,segments:36},scene);
       mesh.parent=root;mesh.position.set(...pos);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
     };
     const workingArms=[];
