@@ -12,14 +12,17 @@ const mobileControls=document.querySelector("#mobile-controls");
 const desktopHint=document.querySelector("#desktop-hint");
 
 async function boot() {
+  const isTouch=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
   const engine=new Engine(canvas,true,{
     preserveDrawingBuffer:false,
     stencil:true,
-    antialias:true,
-    powerPreference:"high-performance",
+    antialias:!isTouch,
+    powerPreference:isTouch?"low-power":"high-performance",
     adaptToDeviceRatio:true,
   });
-  engine.setHardwareScalingLevel(Math.min(1.5,Math.max(1,window.devicePixelRatio||1)));
+  // iPhone Safari can terminate a WebGL page when a large world renders at full
+  // device-pixel resolution. Render mobile at a deliberately lower resolution.
+  engine.setHardwareScalingLevel(isTouch?2.5:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   world.onMovement=(moving,position,location)=>{
@@ -28,7 +31,6 @@ async function boot() {
     const palace=position.z<-72;
     audio.setMovement(moving,position,palace?"palace":tavern?"tavern":guild?"guild":location.includes("市場")?"market":"town");
   };
-  const isTouch=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
   attachMobileControls(world,audio);
   if(isTouch)mobileControls.classList.remove("hidden");
   else desktopHint.classList.remove("hidden");
