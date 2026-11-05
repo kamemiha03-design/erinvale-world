@@ -26,6 +26,9 @@ export function createWorldAudio() {
   let audioContext = null;
   let windGain = null;
   let palacePadGain = null;
+  let musicTimer = null;
+  const oneShotSounds = new Set();
+  let pageIsActive = !document.hidden;
 
   function safePlay(audio) {
     const result = audio.play();
@@ -156,16 +159,20 @@ export function createWorldAudio() {
   }
 
   function startMusic() {
-    if(!audioContext || musicGain) return;
-    musicGain=audioContext.createGain();
-    musicGain.gain.value=0;
-    const filter=audioContext.createBiquadFilter();
-    filter.type="lowpass";filter.frequency.value=3200;
-    musicGain.connect(filter);filter.connect(audioContext.destination);
-    musicGain.gain.setTargetAtTime(musicEnabled?.30:0,audioContext.currentTime,.8);
-    nextMusicTime=audioContext.currentTime+.12;
-    scheduleMusic();
-    window.setInterval(scheduleMusic,100);
+    if(!audioContext) return;
+    if(!musicGain) {
+      musicGain=audioContext.createGain();
+      musicGain.gain.value=0;
+      const filter=audioContext.createBiquadFilter();
+      filter.type="lowpass";filter.frequency.value=3200;
+      musicGain.connect(filter);filter.connect(audioContext.destination);
+      musicGain.gain.setTargetAtTime(musicEnabled?.30:0,audioContext.currentTime,.8);
+      nextMusicTime=audioContext.currentTime+.12;
+    }
+    if(musicTimer === null) {
+      scheduleMusic();
+      musicTimer=window.setInterval(scheduleMusic,100);
+    }
   }
 
   function toggleMusic() {
@@ -181,24 +188,68 @@ export function createWorldAudio() {
     return musicEnabled;
   }
 
-  function unlock() {
-    if (unlocked) return;
-    unlocked = true;
-    Object.values(layers).forEach(safePlay);
-    startWind();
-    const resumed=audioContext?.resume?.();
-    if(resumed?.then) resumed.then(()=>{
+  function pauseAllAudio() {
+    pageIsActive = false;
+    Object.values(layers).forEach(audio => {
+      audio.volume = 0;
+      audio.pause();
+      try { audio.currentTime = 0; } catch {}
+    });
+    for (const audio of oneShotSounds) {
+      audio.pause();
+      try { audio.currentTime = 0; } catch {}
+    }
+    oneShotSounds.clear();
+    if (musicTimer !== null) {
+      window.clearInterval(musicTimer);
+      musicTimer = null;
+    }
+    if (audioContext && audioContext.state !== "closed") {
+      audioContext.suspend().catch(() => {});
+    }
+  }
+
+  function resumeAllAudio() {
+    if (!unlocked || document.hidden) return;
+    pageIsActive = true;
+    Object.values(layers).forEach(audio => {
+      if (audio.paused) safePlay(audio);
+    });
+    if (!audioContext) startWind();
+    const resumed = audioContext?.resume?.();
+    if (resumed?.then) resumed.then(() => {
+      if (document.hidden) return;
       startMusic();
-      if(musicGain&&musicEnabled)musicGain.gain.setTargetAtTime(.30,audioContext.currentTime,.45);
-    }).catch(error=>console.warn("BGM could not start:",error));
+      if (musicGain && musicEnabled) musicGain.gain.setTargetAtTime(.30,audioContext.currentTime,.45);
+    }).catch(error => console.warn("Audio could not resume:", error));
     else startMusic();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pauseAllAudio();
+  });
+  window.addEventListener("pagehide", pauseAllAudio);
+  window.addEventListener("pageshow", () => {
+    // Do not restart sound until the next user gesture.
+    pageIsActive = !document.hidden;
+  });
+
+  function unlock() {
+    if (document.hidden) return;
+    if (unlocked) {
+      resumeAllAudio();
+      return;
+    }
+    unlocked = true;
+    startWind();
+    resumeAllAudio();
   }
 
   function setMovement(active, position, location) {
     const now = performance.now();
     const dt = Math.min(.12, Math.max(.008, (now - lastFrame) / 1000));
     lastFrame = now;
-    if (!unlocked) return;
+    if (!unlocked || document.hidden || !pageIsActive) return;
 
     // getLocation() returns Japanese labels; use those to activate the correct sound zones.
     const inMarket = (location || "").includes("市場");
@@ -231,12 +282,14 @@ export function createWorldAudio() {
       const step = new Audio(indoors ? SOURCES.indoorSteps : SOURCES.steps);
       step.volume = .3;
       step.playbackRate = .92 + Math.random() * .16;
+      oneShotSounds.add(step);
       safePlay(step);
-      step.addEventListener("ended", () => step.remove(), { once: true });
+      step.addEventListener("ended", () => { oneShotSounds.delete(step); step.remove(); }, { once: true });
     }
   }
 
   function playDoor(opening=true) {
+    if (document.hidden || !pageIsActive) return;
     try {
       if(!audioContext) startWind();
       if(!audioContext)return;
@@ -271,5 +324,5 @@ export function createWorldAudio() {
     } catch(error) { console.warn("Door sound unavailable",error); }
   }
 
-  return { unlock, setMovement, playDoor, toggleMusic };
+  return { unlock, setMovement, playDoor, toggleMusic, stop: pauseAllAudio };
 }
