@@ -16,13 +16,13 @@ async function boot() {
   const engine=new Engine(canvas,true,{
     preserveDrawingBuffer:false,
     stencil:true,
-    antialias:!isTouch,
-    powerPreference:isTouch?"low-power":"high-performance",
+    antialias:true,
+    powerPreference:"high-performance",
     adaptToDeviceRatio:true,
   });
   // iPhone Safari can terminate a WebGL page when a large world renders at full
   // device-pixel resolution. Render mobile at a deliberately lower resolution.
-  engine.setHardwareScalingLevel(isTouch?2.5:1);
+  engine.setHardwareScalingLevel(1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   world.onMovement=(moving,position,location)=>{
