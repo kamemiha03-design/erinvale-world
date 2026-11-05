@@ -2265,7 +2265,9 @@ export async function createRoyalCity(engine, canvas) {
       box(scene,"palace-court-hedge-border",[x,.72,-70.5],[1.05,1.25,13],courtHedge);
       box(scene,"palace-court-hedge-border",[x,.72,-58.5],[1.05,1.25,1],courtHedge);
       for(let z=-101;z<=-63;z+=9) {
-        if(z===-65 || z===-83) continue;
+        // Clear the western first-row planting bed at z=-74: this is the
+        // approach corridor directly behind the new library garden arch.
+        if(z===-65 || z===-83 || (row===0 && z===-74)) continue;
         const bed=MeshBuilder.CreateBox("palace-court-shrub-island",{width:5.8,height:.34,depth:4.6},scene);
         bed.position.set(side*(16.0+row*7.2),.22,z);bed.material=courtGrass;
         for(let n=0;n<5;n++) {
@@ -2949,6 +2951,29 @@ export async function createRoyalCity(engine, canvas) {
     sideOrientation:2
   },scene);
   libraryWalk.material=libraryFloor;libraryWalk.isPickable=false;
+  // Public garden gateway: a carved limestone arch marks the point where the
+  // left-hand library promenade leaves the palace garden.
+  const libraryGateX=-14.0,libraryGateZ=-62.2;
+  for(const side of [-1,1]) {
+    box(scene,"public-library-garden-arch-pier",
+      [libraryGateX+side*3.25,2.45,libraryGateZ],[.72,4.9,.82],libraryTrim);
+    box(scene,"public-library-garden-arch-base",
+      [libraryGateX+side*3.25,.38,libraryGateZ],[1.12,.48,1.18],libraryGold);
+    box(scene,"public-library-garden-arch-cap",
+      [libraryGateX+side*3.25,4.78,libraryGateZ],[1.05,.34,1.08],libraryGold);
+  }
+  // Segmented curved crown leaves a generous pedestrian opening.
+  for(let i=0;i<=12;i++) {
+    const a=Math.PI-i*Math.PI/12;
+    const crown=MeshBuilder.CreateBox("public-library-garden-arch-voussoir",
+      {width:.72,height:.62,depth:.88},scene);
+    crown.position.set(libraryGateX+Math.cos(a)*3.25,4.65+Math.sin(a)*2.05,libraryGateZ);
+    crown.rotation.z=a-Math.PI/2;
+    crown.material=i%2?libraryTrim:libraryGold;
+    crown.isPickable=false;
+  }
+  box(scene,"public-library-garden-arch-keystone",
+    [libraryGateX,6.72,libraryGateZ],[1.0,.8,1.0],libraryGold);
   // Foundation, entrance facade (with a real opening), side walls and enclosed rear wall.
   box(scene,"public-library-foundation",[libX,.48,libZ],[libW+1.2,.9,libD+1.2],libraryTrim);
   box(scene,"public-library-floor",[libX,.96,libZ],[libW,.16,libD],libraryFloor);
