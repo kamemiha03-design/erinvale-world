@@ -2448,8 +2448,8 @@ export async function createRoyalCity(engine, canvas) {
   roseFountainWater.alpha=.86;
   cylinder(scene,"rose-garden-fountain-foot",[0,8.68,-164],3.0,.34,roseFountainStone,40);
   cylinder(scene,"rose-garden-fountain-basin",[0,8.91,-164],2.72,.34,roseFountainStone,40);
-  const fountainWater=MeshBuilder.CreateCylinder("rose-garden-fountain-water-surface",{diameter:2.42,height:.035,tessellation:40},scene);
-  fountainWater.position.set(0,9.10,-164);fountainWater.material=roseFountainWater;
+  const roseFountainSurface=MeshBuilder.CreateCylinder("rose-garden-fountain-water-surface",{diameter:2.42,height:.035,tessellation:40},scene);
+  roseFountainSurface.position.set(0,9.10,-164);roseFountainSurface.material=roseFountainWater;
   cylinder(scene,"rose-garden-fountain-pedestal-lower",[0,9.35,-164],.72,.68,roseFountainGold,24);
   cylinder(scene,"rose-garden-fountain-pedestal-upper",[0,9.77,-164],.48,.32,roseFountainStone,24);
   cylinder(scene,"rose-garden-fountain-upper-bowl",[0,9.98,-164],1.42,.22,roseFountainStone,32);
