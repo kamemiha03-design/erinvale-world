@@ -1847,11 +1847,26 @@ export async function createRoyalCity(engine, canvas) {
   }
   for(let x=-18;x<=18;x+=6) for(let z=-180;z<=-152;z+=7)
     box(scene,"state-ballroom-ceiling-coffer",[x,33.68,z],[5.5,.12,6.5],ballroomGold);
+  // Fine pilasters and carved medallions give the great hall a finished royal scale.
+  for(const side of [-1,1]) for(let z=-178;z<=-154;z+=4) {
+    box(scene,"state-ballroom-gilt-pilaster",[side*21.1,22,z],[.34,19,1.15],ballroomGold);
+    box(scene,"state-ballroom-pilaster-capital",[side*21.1,31.7,z],[.9,.52,1.55],palaceIvory);
+    box(scene,"state-ballroom-pilaster-base",[side*21.1,15.8,z],[.9,.52,1.55],palaceIvory);
+  }
+  for(let x=-16;x<=16;x+=8) {
+    const wallMedallion=MeshBuilder.CreateTorus("state-ballroom-wall-medallion",{diameter:2.2,thickness:.13,tessellation:64},scene);
+    wallMedallion.position.set(x,25.2,-182.42);wallMedallion.rotation.y=Math.PI/2;wallMedallion.material=ballroomGold;
+  }
 
   // Move the complete royal complex 40 metres deeper into the estate.
   // The entrance gate remains at the city edge, leaving a generous garden forecourt.
   for(const mesh of scene.meshes.slice(royalPalaceStartIndex)) {
     if(mesh.name!=="world-tree-approach") mesh.position.z-=40;
+  }
+  // Bring the existing detailed ballroom directly behind the second-floor corridor.
+  for(const mesh of scene.meshes) if(mesh.name.startsWith("state-ballroom-")) {
+    mesh.position.y+=6.28;
+    mesh.position.z+=47;
   }
   // Remove obsolete gatehouse fragments and detached ornaments from the old layout.
   for(const mesh of [...scene.meshes]) {
@@ -2035,6 +2050,23 @@ export async function createRoyalCity(engine, canvas) {
   }
   box(scene,"palace-lobby-upper-gallery-floor",[0,14.9,-127.0],[12.5,.3,5.2],lobbyFloor);
   box(scene,"palace-lobby-upper-gallery-runner",[0,15.08,-127.0],[5.0,.05,4.7],lobbyVelvet);
+  // A long, detailed corridor connects the upper stair landing to the great hall.
+  box(scene,"palace-upper-corridor-floor",[0,14.9,-134.8],[12.4,.32,15.8],lobbyFloor);
+  box(scene,"palace-upper-corridor-runner",[0,15.08,-134.8],[4.2,.055,15.2],lobbyVelvet);
+  for(const side of [-1,1]) {
+    box(scene,"palace-upper-corridor-wall",[side*6.35,19.1,-134.8],[.34,8.2,15.8],lobbyWall);
+    for(let z=-129;z>=-140;z-=3.6) {
+      cylinder(scene,"palace-upper-corridor-column-base",[side*5.75,15.25,z],.55,.42,palaceGold,32);
+      cylinder(scene,"palace-upper-corridor-column",[side*5.75,18.9,z],.23,7.0,palaceIvory,40);
+      cylinder(scene,"palace-upper-corridor-column-capital",[side*5.75,22.55,z],.58,.38,palaceGold,32);
+      box(scene,"palace-upper-corridor-sconce",[side*6.08,20.3,z],[.16,.72,.52],palaceGold);
+      const light=MeshBuilder.CreateSphere("palace-upper-corridor-sconce-light",{diameter:.22,segments:16},scene);
+      light.position.set(side*5.94,20.35,z-.04);light.material=mats.lantern;
+    }
+  }
+  box(scene,"palace-upper-hall-doorway-left",[-10.15,23.0,-142.05],[.34,16.2,.42],palaceGold);
+  box(scene,"palace-upper-hall-doorway-right",[10.15,23.0,-142.05],[.34,16.2,.42],palaceGold);
+  box(scene,"palace-upper-hall-doorway-crown",[0,31.2,-142.05],[20.6,.48,.62],palaceGold);
   box(scene,"palace-lobby-upper-gallery-front-rail",[0,15.65,-124.35],[12.0,.18,.18],palaceGold);
   for(let x=-5.6;x<=5.6;x+=.8) {
     const baluster=cylinder(scene,"palace-lobby-upper-gallery-baluster",[x,15.35,-124.35],.09,.72,lobbyPortraitGold,8);
@@ -2256,7 +2288,8 @@ export async function createRoyalCity(engine, canvas) {
     const heart=MeshBuilder.CreateSphere("rose-tunnel-flower-heart",{diameter:radius*.22,segments:10},scene);
     heart.position.copyFrom(center);heart.material=roseMats[2];
   }
-  const tunnelZs=[-137,-144,-151,-158,-165,-172];
+  // One graceful rose arch keeps the garden open and airy.
+  const tunnelZs=[-156];
   for(let archIndex=0;archIndex<tunnelZs.length;archIndex++) {
     const z=tunnelZs[archIndex],pathPts=[];
     for(let i=0;i<=24;i++) {
@@ -2305,8 +2338,8 @@ export async function createRoyalCity(engine, canvas) {
     new Vector3(-4.0,8.75,-134),new Vector3(-4.0,12.8,-134),new Vector3(0,14.0,-134),new Vector3(4.0,12.8,-134),new Vector3(4.0,8.75,-134)
   ],radius:.22,tessellation:12},scene);
   gardenPortal.material=castleGold;
-  // This tunnel belongs in the OUTDOOR forecourt garden, not inside the palace.
-  // Move the complete detailed garden to the right-hand exterior parterre beside the carriage court.
+  // Keep the original fountain and its drinking finches untouched.
+  // Move the open rose parterre to the OUTDOOR forecourt beside the carriage court.
   for(const mesh of scene.meshes.slice(royalGardenStartIndex)) {
     mesh.position.x+=48;
     mesh.position.y-=8.48;
@@ -2845,6 +2878,11 @@ export async function createRoyalCity(engine, canvas) {
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
     // Keep the central stair corridor open; the cliff shoulders remain solid.
     if(z<-78 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
+    // Second-floor corridor and ballroom boundaries, with a wide central doorway.
+    if(z<-126 && z>-142 && Math.abs(x)>6.35)return true;
+    if(z<=-142 && z>-176 && Math.abs(x)>21.35)return true;
+    if(z<-141.5 && z>-143.0 && Math.abs(x)>10.0)return true;
+    if(z<=-176 && z>-178.5)return true;
     return false;
   };
   const location=document.querySelector("#location-name");
@@ -3003,10 +3041,11 @@ export async function createRoyalCity(engine, canvas) {
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
       const onLobbyStair=camera.position.z<=-116.25&&camera.position.z>=-124.55&&Math.abs(Math.abs(camera.position.x)-3.35)<1.65;
       const lobbyStairProgress=onLobbyStair?(-116.25-camera.position.z)/(-116.25+124.55):0;
-      const lobbyStairFloor=onLobbyStair?Math.floor(lobbyStairProgress*15)*6.0/15:0;
-      const onLobbyUpperLanding=camera.position.z<-124.55&&camera.position.z>-130.0&&Math.abs(camera.position.x)<6.3;
+      const lobbyStairFloor=onLobbyStair?Math.max(0,Math.min(6.0,lobbyStairProgress*6.0)):0;
+      const onUpperFloor=camera.position.z<-124.55&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.0;
+      const onLobbyGround=camera.position.z<=-112.2&&camera.position.z>=-126.0&&Math.abs(camera.position.x)<8.5;
       const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-127;
-      camera.position.y=1.72+(onRoyalStair?stairFloor:(onLobbyStair?stairRise+lobbyStairFloor:(onLobbyUpperLanding?stairRise+6.0:(onLanding?stairRise:0))));
+      camera.position.y=1.72+(onRoyalStair?stairFloor:(onLobbyStair?stairRise+lobbyStairFloor:(onUpperFloor?14.9:(onLobbyGround||onLanding?8.62:0))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
