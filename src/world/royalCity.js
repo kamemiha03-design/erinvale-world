@@ -3540,11 +3540,18 @@ export async function createRoyalCity(engine, canvas) {
   const bathSteamMaterial=mat(scene,"imperial-bath-living-steam",new Color3(.91,.94,.92),.98);
   bathSteamMaterial.alpha=.25;
   bathSteamMaterial.transparencyMode=2;
+  // One shared high-detail sphere buffer for all steam wisps. Babylon instances
+  // preserve every puff and its animation while avoiding 106 duplicate mesh
+  // submissions/vertex-buffer allocations on mobile Safari.
+  const bathSteamSource=MeshBuilder.CreateSphere("imperial-bath-steam-shared-geometry",{diameter:1,segments:14},scene);
+  bathSteamSource.material=bathSteamMaterial;
+  bathSteamSource.isVisible=false;
+  bathSteamSource.isPickable=false;
   for(let i=0;i<34;i++) {
     const poolSide=i%3;
     const baseX=poolSide===0?30+(i%5-2)*1.55:poolSide===1?18+(i%3-1)*.72:42+(i%3-1)*.72;
     const baseZ=poolSide===0?62.8+Math.floor(i/5)*.72:61.0+Math.floor(i/9)*1.25;
-    const puff=MeshBuilder.CreateSphere("imperial-bath-rising-steam",{diameter:1,segments:14},scene);
+    const puff=bathSteamSource.createInstance("imperial-bath-rising-steam");
     puff.position.set(baseX,.95+(i%6)*.43,baseZ);
     puff.scaling.set(.52+(i%4)*.13,1.35+(i%5)*.22,.52+(i%3)*.12);
     puff.material=bathSteamMaterial;puff.isPickable=false;
@@ -3552,7 +3559,7 @@ export async function createRoyalCity(engine, canvas) {
   }
   for(let i=0;i<12;i++) {
     const x=17+(i%4)*8.35,z=52.8+Math.floor(i/4)*.95;
-    const puff=MeshBuilder.CreateSphere("imperial-bath-treatment-steam",{diameter:1,segments:12},scene);
+    const puff=bathSteamSource.createInstance("imperial-bath-treatment-steam");
     puff.position.set(x,1.35+(i%3)*.4,z);puff.scaling.set(.62,1.55,.62);
     puff.material=bathSteamMaterial;puff.isPickable=false;
     bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*1.13,speed:.19,drift:.28});
@@ -3563,7 +3570,7 @@ export async function createRoyalCity(engine, canvas) {
     const pool=i%3;
     const x=pool===0?30+((i*7)%9-4)*.92:pool===1?18+((i*3)%5-2)*.48:42+((i*5)%5-2)*.48;
     const z=pool===0?59.8+((i*11)%13)*.62:61.0+((i*7)%11)*.82;
-    const puff=MeshBuilder.CreateSphere("imperial-bath-dense-steam-bank",{diameter:1,segments:12},scene);
+    const puff=bathSteamSource.createInstance("imperial-bath-dense-steam-bank");
     puff.position.set(x,1.2+(i%7)*.36,z);
     puff.scaling.set(.95+(i%4)*.18,1.7+(i%5)*.24,.82+(i%3)*.18);
     puff.material=bathSteamMaterial;puff.isPickable=false;
@@ -3572,7 +3579,7 @@ export async function createRoyalCity(engine, canvas) {
   // Fine wisps rise from the waterline and dissolve into the dome's humid air.
   for(let i=0;i<22;i++) {
     const x=24+(i%9)*1.5,z=59.4+Math.floor(i/9)*7.2;
-    const puff=MeshBuilder.CreateSphere("imperial-bath-fine-steam-wisp",{diameter:1,segments:10},scene);
+    const puff=bathSteamSource.createInstance("imperial-bath-fine-steam-wisp");
     puff.position.set(x,1.0+(i%4)*.25,z);puff.scaling.set(.24,.95,.24);
     puff.material=bathSteamMaterial;puff.isPickable=false;
     bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*.87,speed:.24,drift:.22});
