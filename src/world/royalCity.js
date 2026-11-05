@@ -3043,6 +3043,205 @@ export async function createRoyalCity(engine, canvas) {
   }
   for(const [x,z] of [[-11,-38],[-7,-35.8],[15,-34.9],[28,-34.9],[43,-36],[56,-43.9],[74,-43.9],[87,-30],[102,-22],[107,-3]]){const p=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1,height:.18,tessellation:8},scene);p.position.set(x,.16,z);p.scaling.z=.72;p.material=brookEdge;}
 
+
+  // Imperial public baths: a Roman thermae and a warm, intimate hammam.
+  // Set behind the initial arrival point, on the western side of the royal approach.
+  const hammamMeshStart=scene.meshes.length;
+  const hammamX=-92,hammamZ=-58,hammamFront=-41,hammamBack=-75;
+  const hammamStone=texturedMat(scene,"imperial-hammam-pale-travertine",new Color3(.78,.73,.63),"#d7cdb9","#8f8069",.88);
+  const hammamIvory=mat(scene,"imperial-hammam-ivory-marble",new Color3(.91,.87,.77),.28,.08);
+  const hammamGold=mat(scene,"imperial-hammam-aged-bronze",new Color3(.56,.39,.18),.34,.68);
+  const hammamTile=texturedMat(scene,"imperial-hammam-blue-mosaic",new Color3(.16,.36,.39),"#2d7779","#c5a66a",.32);
+  const hammamShadow=mat(scene,"imperial-hammam-recess",new Color3(.19,.22,.20),.94);
+  const hammamWater=mat(scene,"imperial-hammam-thermal-water",new Color3(.22,.57,.61),.16,.18);
+  hammamWater.alpha=.78;
+  hammamWater.emissiveColor=new Color3(.035,.12,.13);
+  const hammamGlow=mat(scene,"imperial-hammam-lantern-glow",new Color3(1,.69,.34),.22,0);
+  hammamGlow.emissiveColor=new Color3(.95,.39,.12);
+  const hammamWood=mat(scene,"imperial-hammam-walnut",new Color3(.24,.12,.065),.72);
+  const hammamGreen=mat(scene,"imperial-hammam-courtyard-green",new Color3(.16,.31,.19),.96);
+  const hammamFlower=mat(scene,"imperial-hammam-courtyard-flowers",new Color3(.82,.36,.47),.72);
+
+  // A broad stone approach and planted forecourt lead from the town toward the baths.
+  const hammamApproach=MeshBuilder.CreateGround("imperial-hammam-approach",{width:7.2,height:17,subdivisions:1},scene);
+  hammamApproach.position.set(hammamX,-.035,-32.0);hammamApproach.material=hammamStone;
+  box(scene,"imperial-hammam-entry-step",[hammamX,.18,-40.2],[11.2,.36,2.0],hammamIvory);
+  box(scene,"imperial-hammam-entry-step-upper",[hammamX,.38,-41.6],[8.4,.30,1.1],hammamStone);
+  for(const side of [-1,1]) {
+    const planterX=hammamX+side*7.2;
+    box(scene,"imperial-hammam-forecourt-planter",[planterX,.42,-35.2],[2.5,.78,4.0],hammamIvory);
+    box(scene,"imperial-hammam-forecourt-soil",[planterX,.84,-35.2],[2.15,.08,3.6],hammamGreen);
+    for(let n=0;n<7;n++) {
+      const px=planterX+(n%3-1)*.55,pz=-36.2+Math.floor(n/3)*.88;
+      cylinder(scene,"imperial-hammam-forecourt-shrub",[px,1.25+(n%2)*.12,pz],.72,.95,hammamGreen,12);
+      addPetalBloom(scene,"imperial-hammam-forecourt-bloom",new Vector3(px,1.78,pz),.23,hammamFlower,7);
+    }
+    cylinder(scene,"imperial-hammam-forecourt-column",[hammamX+side*5.0,3.2,-40.4],.72,6.0,hammamStone,20);
+    cylinder(scene,"imperial-hammam-forecourt-capital",[hammamX+side*5.0,6.25,-40.4],1.08,.42,hammamIvory,20);
+    addLantern(scene,hammamX+side*5.0,5.0,-40.0,hammamGold,hammamGlow);
+  }
+
+  // Main building footprint: walkable interior, with solid perimeter walls and a central doorway.
+  box(scene,"imperial-hammam-marble-floor",[hammamX,.12,hammamZ],[35.2,.42,33.2],hammamIvory);
+  box(scene,"imperial-hammam-floor-mosaic-field",[hammamX,.345,hammamZ],[28.4,.045,26.6],hammamTile);
+  box(scene,"imperial-hammam-floor-mosaic-center",[hammamX,.38,hammamZ],[13.2,.035,13.2],hammamIvory);
+  const hammamFloorRosette=MeshBuilder.CreateTorus("imperial-hammam-floor-rosette",{diameter:10.8,thickness:.16,tessellation:64},scene);
+  hammamFloorRosette.position.set(hammamX,.415,hammamZ);hammamFloorRosette.material=hammamGold;
+  const hammamFloorInner=MeshBuilder.CreateTorus("imperial-hammam-floor-inner-ring",{diameter:7.8,thickness:.09,tessellation:64},scene);
+  hammamFloorInner.position.set(hammamX,.42,hammamZ);hammamFloorInner.material=hammamIvory;
+
+  const hammamWallY=6.55,hammamWallH=13.0;
+  box(scene,"imperial-hammam-west-wall",[hammamX-17.25,hammamWallY,hammamZ],[.85,hammamWallH,34.0],hammamStone);
+  box(scene,"imperial-hammam-east-wall",[hammamX+17.25,hammamWallY,hammamZ],[.85,hammamWallH,34.0],hammamStone);
+  box(scene,"imperial-hammam-rear-wall",[hammamX,hammamWallY,hammamBack+.45],[35.0,hammamWallH,.9],hammamStone);
+  const hammamDoorWidth=6.4;
+  for(const [a,b] of [[-17.5,-hammamDoorWidth/2-.4],[hammamDoorWidth/2+.4,17.5]]) {
+    const width=b-a;
+    box(scene,"imperial-hammam-front-wall",[hammamX+(a+b)/2,hammamWallY,hammamFront],[width,hammamWallH,.9],hammamStone);
+  }
+  box(scene,"imperial-hammam-front-lintel",[hammamX,12.35,hammamFront],[7.1,1.35,1.0],hammamIvory);
+  for(const side of [-1,1]) {
+    const px=hammamX+side*17.15;
+    for(const zz of [-69,-58,-47]) {
+      box(scene,"imperial-hammam-exterior-pilaster",[px,6.7,zz],[1.15,13.3,.9],hammamIvory);
+      cylinder(scene,"imperial-hammam-pilaster-base",[px,.85,zz],1.48,.72,hammamGold,20);
+      cylinder(scene,"imperial-hammam-pilaster-capital",[px,12.95,zz],1.55,.52,hammamIvory,20);
+    }
+  }
+  for(const zz of [-69,-58,-47]) {
+    for(const side of [-1,1]) {
+      const px=hammamX+side*10.8;
+      cylinder(scene,"imperial-hammam-interior-column-base",[px,.72,zz],1.18,.52,hammamGold,24);
+      cylinder(scene,"imperial-hammam-interior-column",[px,5.8,zz],.72,10.0,hammamIvory,24);
+      cylinder(scene,"imperial-hammam-interior-capital",[px,10.95,zz],1.22,.56,hammamGold,24);
+      cylinder(scene,"imperial-hammam-interior-abacus",[px,11.28,zz],1.38,.18,hammamIvory,24);
+    }
+  }
+  // Repeated semicircular arches join the columns and give the hall a Roman bathhouse rhythm.
+  for(const side of [-1,1]) for(const zz of [-69,-58,-47]) {
+    const cx=hammamX+side*10.8,archPoints=[];
+    for(let k=0;k<=20;k++) {
+      const a=Math.PI-k*Math.PI/20;
+      archPoints.push(new Vector3(cx+Math.cos(a)*2.15,11.25+Math.sin(a)*2.15,zz));
+    }
+    const arch=MeshBuilder.CreateTube("imperial-hammam-colonnade-arch",{path:archPoints,radius:.22,tessellation:12},scene);
+    arch.material=hammamGold;
+  }
+
+  // The great central dome and two smaller steam-room cupolas rise above the colonnades.
+  const hammamDome=MeshBuilder.CreateSphere("imperial-hammam-great-dome",{diameter:23,segments:40,slice:.5},scene);
+  hammamDome.position.set(hammamX,12.25,hammamZ);hammamDome.scaling.y=.78;hammamDome.material=hammamStone;
+  const hammamDomeRim=MeshBuilder.CreateTorus("imperial-hammam-great-dome-rim",{diameter:22.7,thickness:.42,tessellation:80},scene);
+  hammamDomeRim.position.set(hammamX,11.15,hammamZ);hammamDomeRim.material=hammamGold;
+  const hammamOculus=MeshBuilder.CreateCylinder("imperial-hammam-dome-oculus",{diameter:4.1,height:.32,tessellation:48},scene);
+  hammamOculus.position.set(hammamX,20.95,hammamZ);hammamOculus.material=hammamTile;
+  const hammamOculusRing=MeshBuilder.CreateTorus("imperial-hammam-oculus-bronze-ring",{diameter:4.35,thickness:.16,tessellation:48},scene);
+  hammamOculusRing.position.set(hammamX,21.12,hammamZ);hammamOculusRing.material=hammamGold;
+  for(const side of [-1,1]) {
+    const cupola=MeshBuilder.CreateSphere("imperial-hammam-side-cupola",{diameter:10.5,segments:28,slice:.5},scene);
+    cupola.position.set(hammamX+side*11.4,10.8,hammamZ);cupola.scaling.y=.72;cupola.material=hammamIvory;
+    const cupolaRing=MeshBuilder.CreateTorus("imperial-hammam-side-cupola-ring",{diameter:10.2,thickness:.24,tessellation:48},scene);
+    cupolaRing.position.set(hammamX+side*11.4,7.15,hammamZ);cupolaRing.material=hammamGold;
+  }
+  addAntiqueDoor(scene,"imperial-hammam-entry-double-door",hammamX,.48,hammamFront,hammamDoorWidth,6.0,mats,0);
+
+  // A large heated central pool with submerged steps, carved coping and turquoise water.
+  const hammamPoolX=hammamX,hammamPoolZ=-59.2;
+  box(scene,"imperial-hammam-great-pool-basin",[hammamPoolX,.48,hammamPoolZ],[12.8,.68,8.8],hammamShadow);
+  box(scene,"imperial-hammam-great-pool-water",[hammamPoolX,.88,hammamPoolZ],[11.7,.08,7.7],hammamWater);
+  for(const side of [-1,1]) {
+    box(scene,"imperial-hammam-great-pool-long-coping",[hammamPoolX+side*6.55,.88,hammamPoolZ],[.62,.48,9.1],hammamIvory);
+    box(scene,"imperial-hammam-great-pool-short-coping",[hammamPoolX,.88,hammamPoolZ+side*4.45],[13.7,.48,.62],hammamIvory);
+    box(scene,"imperial-hammam-great-pool-gold-inlay",[hammamPoolX+side*6.55,1.13,hammamPoolZ],[.10,.08,8.65],hammamGold);
+  }
+  for(let step=0;step<4;step++) {
+    box(scene,"imperial-hammam-pool-entry-step",[hammamPoolX, .42+step*.14, hammamPoolZ+5.15-step*.48],[3.3,.28,.68],hammamIvory);
+  }
+  for(const side of [-1,1]) {
+    const smallX=hammamX+side*12.0,smallZ=-61.0;
+    box(scene,"imperial-hammam-plunge-basin",[smallX,.42,smallZ],[5.0,.62,7.6],hammamShadow);
+    box(scene,"imperial-hammam-plunge-water",[smallX,.79,smallZ],[4.15,.06,6.75],hammamWater);
+    for(const sx of [-1,1])box(scene,"imperial-hammam-plunge-rim",[smallX+sx*2.58,.82,smallZ],[.38,.36,7.95],hammamIvory);
+    for(const sz of [-1,1])box(scene,"imperial-hammam-plunge-rim",[smallX,.82,smallZ+sz*3.82],[5.35,.36,.38],hammamIvory);
+  }
+  obstacles.push({x:hammamPoolX,z:hammamPoolZ,r:6.65});
+  obstacles.push({x:hammamX-12,z:-61,r:3.0});
+  obstacles.push({x:hammamX+12,z:-61,r:3.0});
+
+  // Warm resting bays, massage benches, towel shelves and oil jars line the side aisles.
+  for(const side of [-1,1]) {
+    const bx=hammamX+side*13.0;
+    for(const zz of [-51,-69]) {
+      box(scene,"imperial-hammam-rest-bench",[bx,.68,zz],[3.4,.42,1.05],hammamWood);
+      box(scene,"imperial-hammam-rest-bench-cushion",[bx,1.0,zz-.04],[3.15,.18,.88],hammamTile);
+      for(const dx of [-1.25,1.25])box(scene,"imperial-hammam-bench-leg",[bx+dx,.34,zz],[.18,.62,.85],hammamGold);
+      for(let jar=0;jar<3;jar++) {
+        const jx=bx+(jar-1)*.72;
+        cylinder(scene,"imperial-hammam-oil-vessel",[jx,1.35,zz-.58],.34,.58,hammamGold,16);
+        cylinder(scene,"imperial-hammam-oil-vessel-neck",[jx,1.68,zz-.58],.16,.16,hammamIvory,12);
+      }
+    }
+  }
+  for(let i=0;i<8;i++) {
+    const zz=-70+i*3.7;
+    box(scene,"imperial-hammam-towel-cubby",[hammamX-4.2,2.0,zz],[1.05,2.7,.85],hammamWood);
+    for(let shelf=0;shelf<3;shelf++)box(scene,"imperial-hammam-folded-towels",[hammamX-4.2,1.2+shelf*.72,zz-.48],[.82,.22,.58],hammamIvory);
+  }
+
+  // Steam wisps, warm wall lamps and a small ablution fountain soften the atmosphere.
+  const hammamSteam=mat(scene,"imperial-hammam-steam",new Color3(.88,.91,.88),.98);
+  hammamSteam.alpha=.16;
+  for(let i=0;i<10;i++) {
+    const wisp=MeshBuilder.CreateSphere("imperial-hammam-steam-wisp",{diameter:1.2+(i%3)*.35,segments:12},scene);
+    wisp.position.set(hammamX-3.8+(i%4)*2.4,2.0+(i%5)*.72,-62.8+Math.floor(i/4)*2.0);
+    wisp.scaling.y=1.9;wisp.material=hammamSteam;
+  }
+  for(const side of [-1,1]) for(const zz of [-70,-61,-52,-44]) {
+    const lampX=hammamX+side*16.45;
+    box(scene,"imperial-hammam-wall-lamp-bracket",[lampX,7.2,zz],[.22,.18,.65],hammamGold);
+    const lamp=MeshBuilder.CreateSphere("imperial-hammam-wall-lamp",{diameter:.52,segments:12},scene);
+    lamp.position.set(lampX,6.9,zz-.32);lamp.material=hammamGlow;
+    const lampCage=MeshBuilder.CreateTorus("imperial-hammam-wall-lamp-cage",{diameter:.74,thickness:.055,tessellation:16},scene);
+    lampCage.position.copyFrom(lamp.position);lampCage.rotation.x=Math.PI/2;lampCage.material=hammamGold;
+  }
+  const ablutionBasin=cylinder(scene,"imperial-hammam-ablution-basin",[hammamX,1.05,-46.8],3.2,.72,hammamIvory,48);
+  cylinder(scene,"imperial-hammam-ablution-water",[hammamX,1.43,-46.8],2.55,.06,hammamWater,48);
+  cylinder(scene,"imperial-hammam-ablution-pedestal",[hammamX,2.0,-46.8],.82,1.45,hammamGold,24);
+  const ablutionJet=MeshBuilder.CreateTube("imperial-hammam-ablution-water-jet",{path:[new Vector3(hammamX,2.65,-46.8),new Vector3(hammamX,3.1,-46.8)],radius:.055,tessellation:8},scene);
+  ablutionJet.material=hammamWater;
+  obstacles.push({x:hammamX,z:-46.8,r:1.9});
+
+  // A bilingual bronze plaque makes the public bath easy to recognize from the lane.
+  const hammamSignTexture=new DynamicTexture("imperial-hammam-sign-texture",{width:1024,height:256},scene,false);
+  const hammamSignCtx=hammamSignTexture.getContext();
+  hammamSignCtx.fillStyle="#263c3b";hammamSignCtx.fillRect(0,0,1024,256);
+  hammamSignCtx.strokeStyle="#c9a86b";hammamSignCtx.lineWidth=12;hammamSignCtx.strokeRect(12,12,1000,232);
+  hammamSignCtx.fillStyle="#f0dfb7";hammamSignCtx.textAlign="center";hammamSignCtx.font="bold 72px Georgia";
+  hammamSignCtx.fillText("THERMAE  •  HAMMAM",512,112);
+  hammamSignCtx.font="42px sans-serif";hammamSignCtx.fillText("帝 国 浴 場",512,190);
+  hammamSignTexture.update();
+  const hammamSignMat=new StandardMaterial("imperial-hammam-sign-material",scene);
+  hammamSignMat.diffuseTexture=hammamSignTexture;hammamSignMat.emissiveColor=new Color3(.12,.09,.045);
+  const hammamSign=MeshBuilder.CreatePlane("imperial-hammam-sign",{width:8.4,height:2.1},scene);
+  hammamSign.position.set(hammamX,10.15,hammamFront-.56);hammamSign.material=hammamSignMat;
+  hammamSign.rotation.y=0;
+
+  // The entry remains accessible through a single central opening; the perimeter stays solid.
+  colliders.push({minX:hammamX-17.5,maxX:hammamX+17.5,minZ:hammamBack-.5,maxZ:hammamFront+.5,doorX:hammamX,doorWidth:hammamDoorWidth,doorZ:hammamFront,interior:true,passThrough:false});
+  const hammamStaticMeshes=scene.meshes.slice(hammamMeshStart).filter(mesh=>
+    mesh.name.startsWith("imperial-hammam-")&&!mesh.name.includes("entry-double-door")&&!mesh.parent&&mesh.material
+  );
+  const hammamMaterialGroups=new Map();
+  for(const mesh of hammamStaticMeshes) {
+    if(!hammamMaterialGroups.has(mesh.material))hammamMaterialGroups.set(mesh.material,[]);
+    hammamMaterialGroups.get(mesh.material).push(mesh);
+  }
+  for(const [material,parts] of hammamMaterialGroups) {
+    if(parts.length<2)continue;
+    const merged=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+    if(merged){merged.name="imperial-hammam-static-detail-batch";merged.material=material;merged.isPickable=false;}
+  }
+
   // Full-height townspeople are assembled locally so their proportions never depend
   // on third-party model downloads. Head height is kept close to one-seventh of stature.
   const people=[];
@@ -3205,6 +3404,13 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(91.0,-8.0,"hostess",30.9,Math.PI,false);
   makeTownsperson(88.5,-16.0,"hostess",32.1,0,false);
   makeTownsperson(94.0,-16.0,"hostess",33.3,0,false);
+
+  // A few clothed townspeople make the public baths feel like a shared civic space.
+  makeTownsperson(-101.5,-48.5,"villager",34.1,Math.PI,false);
+  makeTownsperson(-82.5,-48.5,"merchant",35.2,Math.PI,false);
+  makeTownsperson(-101.5,-68.0,"villager",36.3,0,false);
+  makeTownsperson(-82.5,-68.0,"villager",37.4,0,false);
+  makeTownsperson(-92.0,-49.0,"hostess",38.5,Math.PI,false);
 
   // Give the walking residents real street-to-street routes instead of tiny circles.
   const walkingRoutes=[
@@ -3412,6 +3618,7 @@ export async function createRoyalCity(engine, canvas) {
     if(x<-8&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
     if(x>34&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
+    if(x<-73&&x>-112&&z<-39&&z>-78)return "帝国浴場 — THERMAE · HAMMAM";
     if(z<-72)return "王宮 — 王城の中庭";
     if(z<-45)return "王城への大通り";
     if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
@@ -3437,6 +3644,7 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
     else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
+    else if(x<-73&&x>-112&&z<-39&&z>-78)message="帝国浴場。温泉プール、蒸気浴室、休憩回廊を備えた市民のための大浴場。";
     else if(z<-45)message="王城へ続く大門。街の喧騒が遠のき、王宮の静けさが近づいてくる。";
     else if(x>34&&z>-3&&z<35)message="酒場通り。旅人や商人、冒険者たちが夜まで集う街の一角。";
     else if(x>10&&z<-5)message="市場の屋台。果物や旅の道具が並んでいる。";
