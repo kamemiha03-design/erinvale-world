@@ -2972,6 +2972,14 @@ export async function createRoyalCity(engine, canvas) {
   // toward the crown and descends to both abutments, rather than sitting flat.
   const bridgeX=0,bridgeZ=-47,bridgeHalf=5.0,bridgeSegments=28,bridgeRise=1.55;
   const bridgeSurface=(z)=>.72+bridgeRise*(1-Math.pow((z-bridgeZ)/bridgeHalf,2));
+  // Raise the moving coach onto the arched roadway, with gentle ramps at both ends.
+  const carriageRoadHeight=(z)=>{
+    const smooth=t=>{const v=Math.max(0,Math.min(1,t));return v*v*(3-2*v);};
+    if(z<=bridgeZ-bridgeHalf-3||z>=bridgeZ+bridgeHalf+3)return 0;
+    if(z<bridgeZ-bridgeHalf)return .72*smooth((z-(bridgeZ-bridgeHalf-3))/3);
+    if(z>bridgeZ+bridgeHalf)return .72*(1-smooth((z-(bridgeZ+bridgeHalf))/3));
+    return bridgeSurface(z);
+  };
   for(let i=0;i<bridgeSegments;i++) {
     const z0=bridgeZ-bridgeHalf+i*(2*bridgeHalf/bridgeSegments);
     const z1=z0+2*bridgeHalf/bridgeSegments;
@@ -3565,6 +3573,7 @@ export async function createRoyalCity(engine, canvas) {
         const target=movingCarriage.route[movingCarriage.waypointIndex],dx=target.x-movingCarriage.group.position.x,dz=target.z-movingCarriage.group.position.z,distance=Math.hypot(dx,dz);
         if(distance<.55)movingCarriage.waypointIndex=(movingCarriage.waypointIndex+1)%movingCarriage.route.length;
         else {const stride=Math.min(distance,movingCarriage.speed*step);movingCarriage.group.position.x+=dx/distance*stride;movingCarriage.group.position.z+=dz/distance*stride;movingCarriage.group.rotation.y=Math.atan2(-dx,-dz);movingCarriage.horse.position.y=.015+Math.abs(Math.sin(time*8.5))*.045;movingCarriage.horse.rotation.x=Math.sin(time*8.5)*.012;movingCarriage.horse.getChildMeshes().forEach((limb,index)=>{if(limb.name==="horse-leg-muscle"||limb.name==="horse-cannon-bone")limb.rotation.x=Math.sin(time*8.5+(index%2)*Math.PI)*.16;});}
+        movingCarriage.group.position.y=carriageRoadHeight(movingCarriage.group.position.z);
       }
       people.forEach(person=>{
         if(!person.route||person.route.length<2)return;
