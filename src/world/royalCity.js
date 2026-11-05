@@ -3023,13 +3023,13 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"public-library-west-bookcase-body",[-62.55,4.15,z],[.72,5.95,3.95],libraryWood);
     box(scene,"public-library-west-bookcase-crown",[-62.12,7.22,z],[.18,.22,4.08],libraryGold);
     box(scene,"public-library-west-bookcase-plinth",[-62.12,1.22,z],[.22,.28,4.08],libraryTrim);
-    for(let level=0;level<5;level++) {
-      const y=1.62+level*1.08;
+    for(let level=0;level<6;level++) {
+      const y=1.48+level*.88;
       box(scene,"public-library-west-shelf",[-62.08,y,z],[.78,.075,3.78],libraryGold);
-      for(let b=0;b<12;b++) {
-        const book=box(scene,"public-library-west-volume",[-61.91,y+.205,z-1.60+b*.29],[.075,.34,.205],libraryBookMats[(b+level+bay)%libraryBookCount]);
-        book.rotation.x=(b%4-1.5)*.018;
-        if(b%3===0) box(scene,"public-library-west-gilt-spine-band",[-61.865,y+.205,z-1.60+b*.29],[.012,.045,.15],libraryGold);
+      for(let b=0;b<16;b++) {
+        const book=box(scene,"public-library-west-volume",[-61.91,y+.145,z-1.72+b*.225],[.075,.25,.145],libraryBookMats[(b+level+bay)%libraryBookCount]);
+        book.rotation.x=(b%4-1.5)*.012;
+        if(b%3===0) box(scene,"public-library-west-gilt-spine-band",[-61.865,y+.145,z-1.72+b*.225],[.012,.035,.105],libraryGold);
       }
     }
     for(const side of [-1,1]) {
@@ -3041,12 +3041,12 @@ export async function createRoyalCity(engine, canvas) {
   for(const z of [-95.0,-73.0]) {
     for(const x of [-59.0,-54.5,-47.5,-43.5]) {
       box(scene,"public-library-end-bookcase",[x,3.95,z],[3.65,5.55,.62],libraryWood);
-      for(let level=0;level<4;level++) {
-        const y=1.65+level*1.12;
+      for(let level=0;level<5;level++) {
+        const y=1.48+level*.88;
         box(scene,"public-library-end-shelf",[x,y,z-.34],[3.52,.075,.12],libraryGold);
-        for(let b=0;b<13;b++) {
-          const book=box(scene,"public-library-end-volume",[x-1.58+b*.263,y+.205,z-.43],[.205,.34,.075],libraryBookMats[(b+level)%libraryBookCount]);
-          book.rotation.z=(b%2?-.018:.018);
+        for(let b=0;b<17;b++) {
+          const book=box(scene,"public-library-end-volume",[x-1.68+b*.21,y+.145,z-.43],[.145,.25,.075],libraryBookMats[(b+level)%libraryBookCount]);
+          book.rotation.z=(b%2?-.012:.012);
         }
       }
     }
@@ -3104,6 +3104,78 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"public-library-gallery-balustrade",[-52,7.95,-90.2],[17.5,.18,.28],libraryGold);
   for(let x=-60.5;x<=-43.5;x+=1.25)
     box(scene,"public-library-gallery-baluster",[x,7.62,-90.2],[.12,.62,.12],libraryWood);
+  // A true upper reading gallery: timber floor, carved balustrade and a second
+  // tier of shelves tucked behind the stone columns, like a historic university hall.
+  box(scene,"public-library-mezzanine-floor",[-53.0,5.25,-92.7],[16.4,.28,5.6],libraryWood);
+  box(scene,"public-library-mezzanine-front-beam",[-53.0,5.12,-89.85],[16.6,.34,.24],libraryGold);
+  for(const x of [-60.7,-57.8,-54.9,-52.0,-49.1,-46.2,-43.3]) {
+    box(scene,"public-library-mezzanine-baluster",[x,5.78,-89.9],[.12,.78,.12],libraryWood);
+    box(scene,"public-library-mezzanine-post-cap",[x,6.2,-89.9],[.22,.12,.22],libraryGold);
+  }
+  box(scene,"public-library-mezzanine-handrail",[-53.0,6.2,-89.9],[16.8,.16,.22],libraryGold);
+  for(const x of [-59.5,-54.5,-49.5,-44.5]) {
+    box(scene,"public-library-upper-bookcase",[x,6.45,-94.5],[3.9,2.15,.62],libraryWood);
+    for(let level=0;level<2;level++) {
+      const y=5.65+level*.88;
+      box(scene,"public-library-upper-shelf",[x,y,-94.84],[3.72,.075,.12],libraryGold);
+      for(let b=0;b<16;b++)
+        box(scene,"public-library-upper-volume",[x-1.72+b*.22,y+.14,-94.93],[.15,.24,.075],libraryBookMats[(b+level)%libraryBookCount]);
+    }
+  }
+  // A climbable-looking oak library ladder leans against the upper shelves.
+  for(const x of [-58.0,-56.85]) {
+    const rail=box(scene,"public-library-ladder-rail",[x,3.72,-93.45],[.12,4.35,.14],libraryWood);
+    rail.rotation.x=-.22;
+    for(let r=0;r<10;r++) {
+      const rung=box(scene,"public-library-ladder-rung",[(x===-58.0?-57.43:-57.43),1.75+r*.39,-93.12-r*.095],[1.08,.075,.09],libraryGold);
+    }
+  }
+  // Stone columns carry warm brass sconces; a few restrained ivy strands soften the masonry.
+  for(const [x,z] of [[-59.8,-88.2],[-53.2,-88.2],[-46.6,-88.2],[-59.8,-78.2],[-46.6,-78.2]]) {
+    box(scene,"public-library-reading-column",[x,4.45,z],[.62,6.7,.62],libraryTrim);
+    box(scene,"public-library-column-base",[x,1.25,z],[.92,.34,.92],libraryGold);
+    box(scene,"public-library-column-capital",[x,7.75,z],[.98,.38,.98],libraryGold);
+    box(scene,"public-library-sconce-arm",[x,4.45,z+.42],[.16,.12,.62],libraryGold);
+    const sconce=MeshBuilder.CreateCylinder("public-library-column-sconce",{diameter:.24,height:.48,tessellation:12},scene);
+    sconce.position.set(x,4.55,z+.78);sconce.material=libraryBookMats[3];
+    const glow=mat(scene,"public-library-sconce-glow",new Color3(.95,.66,.28),.3,.4);
+    glow.emissiveColor=new Color3(.65,.31,.08);
+    const flame=MeshBuilder.CreateSphere("public-library-sconce-flame",{diameter:.16,segments:8},scene);
+    flame.position.set(x,4.58,z+.82);flame.material=glow;
+  }
+  const ivyMat=mat(scene,"public-library-ivy-green",new Color3(.12,.25,.13),.92);
+  for(const [x,z,phase] of [[-59.8,-88.2,0],[-46.6,-78.2,1],[-40.9,-91.5,2]]) {
+    const path=[];
+    for(let i=0;i<26;i++) {
+      const t=i/25;
+      path.push(new Vector3(x+Math.sin(t*13+phase)*.22,1.7+t*5.2,z+Math.cos(t*11+phase)*.20));
+    }
+    const vine=MeshBuilder.CreateTube("public-library-climbing-ivy",{path,radius:.035,tessellation:6},scene);
+    vine.material=ivyMat;
+    for(let i=2;i<24;i+=2) {
+      const p=path[i];
+      const leaf=MeshBuilder.CreateSphere("public-library-ivy-leaf",{diameter:.20,segments:6},scene);
+      leaf.position.copyFrom(p);leaf.scaling.set(1.4,.35,.75);leaf.material=ivyMat;
+    }
+  }
+  // Layered carpets mark the reading zone, with a fine gold border and woven medallions.
+  box(scene,"public-library-reading-rug-large",[-51.8,1.09,-83.7],[10.8,.045,9.2],libraryBookMats[0]);
+  box(scene,"public-library-reading-rug-inner",[-51.8,1.12,-83.7],[9.9,.025,8.3],libraryBookMats[1]);
+  for(const x of [-56.9,-46.7]) for(const z of [-88.0,-79.4])
+    box(scene,"public-library-rug-corner-medallion",[x,1.145,z],[.42,.025,.42],libraryGold);
+  for(const z of [-88.25,-79.15])
+    box(scene,"public-library-rug-gold-border",[-51.8,1.145,z],[10.2,.025,.07],libraryGold);
+  // Heraldic cloth banners hang between the piers, with gold fringe and a book sigil.
+  for(const z of [-86.0,-80.0]) {
+    box(scene,"public-library-hanging-banner",[-41.15,6.35,z],[.12,2.05,1.15],libraryBookMats[0]);
+    box(scene,"public-library-banner-crossbar",[-41.22,7.42,z],[.18,.12,1.3],libraryGold);
+    for(const dz of [-.48,.48]) {
+      const fringe=MeshBuilder.CreateCylinder("public-library-banner-fringe",{diameter:.045,height:.28,tessellation:6},scene);
+      fringe.position.set(-41.16,5.25,z+dz);fringe.material=libraryGold;
+    }
+    const sigil=MeshBuilder.CreateCylinder("public-library-banner-book-sigil",{diameter:.28,height:.035,tessellation:8},scene);
+    sigil.position.set(-41.24,6.55,z);sigil.rotation.x=Math.PI/2;sigil.material=libraryGold;
+  }
   // Small public notice desk immediately inside the entrance.
   box(scene,"public-library-help-desk",[-43.2,1.75,-84],[2.2,1.4,1.0],libraryWood);
   box(scene,"public-library-help-desk-top",[-43.2,2.5,-84],[2.5,.16,1.2],libraryGold);
