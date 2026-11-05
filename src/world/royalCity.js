@@ -3056,6 +3056,7 @@ export async function createRoyalCity(engine, canvas) {
           door.open=true;
           const target=door.home+(door.pivot.position.x<camera.position.x?-.95:.95);
           Animation.CreateAndStartAnimation("palace-entry-auto-open",door.pivot,"rotation.y",30,18,door.pivot.rotation.y,target,Animation.ANIMATIONLOOPMODE_CONSTANT);
+          if(this.onDoor)this.onDoor();
         }
       }
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
