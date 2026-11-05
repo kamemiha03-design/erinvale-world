@@ -1972,7 +1972,7 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"palace-lobby-floor",[0,8.62,-120],[18,.24,11],lobbyFloor);
   box(scene,"palace-lobby-runner",[0,8.77,-120],[4.6,.06,10.2],lobbyVelvet);
   // A monumental pair of carved walnut doors closes the main entrance.
-  addAntiqueDoor(scene,"palace-grand-entry-double-door",0,8.72,-114.58,5.8,7.25,mats,1.02);
+  addAntiqueDoor(scene,"palace-grand-entry-double-door",0,8.72,-112.78,5.8,7.25,mats,1.02);
   // Raised clerestory walls and taller columns open the lobby into a true two-storey hall.
   const lobbyPortraitGold=mat(scene,"palace-portrait-gilt-frame",new Color3(.78,.57,.25),.28,.72);
   const lobbyPortraitDark=mat(scene,"palace-portrait-shadow-frame",new Color3(.20,.12,.075),.58,.12);
@@ -3044,12 +3044,12 @@ export async function createRoyalCity(engine, canvas) {
         if(!inDoor)return true;
       }
     }
+    // Palace ground-floor lobby: ignore legacy obstacle volumes inside the
+    // open hall so counters/old town props cannot create invisible walls.
+    if(camera.position.y<14 && z<-114.0 && z>-128.75 && Math.abs(x)<10.2)return false;
     // Fountain basin, market counters, and castle cliff are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
-    // Palace ground-floor lobby: leave the central walkable volume free of
-    // legacy town obstacles and the old invisible rear barrier.
-    if(camera.position.y<14 && z<-114.0 && z>-128.75 && Math.abs(x)<10.2)return false;
     // The old rear wall has a broad central opening; only its two stone wings collide.
     if(z<=-128.75 && z>-130.0 && Math.abs(x)>4.35)return true;
     // Keep the central stair corridor open; the cliff shoulders remain solid.
