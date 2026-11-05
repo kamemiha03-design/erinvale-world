@@ -3131,7 +3131,7 @@ export async function createRoyalCity(engine, canvas) {
     }
   }
   // Stone columns carry warm brass sconces; a few restrained ivy strands soften the masonry.
-  for(const [x,z] of [[-59.8,-88.2],[-53.2,-88.2],[-46.6,-88.2],[-59.8,-78.2],[-46.6,-78.2]]) {
+  for(const [x,z] of [[-59.8,-88.2],[-53.2,-88.2],[-46.6,-88.2],[-59.8,-78.2]]) {
     box(scene,"public-library-reading-column",[x,4.45,z],[.62,6.7,.62],libraryTrim);
     box(scene,"public-library-column-base",[x,1.25,z],[.92,.34,.92],libraryGold);
     box(scene,"public-library-column-capital",[x,7.75,z],[.98,.38,.98],libraryGold);
@@ -3142,9 +3142,15 @@ export async function createRoyalCity(engine, canvas) {
     glow.emissiveColor=new Color3(.65,.31,.08);
     const flame=MeshBuilder.CreateSphere("public-library-sconce-flame",{diameter:.16,segments:8},scene);
     flame.position.set(x,4.58,z+.82);flame.material=glow;
+    if(!isTouchDevice) {
+      const sconceLight=new PointLight("public-library-sconce-light",new Vector3(x,4.58,z+.92),scene);
+      sconceLight.diffuse=new Color3(1,.68,.34);
+      sconceLight.intensity=.32;
+      sconceLight.range=7;
+    }
   }
   const ivyMat=mat(scene,"public-library-ivy-green",new Color3(.12,.25,.13),.92);
-  for(const [x,z,phase] of [[-59.8,-88.2,0],[-46.6,-78.2,1],[-40.9,-91.5,2]]) {
+  for(const [x,z,phase] of [[-59.8,-88.2,0],[-59.8,-78.2,1],[-40.9,-91.5,2]]) {
     const path=[];
     for(let i=0;i<26;i++) {
       const t=i/25;
