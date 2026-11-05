@@ -22,7 +22,7 @@ async function boot() {
   });
   // Mobile renders at 40% of CSS resolution per axis to reduce GPU fill cost.
   // Antialiasing and desktop post-processing are disabled separately for touch devices.
-  engine.setHardwareScalingLevel(isTouch?2.0:1);
+  engine.setHardwareScalingLevel(isTouch?2.8:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
@@ -47,13 +47,13 @@ async function boot() {
   if(isTouch)mobileControls.classList.remove("hidden");
   else desktopHint.classList.remove("hidden");
 
-  // Keep full scene detail, but cap mobile rendering at 30 FPS. Static geometry,
+  // Keep full scene detail, but cap mobile rendering at 24 FPS and use a lower internal resolution. Static geometry,
   // textures and shadow-map quality remain unchanged; optional model downloads
   // are deferred by the world builder.
   let lastMobileFrame=0;
   engine.runRenderLoop(()=>{
     const now=performance.now();
-    if(isTouch && now-lastMobileFrame<1000/30)return;
+    if(isTouch && now-lastMobileFrame<1000/24)return;
     const elapsed=lastMobileFrame?Math.min((now-lastMobileFrame)/1000,.1):engine.getDeltaTime()/1000;
     lastMobileFrame=now;
     world.update(elapsed);
