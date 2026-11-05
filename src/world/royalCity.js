@@ -1859,7 +1859,8 @@ export async function createRoyalCity(engine, canvas) {
     }
     part("npc-hips",[0,.86,0],[.43,.25,.28],npcLeather,"sphere");
     part("npc-tunic",[0,1.23,0],[.58,.70,.34],outfit,"sphere");
-    part("npc-tunic-hem",[0,.91,0],[.59,.12,.35],outfit);\n    if(role==="hostess"){part("hostess-skirt",[0,.91,0],[.62,.62,.42],outfit,"sphere");part("hostess-bodice",[0,1.32,-.015],[.43,.44,.36],npcCloth[4],"sphere");part("hostess-apron",[0,1.05,-.205],[.40,.48,.035],npcCloth[5]);}
+    part("npc-tunic-hem",[0,.91,0],[.59,.12,.35],outfit);
+    if(role==="hostess"){part("hostess-skirt",[0,.91,0],[.62,.62,.42],outfit,"sphere");part("hostess-bodice",[0,1.32,-.015],[.43,.44,.36],npcCloth[4],"sphere");part("hostess-apron",[0,1.05,-.205],[.40,.48,.035],npcCloth[5]);}
     part("npc-belt",[0,1.00,-.012],[.56,.085,.37],npcLeather);
     part("npc-belt-buckle",[0,1.01,-.205],[.09,.10,.035],npcGold);
     part("npc-neck",[0,1.61,0],[.14,.16,.14],skin,"cylinder");
@@ -1868,7 +1869,8 @@ export async function createRoyalCity(engine, canvas) {
     part("npc-ear-left",[-.175,1.78,0],[.075,.12,.09],skin,"sphere");
     part("npc-ear-right",[.175,1.78,0],[.075,.12,.09],skin,"sphere");
     part("npc-hair-cap",[0,1.94,.005],[.365,.19,.34],hair,"sphere");
-    part("npc-hair-back",[0,1.80,.105],[.32,.28,.18],hair,"sphere");\n    if(role==="hostess"){part("hostess-long-hair",[0,1.68,.20],[.29,.72,.17],hair,"sphere");part("hostess-hair-lock-left",[-.17,1.70,-.04],[.11,.48,.12],hair,"sphere");part("hostess-hair-lock-right",[.17,1.70,-.04],[.11,.48,.12],hair,"sphere");}
+    part("npc-hair-back",[0,1.80,.105],[.32,.28,.18],hair,"sphere");
+    if(role==="hostess"){part("hostess-long-hair",[0,1.68,.20],[.29,.72,.17],hair,"sphere");part("hostess-hair-lock-left",[-.17,1.70,-.04],[.11,.48,.12],hair,"sphere");part("hostess-hair-lock-right",[.17,1.70,-.04],[.11,.48,.12],hair,"sphere");}
     for(const side of [-1,1]) {
       part("npc-eye",[side*.075,1.80,-.148],[.045,.035,.025],npcWhite,"sphere");
       part("npc-pupil",[side*.075,1.80,-.168],[.019,.025,.012],npcDark,"sphere");
@@ -1914,7 +1916,12 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(17,17,"merchant",17.1,Math.PI/2,false);
   makeTownsperson(21,-4,"villager",18.2,-.7,true);
   makeTownsperson(-9,-12,"villager",19.3,.5,true);
-  makeTownsperson(2,8,"villager",20.4,Math.PI,false);\n  // Staff: a guild receptionist, tavern server and welcoming adult hostesses.\n  makeTownsperson(-20,-15.4,"hostess",21.2,Math.PI,false);\n  makeTownsperson(-21,4.6,"hostess",22.4,Math.PI,false);\n  makeTownsperson(52,10.0,"hostess",23.6,Math.PI,false);\n  makeTownsperson(72,10.0,"hostess",24.8,Math.PI,false);
+  makeTownsperson(2,8,"villager",20.4,Math.PI,false);
+  // Staff: a guild receptionist, tavern server and welcoming adult hostesses.
+  makeTownsperson(-20,-15.4,"hostess",21.2,Math.PI,false);
+  makeTownsperson(-21,4.6,"hostess",22.4,Math.PI,false);
+  makeTownsperson(52,10.0,"hostess",23.6,Math.PI,false);
+  makeTownsperson(72,10.0,"hostess",24.8,Math.PI,false);
 
   // A properly rigged and animated palomino stands beside the merchant's timber cart.
   let horseRoot=null;
@@ -2023,6 +2030,20 @@ export async function createRoyalCity(engine, canvas) {
     return "王都エリンヴェイル";
   }
   function interact() {
+    const doors=scene.metadata?.doorLeaves||[];
+    let nearest=null,nearestDistance=5.2;
+    for(const door of doors) {
+      const distance=Vector3.Distance(camera.position,door.position);
+      if(distance<nearestDistance){nearest=door;nearestDistance=distance;}
+    }
+    if(nearest) {
+      nearest.open=!nearest.open;
+      const target=nearest.home+(nearest.open?(nearest.pivot.position.x<camera.position.x?-.95:.95):0);
+      Animation.CreateAndStartAnimation("door-swing",nearest.pivot,"rotation.y",30,18,nearest.pivot.rotation.y,target,Animation.ANIMATIONLOOPMODE_CONSTANT);
+      if(this.onDoor)this.onDoor();
+      document.querySelector("#hint").textContent=nearest.open?"重厚な木の扉が軋みながら開いた。":"扉を閉めた。";
+      return;
+    }
     const x=camera.position.x,z=camera.position.z;
     let message="石畳の広場。遠くに王城と世界樹が見える。";
     if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
@@ -2042,7 +2063,8 @@ export async function createRoyalCity(engine, canvas) {
   return {
     scene,
     setMovementSource(fn){moveSource=fn;},
-    onMovement:null,\n    onDoor:null,
+    onMovement:null,
+    onDoor:null,
     turn(dx,dy){yaw+=dx;pitch=Scalar.Clamp(pitch+dy,-1.05,1.05);camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;},
     interact,
     update(dt){
