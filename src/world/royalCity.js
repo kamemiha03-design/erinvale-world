@@ -2872,26 +2872,34 @@ export async function createRoyalCity(engine, canvas) {
   const royalApproachDoorDark=mat(scene,"royal-approach-door-dark-wood",new Color3(.12,.065,.035),.58,.24);
   const royalApproachDoorGlow=mat(scene,"royal-approach-door-lantern-glow",new Color3(1,.68,.34),.2,0);
   royalApproachDoorGlow.emissiveColor=new Color3(.95,.36,.10);
-  for(const side of [-1,1])box(scene,"royal-approach-door-back-wall-wing",[side*5.35,13.2,-112.82],[3.1,9.2,.72],royalApproachDoorStone);
-  box(scene,"royal-approach-door-back-wall-header",[0,17.0,-112.82],[7.4,1.6,.72],royalApproachDoorStone);
-  addAntiqueDoor(scene,"royal-approach-grand-double-door",0,8.68,-112.35,7.2,7.25,mats,.08);
-  for(const d of scene.metadata.doorLeaves.filter(d=>d.name==="royal-approach-grand-double-door")) {
-    const side=d.pivot.position.x<0?-1:1,lw=7.2*.49,lh=7.25*.91,lx=-side*lw*.5;
+
+  // Transfer the ornate gilt-and-ivory design to the double doors beside the chandelier hall.
+  const chandelierDoorLeaves=scene.metadata.doorLeaves.filter(d=>d.name==="royal-entry-chandelier-double-door");
+  for(const d of chandelierDoorLeaves) {
+    const side=d.pivot.position.x<0?-1:1, lw=9.2*.49, lh=8.15*.91, lx=-side*lw*.5;
     for(const level of [-1,1]) {
-      const panel=box(scene,"royal-approach-door-gilded-panel",[0,0,0],[lw*.72,lh*.29,.065],royalApproachDoorDark);
+      const panel=box(scene,"royal-chandelier-door-gilded-panel",[0,0,0],[lw*.72,lh*.29,.065],royalApproachDoorDark);
       panel.parent=d.pivot;panel.position.set(lx,level*lh*.23,.145);
-      const inset=box(scene,"royal-approach-door-ivory-inlay",[0,0,0],[lw*.55,lh*.22,.04],royalApproachDoorStone);
+      const inset=box(scene,"royal-chandelier-door-ivory-inlay",[0,0,0],[lw*.55,lh*.22,.04],royalApproachDoorStone);
       inset.parent=d.pivot;inset.position.set(lx,level*lh*.23,.19);
-      const rail=box(scene,"royal-approach-door-gold-rail",[0,0,0],[lw*.78,.09,.06],royalApproachDoorGold);
+      const rail=box(scene,"royal-chandelier-door-gold-rail",[0,0,0],[lw*.78,.09,.06],royalApproachDoorGold);
       rail.parent=d.pivot;rail.position.set(lx,level*lh*.39,.21);
     }
-    for(let yy=-3;yy<=3;yy+=.55) {
-      const stud=MeshBuilder.CreateSphere("royal-approach-door-brass-stud",{diameter:.11,segments:10},scene);
+    for(let yy=-lh*.40;yy<=lh*.40+.001;yy+=.55) {
+      const stud=MeshBuilder.CreateSphere("royal-chandelier-door-brass-stud",{diameter:.11,segments:10},scene);
       stud.parent=d.pivot;stud.position.set(lx+side*lw*.39,yy,.245);stud.material=royalApproachDoorGold;
     }
-    const boss=MeshBuilder.CreateCylinder("royal-approach-door-rosette",{diameter:.48,height:.12,tessellation:16},scene);
+    const boss=MeshBuilder.CreateCylinder("royal-chandelier-door-rosette",{diameter:.48,height:.12,tessellation:16},scene);
     boss.parent=d.pivot;boss.position.set(lx,0,.25);boss.rotation.x=Math.PI/2;boss.material=royalApproachDoorGold;
   }
+
+  // Remove the outer double-door leaves but keep the stone portal and arch.
+  for(const door of scene.metadata.doorLeaves.filter(d=>d.name==="royal-approach-grand-double-door")) {
+    door.pivot.dispose(false,false);
+  }
+  scene.metadata.doorLeaves=scene.metadata.doorLeaves.filter(d=>d.name!=="royal-approach-grand-double-door");
+  for(const side of [-1,1])box(scene,"royal-approach-door-back-wall-wing",[side*5.35,13.2,-112.82],[3.1,9.2,.72],royalApproachDoorStone);
+  box(scene,"royal-approach-door-back-wall-header",[0,17.0,-112.82],[7.4,1.6,.72],royalApproachDoorStone);
   for(const side of [-1,1]) {
     box(scene,"royal-approach-door-pilaster",[side*4.15,12.6,-111.88],[.78,8.5,.92],royalApproachDoorStone);
     box(scene,"royal-approach-door-pilaster-base",[side*4.15,8.55,-111.88],[1.25,.55,1.2],royalApproachDoorGold);
