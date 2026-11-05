@@ -2878,6 +2878,8 @@ export async function createRoyalCity(engine, canvas) {
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
     // Keep the central stair corridor open; the cliff shoulders remain solid.
     if(z<-78 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
+    // The lower lobby ends at its rear wall; the upper corridor is reached from the stairs.
+    if(camera.position.y<14 && z<-125.7 && z>-127.5 && Math.abs(x)<8.5)return true;
     // Second-floor corridor and ballroom boundaries, with a wide central doorway.
     if(z<-126 && z>-142 && Math.abs(x)>6.35)return true;
     if(z<=-142 && z>-176 && Math.abs(x)>21.35)return true;
@@ -3042,10 +3044,20 @@ export async function createRoyalCity(engine, canvas) {
       const onLobbyStair=camera.position.z<=-116.25&&camera.position.z>=-124.55&&Math.abs(Math.abs(camera.position.x)-3.35)<1.65;
       const lobbyStairProgress=onLobbyStair?(-116.25-camera.position.z)/(-116.25+124.55):0;
       const lobbyStairFloor=onLobbyStair?Math.max(0,Math.min(6.0,lobbyStairProgress*6.0)):0;
-      const onUpperFloor=camera.position.z<-124.55&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.0;
+      const wasOnUpperLevel=camera.position.y>14.0;
+      const onUpperFloor=wasOnUpperLevel&&camera.position.z<-124.55&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.5;
       const onLobbyGround=camera.position.z<=-112.2&&camera.position.z>=-126.0&&Math.abs(camera.position.x)<8.5;
       const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-127;
       camera.position.y=1.72+(onRoyalStair?stairFloor:(onLobbyStair?stairRise+lobbyStairFloor:(onUpperFloor?14.9:(onLobbyGround||onLanding?8.62:0))));
+      // The monumental front doors swing open automatically as the visitor approaches.
+      const mainEntryDoors=(scene.metadata?.doorLeaves||[]).filter(door=>door.name==="palace-grand-entry-double-door");
+      if(Math.abs(camera.position.x)<4.8&&camera.position.z<-110.5&&camera.position.z>-117.5) {
+        for(const door of mainEntryDoors) if(!door.open) {
+          door.open=true;
+          const target=door.home+(door.pivot.position.x<camera.position.x?-.95:.95);
+          Animation.CreateAndStartAnimation("palace-entry-auto-open",door.pivot,"rotation.y",30,18,door.pivot.rotation.y,target,Animation.ANIMATIONLOOPMODE_CONSTANT);
+        }
+      }
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
