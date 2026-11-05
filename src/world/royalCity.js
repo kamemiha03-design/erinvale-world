@@ -1701,14 +1701,14 @@ export async function createRoyalCity(engine, canvas) {
   for(let y of [15.2,23.2,31.2,39.1]) box(scene,"keep-stone-stringcourse",[0,y,-74.25],[21.6,.28,.42],castleGold);
   // Flanking towers: stepped bases, ring courses, machicolations and conical slate roofs.
   for(let i=0;i<7;i++) {
-    const x=-23+i*7.5, height=19+(i%3)*3.5, baseY=12+height/2;
+    const x=-23+i*7.5, height=19+(i%3)*3.5, baseY=8.7+height/2;
     const tower=MeshBuilder.CreateCylinder("castle-tower",{diameter:6.2,height,tessellation:24},scene);
     tower.position.set(x,baseY,-77);tower.material=castleStone;
     for(let ringY of [baseY-height*.36,baseY,baseY+height*.37]) {
       const ring=MeshBuilder.CreateTorus("castle-tower-course",{diameter:6.3,thickness:.22,tessellation:24},scene);
       ring.position.set(x,ringY,-77);ring.material=castleGold;
     }
-    cylinder(scene,"castle-tower-foot",[x,12.5,-77],7.1,.9,mats.trim,16);
+    cylinder(scene,"castle-tower-foot",[x,9.15,-77],7.1,.9,mats.trim,24);
     const roof=MeshBuilder.CreateCylinder("castle-spire",{diameterTop:0,diameterBottom:7.2,height:8,tessellation:16},scene);
     roof.position.set(x,baseY+height/2+4,-77);roof.material=castleRoof;
     for(let j=0;j<4;j++) {
@@ -1853,9 +1853,9 @@ export async function createRoyalCity(engine, canvas) {
   for(const mesh of scene.meshes.slice(royalPalaceStartIndex)) {
     if(mesh.name!=="world-tree-approach") mesh.position.z-=40;
   }
-  // Remove obsolete gatehouse fragments left behind by the old entrance layout.
+  // Remove obsolete gatehouse fragments and detached ornaments from the old layout.
   for(const mesh of [...scene.meshes]) {
-    if(/^(gatehouse-tower-window|gatehouse-window-sill|gatehouse-tower-balcony|gatehouse-baluster|distant-waterfall)$/.test(mesh.name)) mesh.dispose(false,false);
+    if(/^(gatehouse-tower-window|gatehouse-window-sill|gatehouse-tower-balcony|gatehouse-baluster|gatehouse-side-stringcourse|distant-waterfall)$/.test(mesh.name)) mesh.dispose(false,false);
   }
   // Discard the former staircase/landing that was shifted with the palace.
   // It used to leave a phantom climb in the old coordinates.
