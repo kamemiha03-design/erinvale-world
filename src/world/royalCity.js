@@ -3126,10 +3126,9 @@ export async function createRoyalCity(engine, canvas) {
   for(const x of [-58.0,-56.85]) {
     const rail=box(scene,"public-library-ladder-rail",[x,3.72,-93.45],[.12,4.35,.14],libraryWood);
     rail.rotation.x=-.22;
-    for(let r=0;r<10;r++) {
-      const rung=box(scene,"public-library-ladder-rung",[(x===-58.0?-57.43:-57.43),1.75+r*.39,-93.12-r*.095],[1.08,.075,.09],libraryGold);
-    }
   }
+  for(let r=0;r<10;r++)
+    box(scene,"public-library-ladder-rung",[-57.43,1.75+r*.39,-93.12-r*.095],[1.08,.075,.09],libraryGold);
   // Stone columns carry warm brass sconces; a few restrained ivy strands soften the masonry.
   for(const [x,z] of [[-59.8,-88.2],[-53.2,-88.2],[-46.6,-88.2],[-59.8,-78.2]]) {
     box(scene,"public-library-reading-column",[x,4.45,z],[.62,6.7,.62],libraryTrim);
