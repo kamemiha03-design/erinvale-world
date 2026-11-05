@@ -323,6 +323,19 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   const windowY=h*.67;
   addWindow(scene,x-w*.27,windowY,front-.16,mats.wood,mats.glass);
   addWindow(scene,x+w*.27,windowY,front-.16,mats.wood,mats.glass);
+  // Broad side-facing leaded windows make the taverns and guild read as lived-in buildings.
+  for(const side of [-1,1]) for(const zz of [z-d*.24,z+d*.24]) {
+    const wx=x+side*(w/2+.12);
+    box(scene,name+"-side-window-recess",[wx,windowY,zz],[.12,1.9,1.65],mats.wood);
+    box(scene,name+"-side-window-glass",[wx+side*.075,windowY,zz],[.055,1.42,1.18],mats.glass);
+    box(scene,name+"-side-window-mullion-v",[wx+side*.12,windowY,zz],[.07,1.46,.09],mats.wood);
+    box(scene,name+"-side-window-mullion-h",[wx+side*.12,windowY,zz],[.07,.09,1.22],mats.wood);
+    box(scene,name+"-side-window-sill",[wx+side*.15,windowY-.98,zz],[.28,.15,1.82],mats.trim);
+    for(const shutterSide of [-1,1]) {
+      const shutter=box(scene,name+"-side-window-shutter",[wx+side*.12,windowY,zz+shutterSide*.77],[.12,1.48,.24],mats.woodLight);
+      shutter.rotation.x=shutterSide*.06;
+    }
+  }
   // Hanging sign with a legible, illuminated title.
   box(scene,name+"-sign-arm",[x+w*.28,h*.9,front-.85],[2.1,.14,.14],mats.wood);
   box(scene,name+"-sign-board",[x+w*.28,h*.9-.65,front-.88],[2.15,1.15,.16],mats.wood);
@@ -759,6 +772,17 @@ export async function createRoyalCity(engine, canvas) {
     notch.position.set(-23+side*11.4,11.35,guildFront-.46);notch.rotation.z=Math.PI/2;notch.material=mats.gold;
   }
   addBuilding(scene,{x:22,z:-18,w:15,d:10,h:8.5,name:"Royal Market Hall",sign:"MARKET HALL"},{...mats},shadow,colliders,obstacles);
+  // New civic and residential quarter: infirmary, apothecary, bakery and homes.
+  const civicRoad=mat(scene,"civic-quarter-road",new Color3(.39,.36,.31),.98);
+  for(const [x,z,w,d,rot] of [[-58,1,48,7,0],[-79,8,7,30,0],[37,-28,28,7,0],[91,20,7,28,0]]) {
+    const lane=MeshBuilder.CreateGround("civic-quarter-lane",{width:w,height:d,subdivisions:1},scene);
+    lane.position.set(x,-.04,z);lane.rotation.y=rot;lane.material=civicRoad;
+  }
+  addBuilding(scene,{x:-61,z:-12,w:20,d:16,h:12,name:"St Martha Infirmary",sign:"ST MARTHA • INFIRMARY",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:38,z:-38,w:15,d:12,h:9,name:"The Royal Apothecary",sign:"ROYAL APOTHECARY",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:-51,z:18,w:17,d:13,h:9.5,name:"The Hearthstone Bakery",sign:"HEARTHSTONE BAKERY",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:-82,z:18,w:16,d:13,h:9,name:"Westgate Cottages",sign:"WESTGATE COTTAGES"},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:91,z:29,w:16,d:13,h:9,name:"East Quarter Homes",sign:"EAST QUARTER HOMES"},{...mats},shadow,colliders,obstacles);
   // Landmark dressing: make the tavern and guild unmistakable from the square.
   // Copper Stag: oversized hanging sign, steep timber gable, warm windows and a beer emblem.
   const tavernGold=mat(scene,"tavern-sign-gold",new Color3(.92,.68,.27),.38,.48);
@@ -1091,8 +1115,39 @@ export async function createRoyalCity(engine, canvas) {
     const lantern=MeshBuilder.CreateBox("plaza-lantern-glass",{width:.58,height:.78,depth:.58},scene);
     lantern.position.set(x,3.18,z);lantern.material=mats.lantern;
     cylinder(scene,"plaza-lamp-crown",[x,3.68,z],.2,.35,fountainMetal,8);
+    // Small overflowing flower baskets are fastened beneath each lantern.
+    const basketRing=MeshBuilder.CreateTorus("plaza-lamp-flower-basket-ring",{diameter:1.05,thickness:.10,tessellation:20},scene);
+    basketRing.position.set(x,2.45,z);basketRing.material=plazaGold;
+    cylinder(scene,"plaza-lamp-flower-basket-soil",[x,2.45,z],.86,.18,smithWood,16);
+    for(let bloom=0;bloom<5; bloom++) {
+      const a=bloom*Math.PI*2/5,bx=x+Math.cos(a)*.34,bz=z+Math.sin(a)*.34;
+      const flowerMat=bloom%3===0?mats.flowers:(bloom%3===1?mats.banner:plazaGold);
+      addPetalBloom(scene,"plaza-lamp-flower-bloom",new Vector3(bx,2.78+(bloom%2)*.05,bz),.24,flowerMat,6);
+    }
   }
-  // Decorative troughs and urns are omitted so the fountain approach stays clear.
+  // Low, richly planted beds soften the entire ring around the imperial fountain.
+  const plazaFlowerGreen=mat(scene,"plaza-flower-foliage",new Color3(.13,.31,.15),.92);
+  const plazaFlowerPink=mat(scene,"plaza-flower-pink",new Color3(.82,.28,.39),.82);
+  const plazaFlowerCream=mat(scene,"plaza-flower-cream",new Color3(.92,.82,.62),.86);
+  const plazaFlowerViolet=mat(scene,"plaza-flower-violet",new Color3(.42,.29,.61),.84);
+  for(let bed=0;bed<8;bed++) {
+    const a=bed*Math.PI/4,px=13+Math.cos(a)*18.1,pz=5+Math.sin(a)*18.1;
+    const planter=box(scene,"fountain-plaza-flower-bed",[px,.28,pz],[3.6,.5,2.25],fountainStone);
+    planter.rotation.y=-a;
+    const soil=box(scene,"fountain-plaza-flower-soil",[px,.55,pz],[3.28,.08,1.94],fountainShadow);
+    soil.rotation.y=-a;
+    for(let j=0;j<5;j++) {
+      const offset=(j-2)*.54,fx=px+Math.cos(a)*offset,fz=pz+Math.sin(a)*offset;
+      const stem=MeshBuilder.CreateTube("fountain-plaza-flower-stem",{path:[new Vector3(fx,.58,fz),new Vector3(fx,.98+(j%2)*.16,fz)],radius:.025,tessellation:5},scene);
+      stem.material=plazaFlowerGreen;
+      for(const side of [-1,1]) {
+        const leaf=MeshBuilder.CreateSphere("fountain-plaza-flower-leaf",{diameter:.34,segments:8},scene);
+        leaf.position.set(fx+side*.16,.78,fz);leaf.scaling.set(1,.32,.62);leaf.rotation.z=side*.42;leaf.material=plazaFlowerGreen;
+      }
+      const petalMat=[plazaFlowerPink,plazaFlowerCream,plazaFlowerViolet][(bed+j)%3];
+      addPetalBloom(scene,"fountain-plaza-flower",new Vector3(fx,1.03+(j%2)*.16,fz),.34,petalMat,7);
+    }
+  }
 
   // Market stalls: carved counters, striped awnings, stacked crates and wicker baskets.
   for(let i=0;i<4;i++) {
@@ -1993,39 +2048,67 @@ export async function createRoyalCity(engine, canvas) {
   for(const side of [-1,1])box(scene,"royal-lobby-carpet-gilt-border",[side*2.82,8.725,-148.5],[.075,.025,59.6],openHallLobbyTrim);
   const openHallDeskWood=mat(scene,"royal-lobby-reception-walnut",new Color3(.25,.12,.065),.72);
   for(const side of [-1,1]){box(scene,"royal-lobby-reception-desk",[side*9.2,9.35,-172.2],[6.4,1.35,1.45],openHallDeskWood);box(scene,"royal-lobby-reception-countertop",[side*9.2,10.08,-172.2],[6.7,.18,1.62],openHallLobbyTrim);}
-  // Twin sweeping staircases rise from both sides and meet a rear gallery.
+  // A classic imperial double staircase: two broad flights sweep inward and
+  // meet at one shared landing on the centre line of the upper gallery.
   const openHallStairStone=mat(scene,"royal-lobby-stair-marble",new Color3(.72,.69,.62),.24,.08);
   const openHallStairGold=mat(scene,"royal-lobby-stair-brass",new Color3(.82,.62,.29),.28,.78);
   const openHallRailStone=mat(scene,"royal-lobby-balustrade-stone",new Color3(.83,.78,.67),.38,.12);
   const openHallGalleryY=16.2;
   box(scene,"royal-lobby-upper-gallery-floor",[0,16.18,-178.0],[40,.38,8.8],openHallStairStone);
-  box(scene,"royal-lobby-upper-gallery-front-rail",[0,17.05,-173.62],[39,.22,.22],openHallStairGold);
-  for(let x=-19;x<=19.01;x+=.95)cylinder(scene,"royal-lobby-upper-gallery-baluster",[x,16.68,-173.62],.16,.78,openHallRailStone,12);
+  // The two flights arrive together through this broad, unrailed central opening.
+  box(scene,"royal-lobby-double-stair-shared-landing",[0,16.20,-174.0],[10.2,.24,8.0],openHallStairStone);
+  // Protect the open atrium edge, but leave a generous 10-metre mouth for the stairs.
+  for(const [start,end] of [[-19,-5.1],[5.1,19]]) {
+    box(scene,"royal-lobby-upper-gallery-front-rail-section",[(start+end)/2,17.05,-173.62],[end-start,.22,.22],openHallStairGold);
+    for(let x=start+.25;x<end-.1;x+=.85)cylinder(scene,"royal-lobby-upper-gallery-baluster",[x,16.68,-173.62],.16,.78,openHallRailStone,12);
+  }
+  // A rear balustrade and side rails keep the upper level safely enclosed.
+  box(scene,"royal-lobby-upper-gallery-rear-rail",[0,17.05,-182.25],[39,.22,.22],openHallStairGold);
+  for(let x=-19;x<=19.01;x+=.95)cylinder(scene,"royal-lobby-upper-gallery-rear-baluster",[x,16.68,-182.25],.16,.78,openHallRailStone,12);
   for(const side of [-1,1]){
     box(scene,"royal-lobby-upper-gallery-side-rail",[side*19.55,17.05,-178],[.22,.22,8.5],openHallStairGold);
     for(let z=-181.6;z<=-174.4;z+=.95)cylinder(scene,"royal-lobby-upper-gallery-side-baluster",[side*19.55,16.68,z],.16,.78,openHallRailStone,12);
-    const railPaths=[[],[]],steps=32;
+    const outerRailPath=[],steps=40;
     for(let i=0;i<steps;i++){
-      const t=(i+.5)/steps,px=side*(18-8*t*t),pz=-132-39*t,py=openHallLobbyTop+7.58*t;
-      const nextT=Math.min(1,t+.01),dx=side*(18-8*nextT*nextT-px),yaw=Math.atan2(dx,-.39);
-      const tread=box(scene,"royal-lobby-curved-stair-tread",[px,py,pz],[3.65,.22,1.42],openHallStairStone,{rotation:yaw});
+      const t=(i+.5)/steps,px=18*(1-t),pz=-132-39*t,py=openHallLobbyTop+7.58*t;
+      const nextT=Math.min(1,t+.01),nextX=18*(1-nextT),dx=side*(nextX-px),yaw=Math.atan2(dx,-.39);
+      const tread=box(scene,"royal-lobby-curved-stair-tread",[side*px,py,pz],[3.65,.22,1.22],openHallStairStone,{rotation:yaw});
       tread.receiveShadows=true;
-      box(scene,"royal-lobby-curved-stair-gilt-nosing",[px,py+.12,pz-.02],[3.68,.055,1.45],openHallStairGold,{rotation:yaw});
+      box(scene,"royal-lobby-curved-stair-gilt-nosing",[side*px,py+.12,pz-.02],[3.68,.055,1.25],openHallStairGold,{rotation:yaw});
+      if(i%2===0) {
+        const outerX=side*(px+1.88);
+        const post=cylinder(scene,"royal-lobby-stair-outer-baluster",[outerX,py+.49,pz],.14,.92,openHallRailStone,12);
+      }
     }
-    for(let i=0;i<=24;i++){
-      const t=i/24,px=side*(18-8*t*t),pz=-132-39*t,py=openHallLobbyTop+7.58*t+1.02;
-      railPaths[0].push(new Vector3(px-side*1.86,py,pz));
-      railPaths[1].push(new Vector3(px+side*1.86,py,pz));
+    const outerRail=[];
+    for(let i=0;i<=32;i++){
+      const t=i/32,px=18*(1-t),pz=-132-39*t,py=openHallLobbyTop+7.58*t+1.02;
+      outerRail.push(new Vector3(side*(px+1.88),py,pz));
     }
-    for(const path of railPaths){
-      const rail=MeshBuilder.CreateTube("royal-lobby-curved-stair-handrail",{path,radius:.105,tessellation:12},scene);
-      rail.material=openHallStairGold;
-      for(let i=0;i<path.length;i+=3)cylinder(scene,"royal-lobby-stair-newel-baluster",path[i].subtract(new Vector3(0,.48,0)),.13,.92,openHallRailStone,12);
-    }
+    const rail=MeshBuilder.CreateTube("royal-lobby-curved-stair-outer-handrail",{path:outerRail,radius:.105,tessellation:12},scene);
+    rail.material=openHallStairGold;
     for(const t of [0,1]){
-      const px=side*(18-8*t*t),pz=-132-39*t,py=openHallLobbyTop+7.58*t;
-      cylinder(scene,"royal-lobby-stair-newel-base",[px,py+.25,pz],.72,.5,openHallStairGold,20);
-      cylinder(scene,"royal-lobby-stair-newel-finial",[px,py+1.18,pz],.34,.42,openHallStairGold,16);
+      const px=18*(1-t),pz=-132-39*t,py=openHallLobbyTop+7.58*t;
+      cylinder(scene,"royal-lobby-stair-newel-base",[side*px,py+.25,pz],.72,.5,openHallStairGold,20);
+      cylinder(scene,"royal-lobby-stair-newel-finial",[side*px,py+1.18,pz],.34,.42,openHallStairGold,16);
+    }
+  }
+  // Side garden balconies connect the outer stair landing to both sides of the palace.
+  const openHallBalconyStone=mat(scene,"royal-entry-side-balcony-stone",new Color3(.72,.68,.58),.38,.12);
+  for(const side of [-1,1]) {
+    const bx=side*14.4;
+    box(scene,"royal-entry-side-balcony-floor",[bx,8.60,-125.2],[8.8,.30,25.0],openHallBalconyStone);
+    box(scene,"royal-entry-side-balcony-outer-rail",[side*19.05,9.42,-125.2],[.22,.22,24.8],openHallStairGold);
+    for(let z=-136.5;z<=-114.0;z+=1.05)cylinder(scene,"royal-entry-side-balcony-baluster",[side*19.05,9.02,z],.15,.78,openHallRailStone,12);
+    box(scene,"royal-entry-side-balcony-rear-rail",[bx,9.42,-137.55],[8.8,.22,.22],openHallStairGold);
+    for(let x=bx-4.0;x<=bx+4.01;x+=.9)cylinder(scene,"royal-entry-side-balcony-rear-baluster",[x,9.02,-137.55],.15,.78,openHallRailStone,12);
+    // Stone troughs and climbing roses dress the outer edge without narrowing the path.
+    box(scene,"royal-entry-side-balcony-planter",[side*15.6,8.95,-124.8],[2.0,.58,17.0],openHallBalconyStone);
+    for(let j=0;j<9;j++) {
+      const z=-132.0+j*1.8,x=side*(15.6+(j%2)*.18);
+      const stem=MeshBuilder.CreateTube("royal-entry-side-balcony-rose-cane",{path:[new Vector3(x,9.2,z),new Vector3(x+side*.18,9.8,z),new Vector3(x,10.25,z)],radius:.025,tessellation:6},scene);
+      stem.material=openHallFlowerGreen;
+      addPetalBloom(scene,"royal-entry-side-balcony-rose",new Vector3(x,10.28,z),.30,j%2?openHallFlowerRose:openHallFlowerCream,7);
     }
   }
   // Flowered side promenades flank the main doors without narrowing the central approach.
@@ -3141,6 +3224,21 @@ export async function createRoyalCity(engine, canvas) {
     const actor=makeTownsperson(route[0].x,route[0].z,index===1?"merchant":"villager",36+index*1.7,0,true);
     actor.route=route;actor.waypointIndex=1;actor.speed=1.0+(index%3)*.16;
   });
+  const civicRoutes=[
+    [[-45,20],[-51,17],[-58,12],[-62,3],[-57,-4],[-49,-1],[-45,20]],
+    [[-75,30],[-70,23],[-64,18],[-58,19],[-55,27],[-63,32],[-75,30]],
+    [[-61,-22],[-54,-25],[-48,-20],[-46,-12],[-53,-7],[-61,-12],[-61,-22]],
+    [[28,-33],[34,-35],[41,-32],[46,-26],[42,-20],[35,-23],[28,-33]],
+    [[-82,4],[-76,1],[-69,4],[-66,12],[-72,18],[-80,14],[-82,4]],
+    [[81,18],[86,22],[94,26],[99,20],[96,12],[88,11],[81,18]],
+    [[-48,30],[-42,27],[-36,22],[-34,14],[-40,10],[-47,15],[-48,30]],
+    [[40,4],[45,8],[52,12],[59,10],[61,3],[54,-2],[47,0],[40,4]]
+  ];
+  civicRoutes.forEach((points,index)=>{
+    const route=points.map(([x,z])=>new Vector3(x,0,z));
+    const actor=makeTownsperson(route[0].x,route[0].z,index===2?"merchant":(index===3?"merchant":"villager"),45+index*1.4,0,true);
+    actor.route=route;actor.waypointIndex=1;actor.speed=.92+(index%4)*.11;
+  });
 
   // Small songbirds gather among the formal roses: some perch, others circle over the beds.
   const birdBodyMat=mat(scene,"rose-garden-bird-plumage",new Color3(.22,.27,.25),.82);
@@ -3453,7 +3551,8 @@ export async function createRoyalCity(engine, canvas) {
       const onGreatBridge=Math.abs(camera.position.x-bridgeX)<2.85&&camera.position.z>=bridgeZ-bridgeHalf&&camera.position.z<=bridgeZ+bridgeHalf;
       const onSmallBridge=Math.abs(camera.position.x-sx)<2.0&&camera.position.z>=sz-smallHalf&&camera.position.z<=sz+smallHalf;
       const lobbyStairT=Scalar.Clamp((-camera.position.z-132)/39,0,1);
-      const onLobbyGrandStair=camera.position.z<=-132&&camera.position.z>=-171.5&&[-1,1].some(side=>Math.abs(camera.position.x-side*(18-8*lobbyStairT*lobbyStairT))<3.35);
+      const lobbyStairCenterX=18*(1-lobbyStairT);
+      const onLobbyGrandStair=camera.position.z<=-132&&camera.position.z>=-171.5&&Math.abs(Math.abs(camera.position.x)-lobbyStairCenterX)<3.55;
       const onLobbyUpperGallery=camera.position.z<-173.35&&camera.position.z>-182.4&&Math.abs(camera.position.x)<19.2;
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
       camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
