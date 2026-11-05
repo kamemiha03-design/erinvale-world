@@ -5,6 +5,7 @@ export function attachMobileControls(world, audio) {
   const knob=document.querySelector("#move-knob");
   const canvas=document.querySelector("#renderCanvas");
   const interact=document.querySelector("#interact");
+  const bgmToggle=document.querySelector("#bgm-toggle");
   const walkToggle=document.querySelector("#walk-toggle");
   const hint=document.querySelector("#hint");
   const state={x:0,y:0,pointer:null,lookPointer:null,lastX:0,lastY:0,keys:new Set(),autoWalk:false,lastTap:0,tapX:0,tapY:0,dragged:false};
@@ -91,6 +92,12 @@ export function attachMobileControls(world, audio) {
     state.keys.clear();release();setWalk(false);
   });
   interact.addEventListener("click",()=>{audio.unlock();world.interact();});
+  bgmToggle?.addEventListener("click",()=>{
+    audio.unlock();
+    const enabled=audio.toggleMusic();
+    bgmToggle.textContent=enabled?"♫ BGM ON":"♫ BGM OFF";
+    bgmToggle.setAttribute("aria-pressed",String(enabled));
+  });
   walkToggle?.addEventListener("click",()=>{
     audio.unlock();setWalk(!state.autoWalk);
   });
