@@ -1096,6 +1096,84 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"royal-keep-roof-base",[0,44.3,-82],[18.5,.65,13.8],castleGold);
   const keepRoof=MeshBuilder.CreateCylinder("royal-keep-pitched-roof",{diameterTop:0,diameterBottom:18.5,height:8.5,tessellation:4},scene);
   keepRoof.position.set(0,48.6,-82);keepRoof.rotation.y=Math.PI/4;keepRoof.material=castleRoof;
+
+  // Grand Baroque / German palace exterior: symmetry, monumental pavilions,
+  // mansard rooflines, domes, sculpted stonework and a ceremonial staircase.
+  const palaceIvory=mat(scene,"palace-ivory-stone",new Color3(.83,.79,.69),.82);
+  const palaceGold=mat(scene,"palace-bright-gilding",new Color3(.86,.66,.30),.28,.78);
+  const palaceBlue=mat(scene,"palace-mansard-blue",new Color3(.12,.18,.23),.38,.38);
+  const palaceGlass=mat(scene,"palace-tall-window-glass",new Color3(.18,.27,.31),.18,.22);
+  box(scene,"palace-grand-front-pavilion",[0,23.5,-72.6],[25,29,2.4],palaceIvory);
+  box(scene,"palace-grand-pavilion-base",[0,10,-71.2],[27,1.5,3],palaceGold);
+  box(scene,"palace-grand-pavilion-cornice",[0,38.1,-71],[28,.9,3.2],palaceGold);
+  box(scene,"palace-grand-pavilion-attic",[0,41,-72],[17,4.8,2],palaceIvory);
+  for(let x=-10;x<=10;x+=5) {
+    cylinder(scene,"palace-grand-portico-column-base",[x,10.5,-69.8],1.6,.55,palaceGold,20);
+    cylinder(scene,"palace-grand-portico-column",[x,22,-69.8],.72,22.5,palaceIvory,24);
+    cylinder(scene,"palace-grand-portico-capital",[x,33.4,-69.8],1.65,.65,palaceGold,20);
+    box(scene,"palace-grand-window-recess",[x,24,-71.28],[2.6,9,.12],castleShadow);
+    box(scene,"palace-grand-window-glass",[x,24,-71.18],[2,7.8,.08],palaceGlass);
+    box(scene,"palace-grand-window-crossbar",[x,24,-71.08],[2,.14,.08],palaceGold);
+    box(scene,"palace-grand-window-mullion",[x,24,-71.08],[.14,7.8,.08],palaceGold);
+  }
+  const pediment=MeshBuilder.CreateCylinder("palace-grand-pediment",{diameterTop:0,diameterBottom:18,height:5,tessellation:3},scene);
+  pediment.position.set(0,45,-71.4);pediment.rotation.z=Math.PI;pediment.rotation.y=Math.PI/2;pediment.material=palaceIvory;
+  for(const side of [-1,1]) {
+    const tx=side*31.5;
+    box(scene,"palace-corner-pavilion",[tx,22,-88],[12,27,16],palaceIvory);
+    box(scene,"palace-corner-pavilion-base",[tx,9,-88],[13,1.3,17],palaceGold);
+    box(scene,"palace-corner-pavilion-cornice",[tx,35.7,-88],[13,.9,17],palaceGold);
+    for(const z of [-93,-88,-83]) {
+      box(scene,"palace-corner-window-recess",[tx,23.5,z],[3,8.8,.14],castleShadow);
+      box(scene,"palace-corner-window-glass",[tx,23.5,z-.1],[2.35,7.8,.08],palaceGlass);
+      box(scene,"palace-corner-window-mullion",[tx,23.5,z-.2],[.13,7.8,.08],palaceGold);
+      const arch=MeshBuilder.CreateTorus("palace-corner-window-arch",{diameter:2,thickness:.15,tessellation:16},scene);
+      arch.scaling.y=1.25;arch.position.set(tx,28.3,z-.18);arch.rotation.x=Math.PI/2;arch.material=palaceGold;
+    }
+    const mansard=MeshBuilder.CreateCylinder("palace-corner-mansard",{diameterTop:4,diameterBottom:15,height:8,tessellation:4},scene);
+    mansard.position.set(tx,40,-88);mansard.rotation.y=Math.PI/4;mansard.material=palaceBlue;
+    const cupola=MeshBuilder.CreateCylinder("palace-corner-cupola",{diameterTop:2.2,diameterBottom:5,height:5,tessellation:12},scene);
+    cupola.position.set(tx,47,-88);cupola.material=palaceIvory;
+    const dome=MeshBuilder.CreateSphere("palace-corner-dome",{diameter:5.2,segments:16},scene);
+    dome.position.set(tx,50,-88);dome.scaling.y=.85;dome.material=palaceBlue;
+    const finial=MeshBuilder.CreateCylinder("palace-corner-finial",{diameterTop:0,diameterBottom:.45,height:3,tessellation:12},scene);
+    finial.position.set(tx,54,-88);finial.material=palaceGold;
+    box(scene,"palace-corner-balustrade",[tx,37,-88],[13,.6,16],palaceGold);
+    for(let i=0;i<9;i++) {
+      const bal=MeshBuilder.CreateCylinder("palace-corner-baluster",{diameterTop:.13,diameterBottom:.22,height:1.1,tessellation:8},scene);
+      bal.position.set(tx-5.8+i*1.45,36.4,-96);bal.material=palaceIvory;
+    }
+  }
+  box(scene,"palace-main-mansard-roof",[0,43.4,-88],[52,1,19],palaceBlue);
+  box(scene,"palace-main-roof-ridge",[0,44.3,-88],[52,.45,.65],palaceGold);
+  for(let x=-23;x<=23;x+=5.75) {
+    const dormer=box(scene,"palace-mansard-dormer",[x,46,-79],[2.5,3.6,1.7],palaceIvory);
+    const dormerRoof=MeshBuilder.CreateCylinder("palace-dormer-roof",{diameterTop:0,diameterBottom:3.1,height:1.8,tessellation:4},scene);
+    dormerRoof.position.set(x,48,-79);dormerRoof.rotation.y=Math.PI/4;dormerRoof.material=palaceBlue;
+    box(scene,"palace-dormer-window",[x,45.7,-78.1],[1.1,1.8,.08],palaceGlass);
+  }
+  for(let step=0;step<9;step++) box(scene,"palace-grand-stair-step",[0,8.8+step*.42,-64.5-step*1.1],[24-step*.65,.38,2.3],palaceIvory);
+  for(const side of [-1,1]) {
+    box(scene,"palace-grand-stair-balustrade",[side*12,11,-69],[.55,3.5,14],palaceGold);
+    for(let i=0;i<8;i++) {
+      const bal=MeshBuilder.CreateCylinder("palace-grand-stair-baluster",{diameterTop:.2,diameterBottom:.32,height:1.3,tessellation:8},scene);
+      bal.position.set(side*12,9.6,-75+i*1.55);bal.material=palaceIvory;
+    }
+    cylinder(scene,"palace-terrace-statue-plinth",[side*14.8,9.5,-70],1.3,1.8,palaceIvory,12);
+    const statue=MeshBuilder.CreateSphere("palace-terrace-statue",{diameter:2,segments:12},scene);
+    statue.position.set(side*14.8,11,-70);statue.scaling.y=1.8;statue.material=palaceGold;
+  }
+  const domeDrum=MeshBuilder.CreateCylinder("palace-central-dome-drum",{diameter:11,height:5,tessellation:24},scene);
+  domeDrum.position.set(0,42.2,-72);domeDrum.material=palaceIvory;
+  for(let i=0;i<12;i++) {
+    const a=i*Math.PI*2/12;
+    box(scene,"palace-dome-drum-window",[Math.cos(a)*5.45,42.4,-72+Math.sin(a)*5.45],[1,2.6,.15],palaceGlass);
+  }
+  const centralDome=MeshBuilder.CreateSphere("palace-central-dome",{diameter:17,segments:24},scene);
+  centralDome.position.set(0,48,-72);centralDome.scaling.y=1.05;centralDome.material=palaceBlue;
+  const domeFinial=MeshBuilder.CreateCylinder("palace-central-dome-finial",{diameterTop:0,diameterBottom:1,height:5,tessellation:12},scene);
+  domeFinial.position.set(0,58,-72);domeFinial.material=palaceGold;
+
   // A second walkable palace suite continues directly beyond the throne hall.
   const suiteZ=-109.5;
   box(scene,"royal-suite-floor",[0,8.62,suiteZ],[24,.24,26],wingFloor);
@@ -1371,6 +1449,60 @@ export async function createRoyalCity(engine, canvas) {
        mesh.name.startsWith("citadel-courtyard-")) mesh.position.z-=10;
   }
 
+
+
+  // A state ballroom extends beyond the suite and gallery as a fully enclosed, walkable palace wing.
+  const ballroomFloor=mat(scene,"state-ballroom-marble",new Color3(.78,.75,.68),.24,.12);
+  const ballroomGold=mat(scene,"state-ballroom-gilt",new Color3(.82,.62,.28),.28,.75);
+  box(scene,"state-ballroom-floor",[0,8.62,-166],[44,.28,34],ballroomFloor);
+  box(scene,"state-ballroom-ceiling",[0,34,-166],[44,.5,34],castleStone);
+  box(scene,"state-ballroom-back-wall",[0,21,-183],[44,25,.9],castleStone);
+  box(scene,"state-ballroom-side-wall-left",[-22,21,-166],[.9,25,34],castleStone);
+  box(scene,"state-ballroom-side-wall-right",[22,21,-166],[.9,25,34],castleStone);
+  box(scene,"state-ballroom-front-wall-left",[-16,21,-149],[12,25,.9],castleStone);
+  box(scene,"state-ballroom-front-wall-right",[16,21,-149],[12,25,.9],castleStone);
+  box(scene,"state-ballroom-front-lintel",[0,33,-149],[20,2,.9],castleStone);
+  for(let x=-18;x<=18;x+=6) for(let z=-180;z<=-152;z+=6)
+    box(scene,"state-ballroom-floor-inlay",[x,8.79,z],[5.5,.035,5.5],(Math.abs(x/6+z/6)%2===0)?mats.trim:ballroomGold);
+  const medallion=MeshBuilder.CreateTorus("state-ballroom-floor-medallion",{diameter:13,thickness:.18,tessellation:48},scene);
+  medallion.position.set(0,8.86,-166);medallion.material=ballroomGold;
+  const innerMedallion=MeshBuilder.CreateTorus("state-ballroom-floor-inner-medallion",{diameter:8,thickness:.12,tessellation:40},scene);
+  innerMedallion.position.set(0,8.88,-166);innerMedallion.material=palaceGold;
+  for(const side of [-1,1]) for(let z=-178;z<=-154;z+=6) {
+    cylinder(scene,"state-ballroom-column-base",[side*19.2,9.1,z],1.8,.6,ballroomGold,24);
+    cylinder(scene,"state-ballroom-column",[side*19.2,21.2,z],.82,23.5,palaceIvory,24);
+    cylinder(scene,"state-ballroom-column-capital",[side*19.2,33.2,z],1.9,.75,ballroomGold,24);
+    box(scene,"state-ballroom-window-recess",[side*21.48,22,z],[.12,12,3.3],castleShadow);
+    box(scene,"state-ballroom-window-glass",[side*21.38,22,z],[.08,10.8,2.6],palaceGlass);
+    box(scene,"state-ballroom-window-mullion",[side*21.28,22,z],[.08,10.8,.14],ballroomGold);
+    const arch=MeshBuilder.CreateTorus("state-ballroom-window-arch",{diameter:2.4,thickness:.2,tessellation:24},scene);
+    arch.scaling.y=1.7;arch.position.set(side*21.3,28.1,z);arch.rotation.y=Math.PI/2;arch.material=ballroomGold;
+  }
+  box(scene,"state-ballroom-gallery-balcony",[0,23.5,-180.5],[28,1,3],palaceGold);
+  box(scene,"state-ballroom-gallery-front",[0,25.3,-179],[28,2.6,.45],palaceIvory);
+  for(let x=-13;x<=13;x+=1.3) {
+    const bal=MeshBuilder.CreateCylinder("state-ballroom-gallery-baluster",{diameterTop:.12,diameterBottom:.2,height:1.7,tessellation:8},scene);
+    bal.position.set(x,24.6,-178.72);bal.material=ballroomGold;
+  }
+  for(const z of [-176,-166,-156]) {
+    const ring=MeshBuilder.CreateTorus("state-ballroom-chandelier-ring",{diameter:7.5,thickness:.2,tessellation:32},scene);
+    ring.position.set(0,31.2,z);ring.material=ballroomGold;
+    for(let i=0;i<12;i++) {
+      const a=i*Math.PI*2/12;
+      box(scene,"state-ballroom-chandelier-arm",[Math.cos(a)*2.8,31.2,z+Math.sin(a)*2.8],[1.1,.13,.13],ballroomGold);
+      const candle=MeshBuilder.CreateCylinder("state-ballroom-chandelier-candle",{diameter:.15,height:.75,tessellation:8},scene);
+      candle.position.set(Math.cos(a)*3.4,31.8,z+Math.sin(a)*3.4);candle.material=palaceIvory;
+      const flame=MeshBuilder.CreateSphere("state-ballroom-chandelier-flame",{diameter:.22,segments:8},scene);
+      flame.position.set(Math.cos(a)*3.4,32.3,z+Math.sin(a)*3.4);flame.material=mats.lantern;
+    }
+  }
+  for(let x=-16;x<=16;x+=8) {
+    box(scene,"state-ballroom-gilt-mirror-frame",[x,22,-182.35],[4.3,8.8,.28],ballroomGold);
+    box(scene,"state-ballroom-gilt-mirror-glass",[x,22,-182.15],[3.6,7.9,.08],mats.glass);
+    box(scene,"state-ballroom-mirror-top-crest",[x,27,-182],[1.2,.9,.15],ballroomGold);
+  }
+  for(let x=-18;x<=18;x+=6) for(let z=-180;z<=-152;z+=7)
+    box(scene,"state-ballroom-ceiling-coffer",[x,33.68,z],[5.5,.12,6.5],ballroomGold);
 
   const royalGardenStartIndex=scene.meshes.length;
   // Symmetrical royal rose gardens flank the palace approach, with parterre beds and pergolas.
