@@ -1918,8 +1918,75 @@ export async function createRoyalCity(engine, canvas) {
     finial.position.set(x,level+4.12,z);finial.material=castleGold;
   }
   // Level threshold between the last tread, the open gate and the lobby.
-  box(scene,"palace-entry-landing",[0,8.44,-120.2],[28,.36,18.0],castleStone);
-  // An open, empty terrace remains where the palace will be redesigned later.
+  box(scene,"palace-entry-landing",[0,8.44,-147.0],[44,.36,54.0],castleStone);
+  // A broad, open first-floor royal lobby: deliberately no exterior facade yet.
+  const lobbyWall=mat(scene,"royal-lobby-limestone",new Color3(.72,.68,.58),.92);
+  const lobbyTrim=mat(scene,"royal-lobby-gilt",new Color3(.78,.57,.25),.32,.72);
+  const lobbyCeiling=mat(scene,"royal-lobby-ceiling",new Color3(.82,.78,.68),.9);
+  const lobbyFloorMat=mat(scene,"royal-lobby-marble",new Color3(.78,.75,.68),.25,.08);
+  const lobbyTop=8.62, lobbyHeight=18.0, lobbyMidY=lobbyTop+lobbyHeight/2;
+  const lobbyFloor=box(scene,"royal-lobby-marble-floor",[0,8.61,-147.0],[43.6,.12,53.6],lobbyFloorMat);
+  lobbyFloor.receiveShadows=true;
+  box(scene,"royal-lobby-ceiling",[0,26.82,-147.0],[44,.5,54],lobbyCeiling);
+  // Tall side and rear walls enclose the walkable hall; the front remains a wide open entrance.
+  for(const side of [-1,1]) {
+    box(scene,"royal-lobby-side-wall",[side*22,lobbyMidY,-147.0],[.9,lobbyHeight,54],lobbyWall);
+    box(scene,"royal-lobby-side-gilt-course",[side*21.48,25.8,-147.0],[.14,.32,53.2],lobbyTrim);
+    for(const z of [-166,-151,-136]) {
+      const pilaster=box(scene,"royal-lobby-side-pilaster",[side*21.35,17.7,z],[.42,17.2,1.0],lobbyTrim);
+      pilaster.receiveShadows=true;
+    }
+  }
+  box(scene,"royal-lobby-rear-wall",[0,lobbyMidY,-174.0],[44,lobbyHeight,.9],lobbyWall);
+  box(scene,"royal-lobby-rear-gilt-course",[0,25.8,-173.48],[43.2,.32,.14],lobbyTrim);
+  // Two short front returns frame a generous 14-metre opening from the exterior stair.
+  for(const side of [-1,1]) {
+    box(scene,"royal-lobby-entry-return",[side*14.5,lobbyMidY,-120.0],[15,lobbyHeight,.9],lobbyWall);
+    box(scene,"royal-lobby-entry-pilaster",[side*7.2,17.7,-119.48],[.72,17.2,1.0],lobbyTrim);
+  }
+  // Perimeter columns add palace scale without narrowing the central walking area.
+  for(const side of [-1,1]) for(const z of [-165,-151,-137]) {
+    cylinder(scene,"royal-lobby-column-base",[side*18.8,9.05,z],1.45,.72,lobbyTrim,24);
+    cylinder(scene,"royal-lobby-column-shaft",[side*18.8,17.55,z],.62,16.3,lobbyWall,24);
+    cylinder(scene,"royal-lobby-column-capital",[side*18.8,25.9,z],1.55,.72,lobbyTrim,24);
+    // Solid collision footprint: the columns cannot be walked through.
+    colliders.push({minX:side*18.8-.72,maxX:side*18.8+.72,minZ:z-.72,maxZ:z+.72});
+  }
+  // Grand central chandelier suspended over the open marble hall.
+  const chandelierGold=mat(scene,"royal-lobby-chandelier-gold",new Color3(.86,.65,.30),.25,.82);
+  const chandelierIvory=mat(scene,"royal-lobby-chandelier-ivory",new Color3(.94,.83,.61),.3,.3);
+  const chandelierGlow=mat(scene,"royal-lobby-chandelier-glow",new Color3(1,.72,.32),.18,.12);
+  chandelierGlow.emissiveColor=new Color3(1,.48,.14);
+  const chain=MeshBuilder.CreateCylinder("royal-lobby-chandelier-chain",{diameter:.16,height:4.2,tessellation:12},scene);
+  chain.position.set(0,24.45,-147);chain.material=chandelierGold;
+  const canopy=MeshBuilder.CreateCylinder("royal-lobby-chandelier-canopy",{diameter:1.35,height:.42,tessellation:24},scene);
+  canopy.position.set(0,26.55,-147);canopy.material=chandelierGold;
+  for(const [diameter,y] of [[8.4,22.25],[6.0,21.45],[3.4,20.72]]) {
+    const ring=MeshBuilder.CreateTorus("royal-lobby-chandelier-ring",{diameter,thickness:.22,tessellation:64},scene);
+    ring.position.set(0,y,-147);ring.material=chandelierGold;
+  }
+  for(let i=0;i<16;i++) {
+    const a=i*Math.PI*2/16, x=Math.cos(a), z=Math.sin(a);
+    const arm=MeshBuilder.CreateTube("royal-lobby-chandelier-arm",{
+      path:[new Vector3(x*.55,22.25,-147+z*.55),new Vector3(x*2.0,22.05,-147+z*2.0),new Vector3(x*3.8,22.25,-147+z*3.8)],
+      radius:.105,tessellation:10
+    },scene);
+    arm.material=chandelierGold;
+    const candle=MeshBuilder.CreateCylinder("royal-lobby-chandelier-candle",{diameter:.19,height:.72,tessellation:12},scene);
+    candle.position.set(x*3.9,22.62,-147+z*3.9);candle.material=chandelierIvory;
+    const flame=MeshBuilder.CreateSphere("royal-lobby-chandelier-flame",{diameter:.34,segments:16},scene);
+    flame.position.set(x*3.9,23.13,-147+z*3.9);flame.material=chandelierGlow;
+  }
+  const chandelierCore=MeshBuilder.CreateSphere("royal-lobby-chandelier-core",{diameter:1.0,segments:24},scene);
+  chandelierCore.position.set(0,21.3,-147);chandelierCore.material=chandelierGlow;
+  // Wall colliders bound the full hall while leaving the entrance completely open.
+  colliders.push(
+    {minX:-22.7,maxX:-21.3,minZ:-174.5,maxZ:-119.5},
+    {minX:21.3,maxX:22.7,minZ:-174.5,maxZ:-119.5},
+    {minX:-22.7,maxX:22.7,minZ:-174.8,maxZ:-173.2},
+    {minX:-22.7,maxX:-7.0,minZ:-120.8,maxZ:-119.2},
+    {minX:7.0,maxX:22.7,minZ:-120.8,maxZ:-119.2}
+  );
 
   // A broad carriage court with a circular turning area, clipped hedges and low topiary.
   const courtStone=mat(scene,"palace-carriage-court-stone",new Color3(.62,.59,.51),.92);
@@ -2464,9 +2531,7 @@ export async function createRoyalCity(engine, canvas) {
     );
   }
 
-  // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
-  // It now floats on a vast suspended island, rather than growing out of the castle grounds.
-  // The extra depth keeps its silhouette clear of the keep even on a narrow phone screen.
+  // Yggdrasil now floats much higher in the open sky, with its roots fully exposed beneath the island.
   const treeX=34,treeZ=-165,treeLift=18;
   const islandStone=mat(scene,"world-tree-floating-stone",new Color3(.28,.31,.29),.98);
   const islandFace=mat(scene,"world-tree-floating-stone-face",new Color3(.39,.40,.34),.96);
@@ -2550,6 +2615,12 @@ export async function createRoyalCity(engine, canvas) {
     beam.position.set(treeX+Math.cos(i*Math.PI/2)*17,1.5,treeZ+Math.sin(i*Math.PI/2)*14);
     beam.material=underGlow;
   }
+  // Lift the entire tree, floating island, canopy, luminous seeds and hanging roots together.
+  const worldTreeLift=72;
+  for(const mesh of scene.meshes) {
+    if(mesh.name.startsWith("world-tree-") && mesh.name!=="world-tree-approach") mesh.position.y+=worldTreeLift;
+  }
+  for(const leaf of canopy) leaf.baseY+=worldTreeLift;
 
   // Detailed CC0 models add leaf geometry and a merchant wagon.
   // Optional high-detail props are fetched only after the first playable frame.
