@@ -22,7 +22,8 @@ async function boot() {
   });
   // Mobile uses a smaller drawing buffer to stay within Safari's WebGL memory budget.
   // World geometry and texture assets remain full detail.
-  engine.setHardwareScalingLevel(isTouch?2.0:1);
+  // Slightly smaller mobile drawing buffer reduces GPU fill-rate pressure on Safari.
+  engine.setHardwareScalingLevel(isTouch?2.35:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
