@@ -113,6 +113,32 @@ function addLantern(scene, x, y, z, metal, glow) {
   core.material = glow;
 }
 
+
+function addAntiqueDoor(scene,name,x,y,z,width,height,mats,angle=0.98) {
+  const leafW=width*.48, leafH=height*.91, cy=y+height*.455;
+  for(const side of [-1,1]) {
+    const px=x+side*width*.25, rot=side*angle;
+    const leaf=box(scene,name+"-leaf",[px,cy,z],[leafW,leafH,.20],mats.woodLight); leaf.rotation.y=rot;
+    for(const level of [-1,1]) {
+      const panel=box(scene,name+"-panel",[px,cy+level*leafH*.23,z-.13],[leafW*.68,leafH*.28,.05],mats.wood); panel.rotation.y=rot;
+      const inset=box(scene,name+"-panel-inset",[px,cy+level*leafH*.23,z-.16],[leafW*.52,leafH*.20,.04],mats.woodLight); inset.rotation.y=rot;
+    }
+    for(const yy of [cy-leafH*.32,cy,cy+leafH*.32]) {
+      const strap=box(scene,name+"-iron-strap",[px,yy,z-.18],[leafW*.95,.10,.07],mats.gold); strap.rotation.y=rot;
+    }
+    const handle=MeshBuilder.CreateTorus(name+"-ring-handle",{diameter:.22,thickness:.045,tessellation:12},scene);
+    handle.position.set(px-side*.1,cy,z-.23); handle.rotation.y=rot; handle.material=mats.gold;
+    for(const yy of [cy-leafH*.35,cy+leafH*.35]) {
+      const stud=MeshBuilder.CreateSphere(name+"-stud",{diameter:.10,segments:8},scene);
+      stud.position.set(px,yy,z-.19); stud.material=mats.gold;
+    }
+  }
+  for(const side of [-1,1]) box(scene,name+"-stone-jamb",[x+side*(width*.53),y+height*.46,z+.06],[.28,height+.35,.62],mats.trim);
+  box(scene,name+"-stone-lintel",[x,y+height+.20,z+.04],[width+1,.36,.66],mats.trim);
+  const crest=MeshBuilder.CreateCylinder(name+"-crest",{diameter:Math.min(.72,width*.34),height:.12,tessellation:8},scene);
+  crest.position.set(x,y+height+.62,z-.25); crest.rotation.x=Math.PI/2; crest.material=mats.gold;
+}
+
 function addBarrel(scene, x, z, wood, hoop) {
   const b = cylinder(scene, "oak-barrel", [x,0.65,z], 0.9, 1.3, wood, 16);
   b.scaling.x = 0.82;
@@ -188,7 +214,8 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   box(scene,name+"-door-left",[x-.93,1.35,front-.28],[.16,2.9,.45],mats.trim);
   box(scene,name+"-door-right",[x+.93,1.35,front-.28],[.16,2.9,.45],mats.trim);
   box(scene,name+"-door-lintel",[x,2.82,front-.28],[2.05,.22,.45],mats.trim);
-  // The entrance is intentionally open so the player can walk inside.
+  addAntiqueDoor(scene,name+"-antique-entry",x,.12,front-.48,1.95,2.72,mats,.98);
+  // The entrance stays walkable between the open door leaves.
   const windowY=h*.67;
   addWindow(scene,x-w*.27,windowY,front-.16,mats.wood,mats.glass);
   addWindow(scene,x+w*.27,windowY,front-.16,mats.wood,mats.glass);
