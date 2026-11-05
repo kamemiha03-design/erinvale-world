@@ -2049,7 +2049,7 @@ export async function createRoyalCity(engine, canvas) {
   camera.minZ=.08;camera.fov=.92;camera.inputs.clear();camera.rotation.y=Math.PI;
   // A restrained cinematic pass: soft highlight bloom and edge smoothing.
   // Kept deliberately light so Safari on recent iPhones can sustain the frame rate.
-  const isTouchDevice=matchMedia("(pointer: coarse)").matches||navigator.maxTouchPoints>0;
+
   const cinematic=new DefaultRenderingPipeline("erinvale-cinematic",true,scene,[camera]);
   cinematic.samples=2;
   cinematic.fxaaEnabled=true;
