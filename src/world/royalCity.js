@@ -2258,8 +2258,15 @@ export async function createRoyalCity(engine, canvas) {
     // Long clipped borders and planted islands frame the drive without narrowing it.
     for(let row=0;row<3;row++) {
       const x=side*(22+row*7.2);
-      box(scene,"palace-court-hedge-border",[x,.72,-82],[1.05,1.25,48],courtHedge);
+      // Leave a deliberate cross-path through the western garden borders for the public library.
+      if(row===0) {
+        box(scene,"palace-court-hedge-border",[x,.72,-85],[1.05,1.25,42],courtHedge);
+        box(scene,"palace-court-hedge-border",[x,.72,-58.5],[1.05,1.25,1],courtHedge);
+      } else {
+        box(scene,"palace-court-hedge-border",[x,.72,-82],[1.05,1.25,48],courtHedge);
+      }
       for(let z=-101;z<=-63;z+=9) {
+        if(z===-65) continue;
         const bed=MeshBuilder.CreateBox("palace-court-shrub-island",{width:5.8,height:.34,depth:4.6},scene);
         bed.position.set(side*(16.0+row*7.2),.22,z);bed.material=courtGrass;
         for(let n=0;n<5;n++) {
@@ -2915,6 +2922,109 @@ export async function createRoyalCity(engine, canvas) {
   const royalApproachCrestCore=MeshBuilder.CreateCylinder("royal-approach-door-heraldic-core",{diameter:.95,height:.28,tessellation:8},scene);
   royalApproachCrestCore.position.set(0,18.35,-111.96);royalApproachCrestCore.rotation.x=Math.PI/2;royalApproachCrestCore.material=royalApproachDoorDark;
 
+
+  // Public Royal Library: reached by crossing the western garden path from the iron gate.
+  // It is deliberately a civic building, open to every resident rather than a private palace room.
+  const libraryStone=mat(scene,"public-library-limestone",new Color3(.78,.73,.63),.84);
+  const libraryTrim=mat(scene,"public-library-carved-stone",new Color3(.88,.83,.72),.52,.12);
+  const libraryRoof=mat(scene,"public-library-slate-roof",new Color3(.13,.19,.23),.42,.28);
+  const libraryWood=mat(scene,"public-library-dark-oak",new Color3(.20,.105,.055),.72);
+  const libraryGold=mat(scene,"public-library-brass",new Color3(.72,.53,.25),.28,.72);
+  const libraryGlass=mat(scene,"public-library-window-glass",new Color3(.20,.34,.39),.20,.24);
+  const libraryFloor=mat(scene,"public-library-marble-floor",new Color3(.69,.65,.57),.36,.08);
+  const libraryWall=mat(scene,"public-library-interior-wall",new Color3(.72,.67,.57),.9);
+  const libraryBookMats=[
+    mat(scene,"library-book-burgundy",new Color3(.36,.075,.10),.82),
+    mat(scene,"library-book-forest",new Color3(.10,.24,.16),.84),
+    mat(scene,"library-book-navy",new Color3(.075,.14,.25),.82),
+    mat(scene,"library-book-ochre",new Color3(.55,.34,.12),.82)
+  ];
+  const libX=-52,libZ=-84,libW=24,libD=24,libEast=-40;
+  // A pale stone walkway begins at the gap in the western garden hedge and leads to the library.
+  const libraryWalk=MeshBuilder.CreateRibbon("public-library-garden-walk",{
+    pathArray:[
+      [new Vector3(-14,.035,-61.5),new Vector3(-22,.035,-61.5),new Vector3(-32,.035,-61.5),new Vector3(-43,.035,-61.5),new Vector3(-49,.035,-68),new Vector3(-49,.035,-78),new Vector3(-43,.035,-84)],
+      [new Vector3(-14,.035,-64.7),new Vector3(-22,.035,-64.7),new Vector3(-32,.035,-64.7),new Vector3(-43,.035,-64.7),new Vector3(-52.2,.035,-70),new Vector3(-52.2,.035,-78),new Vector3(-43,.035,-87.2)]
+    ],
+    sideOrientation:2
+  },scene);
+  libraryWalk.material=libraryFloor;libraryWalk.isPickable=false;
+  // Foundation, entrance facade (with a real opening), side walls and enclosed rear wall.
+  box(scene,"public-library-foundation",[libX,.48,libZ],[libW+1.2,.9,libD+1.2],libraryTrim);
+  box(scene,"public-library-floor",[libX,.96,libZ],[libW,.16,libD],libraryFloor);
+  box(scene,"public-library-east-wall-north",[-40.25,5.1,-90.8],[.55,8.3,10.4],libraryStone);
+  box(scene,"public-library-east-wall-south",[-40.25,5.1,-77.2],[.55,8.3,10.4],libraryStone);
+  box(scene,"public-library-east-wall-over-door",[-40.25,8.0,-84],[.55,2.5,3.2],libraryStone);
+  box(scene,"public-library-west-wall",[-63.75,5.1,libZ],[.55,8.3,libD],libraryStone);
+  box(scene,"public-library-north-wall",[libX,5.1,-96],[libW,8.3,.55],libraryStone);
+  box(scene,"public-library-south-wall",[libX,5.1,-72],[libW,8.3,.55],libraryStone);
+  // Tall slate roof with a raised central ridge and gold-edged eaves.
+  box(scene,"public-library-roof-left",[-47.0,10.0,libZ],[13.8,.42,26],libraryRoof,{rotation:-.22});
+  box(scene,"public-library-roof-right",[-57.0,10.0,libZ],[13.8,.42,26],libraryRoof,{rotation:.22});
+  box(scene,"public-library-roof-ridge",[libX,10.9,libZ],[.55,.45,26.5],libraryGold);
+  for(const z of [-94,-84,-74]) {
+    box(scene,"public-library-east-window-recess",[-40.53,5.7,z],[.08,4.5,2.4],libraryWood);
+    box(scene,"public-library-east-window-glass",[-40.59,5.7,z],[.06,3.75,1.75],libraryGlass);
+    box(scene,"public-library-east-window-mullion",[-40.64,5.7,z],[.06,3.8,.12],libraryGold);
+    box(scene,"public-library-east-window-crossbar",[-40.64,5.7,z],[.06,.12,1.85],libraryGold);
+    box(scene,"public-library-window-sill",[-40.8,3.35,z],[.5,.18,2.7],libraryTrim);
+  }
+  for(const z of [-95,-73]) {
+    box(scene,"public-library-side-window-recess",[-52,5.8,z],[3.0,4.4,.08],libraryWood);
+    box(scene,"public-library-side-window-glass",[-52,5.8,z],[2.3,3.7,.06],libraryGlass);
+    box(scene,"public-library-side-window-mullion",[-52,5.8,z],[.12,3.8,.06],libraryGold);
+  }
+  // Classical entrance portal and public-library sign.
+  box(scene,"public-library-door-pier-left",[-40.55,3.8,-86.15],[.75,6.0,.55],libraryTrim);
+  box(scene,"public-library-door-pier-right",[-40.55,3.8,-81.85],[.75,6.0,.55],libraryTrim);
+  box(scene,"public-library-door-lintel",[-40.55,6.95,-84],[.85,.55,5.0],libraryGold);
+  addAntiqueDoor(scene,"public-library-main-double-door",-40.1,1.05,-84,4.1,5.2,
+    {wood:libraryWood,woodLight:libraryWood,gold:libraryGold,trim:libraryTrim},.88,"x");
+  box(scene,"public-library-sign-board",[-40.82,8.1,-84],[.22,1.1,5.6],libraryWood);
+  box(scene,"public-library-sign-inlay",[-40.96,8.1,-84],[.08,.82,5.15],libraryGold);
+  // A luminous heraldic book emblem above the sign gives the building its civic identity.
+  const libraryEmblem=MeshBuilder.CreateCylinder("public-library-open-book-emblem",{diameter:1.25,height:.18,tessellation:8},scene);
+  libraryEmblem.position.set(-41.12,9.1,-84);libraryEmblem.rotation.x=Math.PI/2;libraryEmblem.material=libraryGold;
+  // Interior: two-storey reading hall, gallery-like upper shelving, and warm reading tables.
+  box(scene,"public-library-interior-back-wall",[-63.35,5.0,libZ],[.18,7.8,22.8],libraryWall);
+  box(scene,"public-library-interior-north-wall",[libX,5.0,-95.55],[22.8,7.8,.18],libraryWall);
+  box(scene,"public-library-interior-south-wall",[libX,5.0,-72.45],[22.8,7.8,.18],libraryWall);
+  box(scene,"public-library-ceiling",[libX,9.3,libZ],[23.5,.28,23.5],libraryTrim);
+  for(const z of [-93,-87,-81,-75]) {
+    for(const x of [-61.4,-58.8,-56.2,-53.6]) {
+      box(scene,"public-library-bookcase",[x,4.2,z],[1.25,5.9,.85],libraryWood);
+      for(let level=0;level<4;level++) {
+        box(scene,"public-library-shelf",[x,2.0+level*1.25,z+.48],[1.32,.12,.12],libraryGold);
+        for(let b=0;b<6;b++) {
+          const book=box(scene,"public-library-book",[x-.48+b*.19,2.48+level*1.25,z+.40],[.14,.82,.38],libraryBookMats[(b+level)%libraryBookMats.length]);
+          book.rotation.z=(b%2?-.035:.025);
+        }
+      }
+    }
+  }
+  // Reading desks, chairs and green-shaded lamps form a welcoming shared study area.
+  for(const z of [-89,-78]) {
+    box(scene,"public-library-reading-table",[-47.2,1.95,z],[5.8,.22,1.8],libraryWood);
+    for(const side of [-1,1]) for(const x of [-49.2,-47.2,-45.2]) {
+      box(scene,"public-library-reading-chair",[x,1.45,z+side*1.55],[.72,.16,.72],libraryWood);
+      box(scene,"public-library-chair-back",[x,1.95,z+side*1.85],[.72,1.0,.14],libraryWood);
+    }
+    const lamp=MeshBuilder.CreateCylinder("public-library-reading-lamp",{diameter:.16,height:.9,tessellation:12},scene);
+    lamp.position.set(-47.2,2.5,z);lamp.material=libraryGold;
+    const shade=MeshBuilder.CreateCylinder("public-library-lamp-shade",{diameterTop:.38,diameterBottom:.72,height:.32,tessellation:16},scene);
+    shade.position.set(-47.2,2.98,z);shade.material=libraryBookMats[1];
+  }
+  box(scene,"public-library-central-carpet",[-52,1.06,-84],[4.2,.035,8.5],libraryBookMats[0]);
+  // Small public notice desk immediately inside the entrance.
+  box(scene,"public-library-help-desk",[-43.2,1.75,-84],[2.2,1.4,1.0],libraryWood);
+  box(scene,"public-library-help-desk-top",[-43.2,2.5,-84],[2.5,.16,1.2],libraryGold);
+  // The player can enter through the east double doors; the rest of the shell is solid.
+  const inLibrary=x>-63.0&&x<-40.8&&z>-95.2&&z<-72.8;
+  const libraryDoorway=z>-86.2&&z<-81.8&&x<-40.8;
+  if(inLibrary&&!libraryDoorway)return true;
+  if(x<-63.0&&x>-64.4&&z>-96.5&&z<-71.5)return true;
+  if(z<-95.2&&z>-96.8&&x>-40.0&&x<-64.0)return true;
+  if(z>-72.8&&z<-71.2&&x>-64.0&&x<-40.0)return true;
 
   // Yggdrasil now floats much higher in the open sky, with its roots fully exposed beneath the island.
   const treeX=34,treeZ=-165,treeLift=18;
@@ -4082,6 +4192,13 @@ export async function createRoyalCity(engine, canvas) {
   const velocity=new Vector3();
   const collides=(x,z)=>{
     if(Math.abs(x)>112)return true;
+    // The public library is entered from its east-facing double doors.
+    const inLibrary=x>-63.0&&x<-40.8&&z>-95.2&&z<-72.8;
+    const libraryDoorway=z>-86.2&&z<-81.8&&x<-40.8;
+    if(inLibrary&&!libraryDoorway)return true;
+    if(x<-63.0&&x>-64.4&&z>-96.5&&z<-71.5)return true;
+    if(z<-95.2&&z>-96.8&&x>-64.0&&x<-40.0)return true;
+    if(z>-72.8&&z<-71.2&&x>-64.0&&x<-40.0)return true;
     // The hall is checked before the legacy z=-116 boundary and town obstacles.
     if(x>-26.2&&x<26.2&&z>-183.0&&z<-113.0) {
       if(Math.abs(x)>25.9||z<-182.5)return true;
@@ -4117,6 +4234,7 @@ export async function createRoyalCity(engine, canvas) {
     if(x>10&&z<-5&&z>-29)return "王都の市場";
     if(x>34&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
     if(x>11&&x<49&&z>35&&z<86)return "帝国浴場 — THERMAE · HAMMAM";
+    if(x<-39&&x>-66&&z>-98&&z<-68)return "王立図書館 — PUBLIC ROYAL LIBRARY";
     if(z<-72)return "王宮 — 王城の中庭";
     if(z<-45)return "王城への大通り";
     if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
@@ -4147,7 +4265,8 @@ export async function createRoyalCity(engine, canvas) {
     }
     const x=camera.position.x,z=camera.position.z;
     let message="石畳の広場。遠くに王城と世界樹が見える。";
-    if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
+    if(x<-39&&x>-66&&z>-98&&z<-68)message="王立図書館。王族だけでなく、エリンヴェイルのすべての国民に開かれた公共図書館。自由に本を読んだり調べものをしたりできる。";
+    else if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
     else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
     else if(x>24.15&&x<35.85&&z>58.35&&z<66.05)message="湯船に浸かっている。湯気と水音に包まれ、ゆっくり身体を温めよう。";
