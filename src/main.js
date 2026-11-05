@@ -21,9 +21,9 @@ async function boot() {
     powerPreference:"high-performance",
     adaptToDeviceRatio:true,
   });
-  // Keep all world geometry and textures. On phones, dynamically trade only
-  // framebuffer resolution when the GPU is struggling, then restore it slowly.
-  let mobileScale=1.5;
+  // Strong mobile safety preset: retain geometry and textures, but render fewer
+  // pixels per frame. This is intentionally conservative for older iPhones.
+  let mobileScale=3.0;
   let lastScaleCheck=performance.now();
   let stableSince=lastScaleCheck;
   if(isTouch) engine.setHardwareScalingLevel(mobileScale);
@@ -51,13 +51,13 @@ async function boot() {
   if(isTouch)mobileControls.classList.remove("hidden");
   else desktopHint.classList.remove("hidden");
 
-  // Keep full scene detail and a 24 FPS mobile cap. Static geometry,
-  // textures remain unchanged; optional model downloads are deferred by the world builder.
+  // Keep all scene geometry and textures, but cap mobile rendering at 15 FPS
+  // to reduce sustained GPU heat and memory bandwidth.
   let lastMobileFrame=0;
   engine.runRenderLoop(()=>{
     if(document.hidden)return;
     const now=performance.now();
-    if(isTouch && now-lastMobileFrame<1000/24)return;
+    if(isTouch && now-lastMobileFrame<1000/15)return;
     const elapsed=lastMobileFrame?Math.min((now-lastMobileFrame)/1000,.1):engine.getDeltaTime()/1000;
     lastMobileFrame=now;
 
@@ -66,17 +66,9 @@ async function boot() {
     if(isTouch && now-lastScaleCheck>1800) {
       lastScaleCheck=now;
       const fps=engine.getFps();
-      if(fps<19 && mobileScale<2.8) {
-        mobileScale=Math.min(2.8,mobileScale+.25);
+      if(fps<12 && mobileScale<3.6) {
+        mobileScale=Math.min(3.6,mobileScale+.2);
         engine.setHardwareScalingLevel(mobileScale);
-        stableSince=now;
-      } else if(fps>23 && mobileScale>1.5) {
-        if(now-stableSince>9000) {
-          mobileScale=Math.max(1.5,mobileScale-.1);
-          engine.setHardwareScalingLevel(mobileScale);
-          stableSince=now;
-        }
-      } else if(fps<=23) {
         stableSince=now;
       }
     }
