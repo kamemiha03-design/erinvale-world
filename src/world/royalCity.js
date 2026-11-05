@@ -1110,7 +1110,9 @@ export async function createRoyalCity(engine, canvas) {
       cylinder(scene,"royal-suite-column-cap",[side*7.5,24.5,z],.95,.4,castleGold,16);
     }
   }
-  box(scene,"royal-suite-back-wall",[0,20.5,suiteZ-13],[24,24,.8],castleStone);
+  box(scene,"royal-suite-back-wall-left",[-8,20.5,suiteZ-13],[8,24,.8],castleStone);
+  box(scene,"royal-suite-back-wall-right",[8,20.5,suiteZ-13],[8,24,.8],castleStone);
+  box(scene,"royal-suite-back-wall-lintel",[0,31,suiteZ-13],[8,3,.8],castleStone);
   const suiteCloth=mat(scene,"royal-suite-velvet",new Color3(.34,.10,.16),.88);
   // Canopied royal bed, embroidered curtains and a carved headboard.
   box(scene,"royal-suite-bed-frame",[0,9.45,suiteZ-5.8],[5.6,.55,4.0],mats.wood);
@@ -1139,6 +1141,70 @@ export async function createRoyalCity(engine, canvas) {
   const suiteFire=MeshBuilder.CreateSphere("royal-suite-fire",{diameter:1.1,segments:12},scene);
   suiteFire.position.set(0,11.0,suiteZ-8.65);suiteFire.scaling.set(1,.8,.18);suiteFire.material=mats.lantern;
   box(scene,"royal-suite-carpet",[0,8.79,suiteZ+1.0],[4.2,.05,13],mats.banner);
+
+  // The private suite continues into a broad rear gallery instead of ending at a blank wall.
+  const galleryZ=-135;
+  const galleryFloor=mat(scene,"palace-gallery-marble",new Color3(.77,.74,.67),.34,.08);
+  box(scene,"palace-rear-gallery-floor",[0,8.60,galleryZ],[30,.24,24],galleryFloor);
+  box(scene,"palace-rear-gallery-ceiling",[0,29.5,galleryZ],[30,.4,24],castleStone);
+  for(const side of [-1,1]) {
+    box(scene,"palace-gallery-side-wall-front",[side*15,19,-127],[.8,20,8],castleStone);
+    box(scene,"palace-gallery-side-wall-rear",[side*15,19,-143],[.8,20,8],castleStone);
+    box(scene,"palace-gallery-chamber-outer-wall",[side*30,19,galleryZ],[.8,20,18],castleStone);
+    box(scene,"palace-gallery-chamber-front-wall",[side*22.5,19,-126],[15,20,.8],castleStone);
+    box(scene,"palace-gallery-chamber-rear-wall",[side*22.5,19,-144],[15,20,.8],castleStone);
+    box(scene,"palace-gallery-chamber-floor",[side*22.5,8.58,galleryZ],[15,.22,18],galleryFloor);
+    box(scene,"palace-gallery-chamber-ceiling",[side*22.5,29, galleryZ],[15,.3,18],castleStone);
+    addAntiqueDoor(scene,"palace-gallery-room-door-"+side,side*15,8.8,galleryZ,3.8,5.6,mats,1.08);
+    for(const z of [-142,-135,-128]) {
+      box(scene,"palace-gallery-window-recess",[side*14.52,18,z],[.12,5.2,2.7],castleShadow);
+      box(scene,"palace-gallery-window-glass",[side*14.43,18,z],[.08,4.6,2.0],mats.glass);
+      box(scene,"palace-gallery-window-sill",[side*14.25,15.4,z],[.42,.2,2.9],mats.trim);
+    }
+    for(let z=-144;z<=-128;z+=8) {
+      cylinder(scene,"palace-gallery-column-base",[side*12.7,9,z],.95,.4,castleGold,16);
+      cylinder(scene,"palace-gallery-column",[side*12.7,18,z],.46,17.8,mats.trim,16);
+      cylinder(scene,"palace-gallery-column-cap",[side*12.7,27.3,z],.9,.4,castleGold,16);
+    }
+    if(side<0) {
+      // Enclosed glass conservatory with rose trellises and a fountain.
+      box(scene,"royal-conservatory-glass-roof",[-22.5,29.2,galleryZ],[14.5,.16,17.5],mats.glass);
+      for(let xx=-29;xx<=-16;xx+=3.2) box(scene,"royal-conservatory-roof-rib",[xx,29.35,galleryZ],[.14,.3,18],castleGold);
+      for(let z=-142;z<=-128;z+=4) {
+        box(scene,"conservatory-rose-trellis",[-29,15,z],[.16,11,2.8],castleGold);
+        for(let j=0;j<8;j++) {
+          const rose=MeshBuilder.CreateSphere("conservatory-climbing-rose",{diameter:.34,segments:8},scene);
+          rose.position.set(-28.8,10.5+j*.95,z+(j%2)*.55);rose.material=j%3===0?mats.flowers:mats.green;
+        }
+        box(scene,"conservatory-planter",[-22,9.05,z],[10,.7,1.5],mats.trim);
+        for(let j=0;j<8;j++) {
+          const bloom=MeshBuilder.CreateSphere("conservatory-rose-bloom",{diameter:.4,segments:8},scene);
+          bloom.position.set(-26+j*1.1,9.9,z+(j%2)*.25);bloom.material=j%3===0?mats.flowers:mats.green;
+        }
+      }
+      cylinder(scene,"conservatory-fountain-basin",[-22.5,9.0,-135],4.0,.45,mats.trim,28);
+      cylinder(scene,"conservatory-fountain-water",[-22.5,9.25,-135],3.5,.06,mats.glass,28);
+      cylinder(scene,"conservatory-fountain-spire",[-22.5,10.0,-135],.55,1.4,castleGold,16);
+    } else {
+      // Royal chapel with a raised altar, carved pews and jewel-coloured windows.
+      box(scene,"royal-chapel-altar",[22.5,10.0,-142.5],[5.5,1.4,1.8],castleGold);
+      box(scene,"royal-chapel-altar-top",[22.5,10.8,-142.5],[6.1,.2,2.2],mats.trim);
+      for(let row=0;row<4;row++) for(const dx of [-2,2])
+        box(scene,"royal-chapel-pew",[22.5+dx,9.2,-139+row*3],[.75,.42,2.2],mats.wood);
+      for(let i=0;i<5;i++) box(scene,"royal-chapel-stained-glass",[18+i*2.25,18.2,-144.4],[1.4,7,.08],i%2?mats.banner:mats.glass);
+      const apse=MeshBuilder.CreateTorus("royal-chapel-apse-arch",{diameter:7.5,thickness:.28,tessellation:28},scene);
+      apse.scaling.y=1.4;apse.position.set(22.5,17,-144.0);apse.rotation.y=Math.PI/2;apse.material=castleGold;
+    }
+  }
+  addAntiqueDoor(scene,"royal-suite-gallery-double-door",0,8.8,suiteZ-13.5,6.2,7.0,mats,1.12);
+  for(let x=-12;x<=12;x+=6) {
+    box(scene,"palace-gallery-vault-rib",[x,29.2,galleryZ],[.3,.48,23],castleGold);
+    const lamp=MeshBuilder.CreateCylinder("palace-gallery-pendant",{diameter:.36,height:1.0,tessellation:10},scene);
+    lamp.position.set(x,27.6,galleryZ);lamp.material=castleGold;
+    const glow=MeshBuilder.CreateSphere("palace-gallery-pendant-glow",{diameter:.45,segments:8},scene);
+    glow.position.set(x,26.8,galleryZ);glow.material=mats.lantern;
+  }
+
 
   // Tall arched windows, inset dark glass, stone frames and carved horizontal courses.
   for(let floor=0;floor<3;floor++) for(let col=-2;col<=2;col++) {
@@ -1300,6 +1366,44 @@ export async function createRoyalCity(engine, canvas) {
        mesh.name.startsWith("castle-roof") || mesh.name.startsWith("castle-stair-") ||
        mesh.name.startsWith("royal-stair-") || mesh.name.startsWith("courtyard-") ||
        mesh.name.startsWith("citadel-courtyard-")) mesh.position.z-=10;
+  }
+
+
+  // Symmetrical royal rose gardens flank the palace approach, with parterre beds and pergolas.
+  const gardenSoil=mat(scene,"royal-garden-soil",new Color3(.18,.15,.10),.98);
+  const gardenHedge=mat(scene,"royal-garden-boxwood",new Color3(.12,.27,.13),.95);
+  const gardenRed=mat(scene,"royal-garden-red-rose",new Color3(.68,.11,.19),.62);
+  const gardenPink=mat(scene,"royal-garden-pink-rose",new Color3(.9,.39,.5),.62);
+  for(const side of [-1,1]) {
+    const gx=side*42, gz=-105;
+    box(scene,"royal-garden-paving",[gx,8.48,gz],[22,.16,30],mats.trim);
+    box(scene,"royal-garden-central-walk",[gx,8.59,gz],[2.8,.05,29],mats.trim);
+    for(const dx of [-7,7]) for(const dz of [-9,0,9]) {
+      box(scene,"royal-garden-rose-bed",[gx+dx,8.78,gz+dz],[5.4,.36,6.8],gardenSoil);
+      for(let row=0;row<4;row++) for(let col=0;col<5;col++) {
+        const bush=MeshBuilder.CreateSphere("royal-garden-rose-bush",{diameter:.66,segments:8},scene);
+        bush.position.set(gx+dx-2+col,gz*0+9.2,gz+dz-2.3+row*1.5);
+        bush.scaling.y=.8;bush.material=(row+col)%3===0?gardenPink:gardenRed;
+      }
+    }
+    for(const dx of [-10,10]) box(scene,"royal-garden-long-hedge",[gx+dx,9.0,gz],[.72,1.0,29],gardenHedge);
+    for(const dz of [-14,14]) box(scene,"royal-garden-cross-hedge",[gx,9.0,gz+dz],[20,1,.72],gardenHedge);
+    for(let z=-115;z<=-95;z+=10) {
+      for(const dx of [-1.7,1.7]) box(scene,"royal-garden-pergola-post",[gx+dx,11.1,z],[.22,5,.22],castleGold);
+      box(scene,"royal-garden-pergola-beam",[gx,13.65,z],[3.7,.24,.28],castleGold);
+      for(let j=0;j<7;j++) {
+        const vine=MeshBuilder.CreateSphere("royal-garden-pergola-rose",{diameter:.44,segments:8},scene);
+        vine.position.set(gx-1.5+j*.5,13.35,z);vine.material=j%2?gardenPink:gardenRed;
+      }
+    }
+    const urn=MeshBuilder.CreateCylinder("royal-garden-entry-urn",{diameterTop:.55,diameterBottom:1.05,height:1.5,tessellation:14},scene);
+    urn.position.set(gx,9.5,-91);urn.material=mats.trim;
+  }
+  // Three shallow reflecting pools form the centreline of the formal garden.
+  for(const z of [-114,-105,-96]) {
+    cylinder(scene,"royal-garden-pool-basin",[0,8.85,z],2.5,.48,castleGold,24);
+    cylinder(scene,"royal-garden-pool-water",[0,9.12,z],2.1,.06,mats.glass,24);
+    cylinder(scene,"royal-garden-pool-spout",[0,9.8,z],.5,1.3,mats.trim,16);
   }
 
   // Yggdrasil is deliberately far to the LEFT of the palace skyline (world +X from this camera).
