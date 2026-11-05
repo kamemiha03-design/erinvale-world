@@ -2182,6 +2182,28 @@ export async function createRoyalCity(engine, canvas) {
     document.querySelector("#hint").textContent=message;
   }
 
+  // The guild contains many individually modeled but stationary props.
+  // Batch them by their existing material to cut draw calls without removing
+  // any geometry, texture, decoration, or changing their world-space layout.
+  const guildAnimatedNames = /glow|flame|sign-face|readable-face/;
+  const guildBatches = new Map();
+  for (const mesh of [...scene.meshes]) {
+    if (!mesh.name.startsWith("guild-") || guildAnimatedNames.test(mesh.name)) continue;
+    if (mesh.parent || mesh.isDisposed() || !mesh.material || Array.isArray(mesh.material)) continue;
+    if (!guildBatches.has(mesh.material)) guildBatches.set(mesh.material, []);
+    guildBatches.get(mesh.material).push(mesh);
+  }
+  let guildBatchIndex = 0;
+  for (const [material, parts] of guildBatches) {
+    if (parts.length < 2) continue;
+    const merged = Mesh.MergeMeshes(parts, true, true, undefined, false, false);
+    if (merged) {
+      merged.name = "guild-static-batch-" + guildBatchIndex++;
+      merged.material = material;
+      merged.isPickable = false;
+    }
+  }
+
   const shadowNames = /facade-|side-wall-|rear-wall|roof-left|roof-right|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-trunk|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
   for (const mesh of scene.meshes) {
     if (shadowNames.test(mesh.name)) shadow.addShadowCaster(mesh, false);
