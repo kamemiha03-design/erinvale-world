@@ -139,17 +139,17 @@ export function createWorldAudio() {
       const beatInBar=step%8;
       const chord=chordProgression[bar];
       if(beatInBar===0) chord.forEach(frequency=>{
-        sustainString(frequency,nextMusicTime,beat*3.85,.0065);
-        pluck(frequency/2,nextMusicTime,beat*2.8,.006,"sine");
+        sustainString(frequency,nextMusicTime,beat*3.85,.015);
+        pluck(frequency/2,nextMusicTime,beat*2.8,.018,"sine");
       });
       // A slow broken-chord figure gives the harmony a delicate harp-like shimmer.
       if(beatInBar===0||beatInBar===4) {
         const harpNotes=[chord[0]*2,chord[1]*2,chord[2]*2];
-        pluck(harpNotes[beatInBar===0?0:1],nextMusicTime,beat*1.55,.010,"sine");
+        pluck(harpNotes[beatInBar===0?0:1],nextMusicTime,beat*1.55,.026,"sine");
       }
-      if(beatInBar===2||beatInBar===6) pluck(chord[beatInBar===2?1:2]*2,nextMusicTime,beat*1.2,.008,"sine");
+      if(beatInBar===2||beatInBar===6) pluck(chord[beatInBar===2?1:2]*2,nextMusicTime,beat*1.2,.022,"sine");
       const note=melody[step];
-      if(note) pluck(note,nextMusicTime,beat*1.05,.014,"triangle");
+      if(note) pluck(note,nextMusicTime,beat*1.05,.034,"triangle");
       nextMusicTime+=beat/2;
       musicStep++;
     }
@@ -162,7 +162,7 @@ export function createWorldAudio() {
     const filter=audioContext.createBiquadFilter();
     filter.type="lowpass";filter.frequency.value=3200;
     musicGain.connect(filter);filter.connect(audioContext.destination);
-    musicGain.gain.setTargetAtTime(musicEnabled?.12:0,audioContext.currentTime,1.1);
+    musicGain.gain.setTargetAtTime(musicEnabled?.30:0,audioContext.currentTime,.8);
     nextMusicTime=audioContext.currentTime+.12;
     scheduleMusic();
     window.setInterval(scheduleMusic,100);
@@ -174,7 +174,7 @@ export function createWorldAudio() {
       if(!audioContext) startWind();
       audioContext?.resume?.();
       startMusic();
-      if(musicGain&&audioContext)musicGain.gain.setTargetAtTime(.12,audioContext.currentTime,.35);
+      if(musicGain&&audioContext)musicGain.gain.setTargetAtTime(.30,audioContext.currentTime,.35);
     } else if(musicGain&&audioContext) {
       musicGain.gain.setTargetAtTime(0,audioContext.currentTime,.35);
     }
@@ -186,8 +186,12 @@ export function createWorldAudio() {
     unlocked = true;
     Object.values(layers).forEach(safePlay);
     startWind();
-    audioContext?.resume?.();
-    startMusic();
+    const resumed=audioContext?.resume?.();
+    if(resumed?.then) resumed.then(()=>{
+      startMusic();
+      if(musicGain&&musicEnabled)musicGain.gain.setTargetAtTime(.30,audioContext.currentTime,.45);
+    }).catch(error=>console.warn("BGM could not start:",error));
+    else startMusic();
   }
 
   function setMovement(active, position, location) {
