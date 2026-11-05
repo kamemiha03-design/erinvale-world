@@ -3184,9 +3184,6 @@ export async function createRoyalCity(engine, canvas) {
     for(const x of [-62.5,-41.5])
       box(scene,"public-library-rib-gilt-cap",[x,9.02,z],[.12,.28,.34],libraryGold);
   }
-  box(scene,"public-library-gallery-balustrade",[-52,7.95,-90.2],[17.5,.18,.28],libraryGold);
-  for(let x=-60.5;x<=-43.5;x+=1.25)
-    box(scene,"public-library-gallery-baluster",[x,7.62,-90.2],[.12,.62,.12],libraryWood);
   // A true upper reading gallery: timber floor, carved balustrade and a second
   // tier of shelves tucked behind the stone columns, like a historic university hall.
   box(scene,"public-library-mezzanine-floor",[-53.0,5.25,-92.7],[18.5,.28,6.0],libraryWood);
@@ -3210,15 +3207,6 @@ export async function createRoyalCity(engine, canvas) {
         box(scene,"public-library-upper-west-wall-volume",[-61.62,y+.12,z-.82+b*.205],[.075,.21,.135],libraryBookMats[(b+level+1)%libraryBookCount]);
     }
   }
-  // A second gallery balcony faces the entrance, completing the upper U-shaped
-  // reading gallery. Its rail leaves the stair landing open.
-  box(scene,"public-library-front-gallery-floor",[-52.0,5.25,-86.1],[17.8,.28,2.6],libraryWood);
-  box(scene,"public-library-front-gallery-beam",[-52.0,5.12,-84.75],[17.8,.34,.20],libraryGold);
-  for(let x=-60.4;x<=-43.6;x+=1.2) {
-    box(scene,"public-library-front-gallery-baluster",[x,5.78,-84.78],[.11,.72,.11],libraryWood);
-    box(scene,"public-library-front-gallery-post-cap",[x,6.18,-84.78],[.20,.10,.20],libraryGold);
-  }
-  box(scene,"public-library-front-gallery-handrail",[-52.0,6.18,-84.78],[17.9,.15,.20],libraryGold);
   // Broad oak staircase rises from the east aisle to the gallery's north-east landing.
   for(let i=0;i<14;i++) {
     const t=(i+.5)/14;
@@ -3251,16 +3239,18 @@ export async function createRoyalCity(engine, canvas) {
         box(scene,"public-library-upper-volume",[x-1.72+b*.22,y+.14,-94.93],[.15,.24,.075],libraryBookMats[(b+level)%libraryBookCount]);
     }
   }
-  // Entrance-facing west gallery joins the mezzanine to the front balcony.
-  box(scene,"public-library-west-gallery-floor",[-61.05,5.25,-87.25],[2.25,.28,5.1],libraryWood);
-  box(scene,"public-library-west-gallery-front-beam",[-59.88,5.12,-84.78],[.20,.34,5.05],libraryGold);
-  for(let z=-89.55;z<=-85.05;z+=.9) {
+  // One continuous gallery follows the wall directly opposite the entrance.
+  // It joins the existing left/north gallery at the rear corner without creating
+  // a second overlapping balcony.
+  box(scene,"public-library-west-gallery-floor",[-61.05,5.25,-81.95],[2.25,.28,17.2],libraryWood);
+  box(scene,"public-library-west-gallery-inner-beam",[-59.88,5.12,-81.95],[.20,.34,16.9],libraryGold);
+  for(let z=-89.7;z<=-74.1;z+=1.05) {
     box(scene,"public-library-west-gallery-baluster",[-59.9,5.78,z],[.12,.72,.12],libraryWood);
     box(scene,"public-library-west-gallery-post-cap",[-59.9,6.18,z],[.20,.10,.20],libraryGold);
   }
-  box(scene,"public-library-west-gallery-handrail",[-59.9,6.18,-87.25],[.20,.15,5.15],libraryGold);
+  box(scene,"public-library-west-gallery-handrail",[-59.9,6.18,-81.95],[.20,.15,17.0],libraryGold);
   // Upper wall stacks face the entrance; matching ground-floor stacks remain below.
-  for(const z of [-87.7,-85.2]) {
+  for(const z of [-87.7,-85.2,-80.5,-76.0]) {
     box(scene,"public-library-upper-west-facing-bookcase",[-62.35,6.55,z],[.48,2.18,2.15],libraryWood);
     for(let level=0;level<3;level++) {
       const y=5.72+level*.66;
@@ -4764,7 +4754,7 @@ export async function createRoyalCity(engine, canvas) {
   // those optional bath effects/figures on touch devices and disable its point lights.
   if(isTouchDevice) {
     for(const mesh of [...scene.meshes]) {
-      if(/imperial-bath-(?:rising-steam|treatment-steam|dense-steam-bank|fine-steam-wisp)|bath-guest-|bath-treatment-|bath-attendant-/.test(mesh.name)) {
+      if(/imperial-bath-(?:rising-steam|treatment-steam|dense-steam-bank|fine-steam-wisp)/.test(mesh.name)) {
         mesh.dispose(false,false);
       }
     }
