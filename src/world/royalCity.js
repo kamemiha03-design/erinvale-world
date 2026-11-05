@@ -2590,7 +2590,8 @@ export async function createRoyalCity(engine, canvas) {
     const meshStart=scene.meshes.length,horse=addHorse(x,z-4.25,coat,turn);
     if(!moving){const pad=MeshBuilder.CreateGround("royal-carriage-parking-pad",{width:5.8,height:8.8,subdivisions:1},scene);pad.position.set(x,.025,z+.3);pad.material=courtStone;}
     box(scene,"royal-carriage-underframe",[x,.92,z+.72],[2.8,.28,3.55],carriageWood);
-    box(scene,"royal-carriage-body",[x,1.65,z+1.05],[3.35,1.42,2.65],carriageWood);
+    // Keep the cabin open above its low upholstered base so seated passengers are visible.
+    box(scene,"royal-carriage-body",[x,1.17,z+1.05],[3.35,.48,2.65],carriageWood);
     box(scene,"royal-carriage-side-panel-left",[x-1.72,1.75,z+1.05],[.18,1.45,2.7],carriageGold);
     box(scene,"royal-carriage-side-panel-right",[x+1.72,1.75,z+1.05],[.18,1.45,2.7],carriageGold);
     box(scene,"royal-carriage-door-panel-left",[x-1.82,1.75,z+1.0],[.06,.78,1.45],carriageCloth);
@@ -2622,12 +2623,13 @@ export async function createRoyalCity(engine, canvas) {
       for(const mesh of scene.meshes.slice(meshStart)){if(mesh.parent===horse)continue;mesh.position.x-=x;mesh.position.z-=z;mesh.parent=group;}
       horse.position.x-=x;horse.position.z-=z;horse.parent=group;
       movingCarriage={group,horse,waypointIndex:1,speed:2.35,route:[[0,-73.5],[0,-55],[0,-47],[0,-39],[0,-25],[0,-10],[0,6],[0,21],[-12,29],[-28,27],[-37,14],[-34,-4],[-20,-18],[0,-25],[0,-39],[0,-47],[0,-55],[0,-73.5]].map(([rx,rz])=>new Vector3(rx,0,rz))};
-      return group;
+      return {x,z,group,moving:true};
     }
-    return null;
+    return {x,z,group:null,moving:false};
   }
-  addCarriage(-15.2,-73.5,horseCoats[0],.1);
-  addCarriage(0,-73.5,horseCoats[1],.4,true);
+  // Park the waiting royal coach in the garden on the opposite (eastern) side.
+  const parkedRoyalCarriage=addCarriage(15.2,-73.5,horseCoats[0],.1);
+  const travelingRoyalCarriage=addCarriage(0,-73.5,horseCoats[1],.4,true);
 
   const royalGardenStartIndex=scene.meshes.length;
   // Yield between major districts so mobile Safari can service the page.
@@ -3204,23 +3206,27 @@ export async function createRoyalCity(engine, canvas) {
         box(scene,"public-library-upper-west-wall-volume",[-61.62,y+.12,z-.82+b*.205],[.075,.21,.135],libraryBookMats[(b+level+1)%libraryBookCount]);
     }
   }
-  // Broad oak staircase rises from the east aisle to the gallery's north-east landing.
-  for(let i=0;i<14;i++) {
-    const t=(i+.5)/14;
-    const x=-42.55-t*6.0;
-    const y=1.72+t*3.53;
-    box(scene,"public-library-grand-stair-step",[x,y,-92.35],[.48,.34,1.55],libraryWood);
-    box(scene,"public-library-grand-stair-nosing",[x,y+.18,-92.35],[.50,.055,1.62],libraryGold);
+  // A narrower, properly stepped oak stair rises from the east aisle to the gallery.
+  // Each tread top matches the walking surface from the marble floor to the gallery deck.
+  const libraryStairRun=6.0,libraryStairRise=4.35,libraryStairCount=18;
+  for(let i=0;i<libraryStairCount;i++) {
+    const t=(i+.5)/libraryStairCount;
+    const x=-42.55-t*libraryStairRun;
+    const treadTop=1.04+t*libraryStairRise;
+    const y=treadTop-.17;
+    box(scene,"public-library-grand-stair-step",[x,y,-92.35],[.38,.34,1.32],libraryWood);
+    box(scene,"public-library-grand-stair-nosing",[x,y+.18,-92.35],[.40,.055,1.38],libraryGold);
   }
   for(const side of [-1,1]) {
-    const rail=box(scene,"public-library-grand-stair-stringer",[-45.55,3.55,-92.35+side*.86],[6.35,.22,.18],libraryTrim);
-    rail.rotation.z=-.53;
-    for(let i=0;i<8;i++) {
-      const t=(i+.5)/8;
-      box(scene,"public-library-grand-stair-baluster",[-42.55-t*6,1.95+t*3.53,-92.35+side*.86],[.10,.55,.10],libraryGold);
+    const rail=box(scene,"public-library-grand-stair-stringer",[-45.55,3.20,-92.35+side*.74],[6.35,.20,.14],libraryTrim);
+    rail.rotation.z=-Math.atan(libraryStairRise/libraryStairRun);
+    for(let i=0;i<9;i++) {
+      const t=(i+.5)/9;
+      const treadTop=1.04+t*libraryStairRise;
+      box(scene,"public-library-grand-stair-baluster",[-42.55-t*6,treadTop+.42,-92.35+side*.74],[.085,.84,.085],libraryGold);
     }
   }
-  box(scene,"public-library-grand-stair-landing",[-48.9,5.25,-92.35],[1.1,.28,2.0],libraryWood);
+  box(scene,"public-library-grand-stair-landing",[-48.9,5.25,-92.35],[.9,.28,1.65],libraryWood);
   box(scene,"public-library-mezzanine-front-beam",[-53.0,5.12,-89.85],[16.6,.34,.24],libraryGold);
   for(const x of [-57.8,-54.9,-52.0,-49.1,-46.2,-43.3]) {
     box(scene,"public-library-mezzanine-baluster",[x,5.78,-89.9],[.12,.78,.12],libraryWood);
@@ -4447,6 +4453,27 @@ export async function createRoyalCity(engine, canvas) {
     makeTownsperson(3.0,-29.0,"villager",48.2,Math.PI-.2,false);
   }
 
+  // Coachmen hold the reins, noble passengers ride inside, and attendants help guests board.
+  function addCoachPerson(coach,role,phase,localPosition,heading=0) {
+    const root=makeTownsperson(coach.x,coach.z,role,phase,heading,false,"seated");
+    if(coach.group) {
+      root.parent=coach.group;
+      root.position.set(localPosition[0],localPosition[1],localPosition[2]);
+    } else {
+      root.position.set(coach.x+localPosition[0],localPosition[1],coach.z+localPosition[2]);
+    }
+    root.rotation.y=heading;
+    return root;
+  }
+  addCoachPerson(parkedRoyalCarriage,"butler",52.1,[0,1.95,-.48]);
+  addCoachPerson(parkedRoyalCarriage,"hostess",53.2,[.48,1.08,1.12]);
+  addCoachPerson(travelingRoyalCarriage,"butler",54.3,[0,1.95,-.48]);
+  addCoachPerson(travelingRoyalCarriage,"villager",55.4,[-.48,1.08,1.12]);
+  const coachAttendant=makeTownsperson(parkedRoyalCarriage.x+2.8,parkedRoyalCarriage.z+1.0,"butler",56.5,Math.PI/2,false);
+  coachAttendant.position.y=0;
+  const arrivingNoble=makeTownsperson(parkedRoyalCarriage.x-2.8,parkedRoyalCarriage.z+1.5,"hostess",57.6,-Math.PI/2,false);
+  arrivingNoble.position.y=0;
+
   // Small songbirds gather among the formal roses: some perch, others circle over the beds.
   const birdBodyMat=mat(scene,"rose-garden-bird-plumage",new Color3(.22,.27,.25),.82);
   const birdBreastMat=mat(scene,"rose-garden-bird-breast",new Color3(.72,.62,.43),.9);
@@ -4585,6 +4612,28 @@ export async function createRoyalCity(engine, canvas) {
     if(inLibraryZ&&x>-41.05&&x<-39.45) {
       const inMainDoorway=z>-86.0&&z<-82.0;
       if(!inMainDoorway)return true;
+    }
+    // Block every upper-gallery edge not covered by the mezzanine deck or stair.
+    if(libraryUpperLevel&&inLibraryX&&inLibraryZ) {
+      const onStair=x>-49.25&&x<-42.15&&z>-93.1&&z<-91.6;
+      const onMainGallery=x>-62.0&&x<-44.0&&z>-95.45&&z<-90.0;
+      const onWestGallery=x>-62.0&&x<-60.0&&z>-90.5&&z<-73.6;
+      if(!onStair&&!onMainGallery&&!onWestGallery)return true;
+    }
+    // Bookcase bodies and the books on their shelves are solid obstacles.
+    for(const shelfZ of [-92,-87.75,-83.5,-79.25,-75])
+      if(x>-63.15&&x<-61.85&&Math.abs(z-shelfZ)<2.05)return true;
+    for(const shelfX of [-59,-54.5,-47.5,-43.5])for(const shelfZ of [-95,-73])
+      if(Math.abs(x-shelfX)<1.98&&Math.abs(z-shelfZ)<.48)return true;
+    if(libraryUpperLevel) {
+      for(const shelfX of [-60.5,-57,-53.5,-50,-46.5])
+        if(Math.abs(x-shelfX)<1.68&&Math.abs(z+95.35)<.32)return true;
+      for(const shelfX of [-59.5,-54.5,-49.5,-44.5])
+        if(Math.abs(x-shelfX)<2.0&&Math.abs(z+94.5)<.40)return true;
+      for(const shelfZ of [-94,-91.8])
+        if(Math.abs(x+62.0)<.38&&Math.abs(z-shelfZ)<1.08)return true;
+      for(const shelfZ of [-87.7,-85.2,-80.5,-76.0])
+        if(Math.abs(x+62.35)<.38&&Math.abs(z-shelfZ)<1.12)return true;
     }
     // Stair footprint is intentionally passable so visitors can climb to the gallery.
     // The hall is checked before the legacy z=-116 boundary and town obstacles.
@@ -4849,17 +4898,17 @@ export async function createRoyalCity(engine, canvas) {
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
       // Stair progression changes the camera elevation smoothly; the top landing
       // latches the visitor onto the upper gallery until they descend again.
-      const onLibraryStair=camera.position.z>-93.25&&camera.position.z<-91.45&&camera.position.x>-49.2&&camera.position.x<-42.2;
+      const onLibraryStair=camera.position.z>-93.1&&camera.position.z<-91.6&&camera.position.x>-49.25&&camera.position.x<-42.15;
+      const libraryStairT=Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1);
       if(onLibraryStair) {
-        const stairT=Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1);
-        if(stairT>.94)libraryUpperLevel=true;
-        else if(stairT<.06)libraryUpperLevel=false;
+        if(libraryStairT>.94)libraryUpperLevel=true;
+        else if(libraryStairT<.06)libraryUpperLevel=false;
       }
       const onLibraryGallery=libraryUpperLevel&&(
-        (camera.position.x>-62.2&&camera.position.x<-43.7&&camera.position.z>-95.8&&camera.position.z<-89.55)||
-        (camera.position.x>-62.2&&camera.position.x<-59.75&&camera.position.z>-90.7&&camera.position.z<-73.2)
+        (camera.position.x>-62.0&&camera.position.x<-44.0&&camera.position.z>-95.45&&camera.position.z<-90.0)||
+        (camera.position.x>-62.0&&camera.position.x<-60.0&&camera.position.z>-90.5&&camera.position.z<-73.6)
       );
-      const libraryFloorY=onLibraryStair?3.44+Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1)*3.53:(onLibraryGallery?6.97:1.72);
+      const libraryFloorY=onLibraryStair?2.76+libraryStairT*4.35:(onLibraryGallery?7.11:1.72);
       camera.position.y=seatedAt?2.02:(camera.position.x>-64.5&&camera.position.x<-39.4&&camera.position.z>-97&&camera.position.z<-71?libraryFloorY:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
         (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))))));
