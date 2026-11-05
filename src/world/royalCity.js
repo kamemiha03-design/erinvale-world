@@ -3758,26 +3758,6 @@ export async function createRoyalCity(engine, canvas) {
   makeMarketDog(-2.6,-19.2,.88,-.35);
   makeMarketDog(2.9,-31.7,.76,.55);
 
-  // The market is entirely static. Merge its detailed pieces by material so
-  // the same geometry, textures and silhouettes render with far fewer draw calls.
-  // This keeps the visual quality while reducing Safari's startup/render overhead.
-  const marketBatches=new Map();
-  for(const mesh of scene.meshes) {
-    if(!mesh.name.startsWith("market-") || !mesh.material || mesh.getTotalVertices()===0 || mesh.isDisposed()) continue;
-    const material=mesh.material;
-    if(!marketBatches.has(material)) marketBatches.set(material,[]);
-    mesh.computeWorldMatrix(true);
-    marketBatches.get(material).push(mesh);
-  }
-  for(const [material,meshes] of marketBatches) {
-    if(meshes.length<2) continue;
-    const merged=Mesh.MergeMeshes(meshes,true,true,undefined,false,true);
-    if(merged) {
-      merged.material=material;
-      merged.isPickable=false;
-      merged.name="market-static-batch";
-    }
-  }
   // Extra residents make the fountain square feel like a lived-in town.
   makeTownsperson(17,17,"merchant",17.1,Math.PI/2,false);
   makeTownsperson(21,-4,"villager",18.2,-.7,true);
@@ -4112,8 +4092,9 @@ export async function createRoyalCity(engine, canvas) {
   const marketBatches=new Map();
   for(const mesh of [...scene.meshes]) {
     if(!mesh.name.startsWith("market-")||mesh.name.includes("sign-face")||mesh.name.includes("apothecary-jar"))continue;
-    if(mesh.parent||mesh.isDisposed()||!mesh.material||Array.isArray(mesh.material))continue;
+    if(mesh.isDisposed()||!mesh.material||Array.isArray(mesh.material)||mesh.getTotalVertices()===0)continue;
     if(!marketBatches.has(mesh.material))marketBatches.set(mesh.material,[]);
+    mesh.computeWorldMatrix(true);
     marketBatches.get(mesh.material).push(mesh);
   }
   let marketBatchIndex=0;
