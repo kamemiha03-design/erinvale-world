@@ -3214,9 +3214,8 @@ export async function createRoyalCity(engine, canvas) {
     for(const sx of [-1,1])box(scene,"imperial-hammam-plunge-rim",[smallX+sx*2.58,.82,smallZ],[.38,.36,7.95],hammamIvory);
     for(const sz of [-1,1])box(scene,"imperial-hammam-plunge-rim",[smallX,.82,smallZ+sz*3.82],[5.35,.36,.38],hammamIvory);
   }
-  obstacles.push({x:hammamPoolX,z:hammamPoolZ,r:6.65});
-  obstacles.push({x:hammamX-12,z:-61,r:3.0});
-  obstacles.push({x:hammamX+12,z:-61,r:3.0});
+  // Bath pools are intentionally walkable: visitors can descend the submerged steps.
+
 
   // Warm resting bays, massage benches, towel shelves and oil jars line the side aisles.
   for(const side of [-1,1]) {
@@ -3345,6 +3344,29 @@ export async function createRoyalCity(engine, canvas) {
     const door=rotateBathPoint(bathCollider.doorX,bathCollider.doorZ);
     bathCollider.doorX=door.x;bathCollider.doorZ=door.z;
   }
+
+  // Layered steam rises from the pools and drifts through the warm, lantern-lit air.
+  const bathSteamPuffs=[];
+  const bathSteamMaterial=mat(scene,"imperial-bath-living-steam",new Color3(.91,.94,.92),.98);
+  bathSteamMaterial.alpha=.19;
+  bathSteamMaterial.transparencyMode=2;
+  for(let i=0;i<34;i++) {
+    const poolSide=i%3;
+    const baseX=poolSide===0?30+(i%5-2)*1.55:poolSide===1?18+(i%3-1)*.72:42+(i%3-1)*.72;
+    const baseZ=poolSide===0?62.8+Math.floor(i/5)*.72:61.0+Math.floor(i/9)*1.25;
+    const puff=MeshBuilder.CreateSphere("imperial-bath-rising-steam",{diameter:1,segments:14},scene);
+    puff.position.set(baseX,.95+(i%6)*.43,baseZ);
+    puff.scaling.set(.52+(i%4)*.13,1.35+(i%5)*.22,.52+(i%3)*.12);
+    puff.material=bathSteamMaterial;puff.isPickable=false;
+    bathSteamPuffs.push({mesh:puff,x:baseX,y:puff.position.y,z:baseZ,phase:i*.73,speed:.22+(i%4)*.035,drift:.35+(i%3)*.12});
+  }
+  for(let i=0;i<8;i++) {
+    const x=23+(i%4)*4.6,z=70+Math.floor(i/4)*1.8;
+    const puff=MeshBuilder.CreateSphere("imperial-bath-treatment-steam",{diameter:1,segments:12},scene);
+    puff.position.set(x,1.35+(i%3)*.4,z);puff.scaling.set(.48,1.25,.48);
+    puff.material=bathSteamMaterial;puff.isPickable=false;
+    bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*1.13,speed:.19,drift:.28});
+  }
   makeBathWaySign(16,18,"帝国浴場　↗","THERMAE  •  HAMMAM");
   makeBathWaySign(25,31,"帝国浴場　↗","PUBLIC BATHS");
 
@@ -3364,6 +3386,47 @@ export async function createRoyalCity(engine, canvas) {
   const npcWhite=mat(scene,"npc-eye-white",new Color3(.88,.83,.72),.8);
   const npcDark=mat(scene,"npc-eye-dark",new Color3(.075,.045,.03),.8);
   const npcBeard=mat(scene,"npc-beard",new Color3(.20,.095,.045),.96);
+  const bathTowel=mat(scene,"imperial-bath-linen",new Color3(.88,.82,.68),.98);
+  const bathClothBlue=mat(scene,"imperial-bath-blue-linen",new Color3(.20,.36,.39),.96);
+  const bathSkin=mat(scene,"imperial-bath-skin",new Color3(.70,.48,.35),.96);
+  const bathHair=mat(scene,"imperial-bath-hair",new Color3(.12,.075,.05),.96);
+  const bathActors=[];
+  function makeBathGuest(x,y,z,pose="soaking",heading=0,phase=0) {
+    const root=new TransformNode("imperial-bath-guest",scene);
+    root.position.set(x,y,z);root.rotation.y=heading;
+    const part=(name,pos,scale,material,kind="sphere")=>{
+      const mesh=kind==="cylinder"
+        ?MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:14},scene)
+        :MeshBuilder.CreateSphere(name,{diameter:1,segments:14},scene);
+      mesh.parent=root;mesh.position.set(...pos);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
+    };
+    if(pose==="soaking") {
+      part("bath-guest-submerged-body",[0,.16,0],[.78,.72,.43],phase%2?bathClothBlue:bathTowel);
+      part("bath-guest-shoulders",[0,.54,-.015],[.72,.34,.42],bathSkin);
+      part("bath-guest-neck",[0,.76,-.035],[.18,.25,.18],bathSkin,"cylinder");
+      part("bath-guest-head",[0,.99,-.055],[.36,.43,.34],bathSkin);
+      part("bath-guest-wet-hair",[0,1.17,-.01],[.39,.19,.36],bathHair);
+      for(const side of [-1,1])part("bath-guest-resting-arm",[side*.48,.43,.08],[.19,.20,.62],bathSkin);
+    } else if(pose==="scrubbed") {
+      part("bath-treatment-reclining-body",[0,.48,0],[.72,.48,1.22],bathTowel);
+      part("bath-treatment-reclining-shoulder",[0,.69,-.58],[.62,.30,.48],bathSkin);
+      part("bath-treatment-reclining-head",[0,.88,-.92],[.34,.40,.34],bathSkin);
+      part("bath-treatment-reclining-hair",[0,1.04,-.91],[.38,.18,.36],bathHair);
+      for(const side of [-1,1])part("bath-treatment-resting-arm",[side*.37,.56,-.22],[.16,.18,.70],bathSkin);
+    } else {
+      part("bath-attendant-tunic",[0,.76,.05],[.52,.72,.38],bathClothBlue);
+      part("bath-attendant-head",[0,1.28,-.02],[.34,.39,.32],bathSkin);
+      part("bath-attendant-hair",[0,1.45,.02],[.37,.18,.34],bathHair);
+      for(const side of [-1,1]) {
+        part("bath-attendant-kneeling-leg",[side*.20,.22,.34],[.25,.30,.58],bathTowel);
+        const arm=part("bath-attendant-working-arm",[side*.28,.78,-.40],[.15,.18,.72],bathSkin);
+        arm.rotation.x=-.30;
+        part("bath-attendant-hand",[side*.28,.73,-.72],[.16,.13,.18],bathSkin);
+      }
+    }
+    bathActors.push({root,baseY:y,phase,pose});
+    return root;
+  }
 
   function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
     const root=new TransformNode("townsperson-root",scene);
@@ -3468,6 +3531,14 @@ export async function createRoyalCity(engine, canvas) {
     }
     return root;
   }
+
+  // Guests soak in the central pool; a modestly draped treatment pair shares a marble bench.
+  makeBathGuest(27.0,.88,61.0,"soaking",-.25,0);
+  makeBathGuest(32.8,.88,64.5,"soaking",Math.PI+.25,1);
+  makeBathGuest(29.8,.88,66.0,"soaking",Math.PI/2,2);
+  makeBathGuest(25.8,.88,64.4,"soaking",-Math.PI/2,3);
+  makeBathGuest(42.2,.38,73.0,"scrubbed",Math.PI/2,4);
+  makeBathGuest(40.8,.38,72.8,"attendant",-Math.PI/2,5);
 
   // Palace attendants welcome visitors and keep the reception hall lived-in.
   makeTownsperson(-9.0,-126.0,"maid",21.1,-Math.PI/2,false);
@@ -3866,7 +3937,8 @@ export async function createRoyalCity(engine, canvas) {
     update(dt){
       const input=moveSource();
       const step=Math.min(dt,.045);
-      const speed=4.4;
+      const inBathPool=camera.position.x>24.15&&camera.position.x<35.85&&camera.position.z>59.35&&camera.position.z<67.05;
+      const speed=inBathPool?2.25:4.4;
       const forward=camera.getDirection(new Vector3(0,0,1));
       forward.y=0;
       if(forward.lengthSquared()>0.0001) forward.normalize();
@@ -3894,15 +3966,30 @@ export async function createRoyalCity(engine, canvas) {
       const onLobbyStairLanding=camera.position.z<-171.0&&camera.position.z>=-174.0&&Math.abs(camera.position.x)<5.2;
       const onLobbyUpperGallery=camera.position.z<-173.35&&camera.position.z>-182.4&&Math.abs(camera.position.x)<19.2;
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
-      camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
+      camera.position.y=inBathPool?1.82:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
-        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))));
+        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
       camera._lastFootX=camera.position.x;camera._lastFootZ=camera.position.z;
       if(this.onMovement)this.onMovement(moving,camera.position,getLocation(camera.position.x,camera.position.z));
       const time=performance.now()*.001;
+      bathSteamPuffs.forEach((puff,index)=>{
+        const cycle=(time*puff.speed+puff.phase)%3.8;
+        puff.mesh.position.x=puff.x+Math.sin(time*.55+puff.phase)*puff.drift;
+        puff.mesh.position.z=puff.z+Math.cos(time*.42+puff.phase)*puff.drift*.55;
+        puff.mesh.position.y=puff.y+cycle*.72;
+        const fade=Math.sin(Math.PI*cycle/3.8);
+        const swell=.82+fade*.48;
+        puff.mesh.scaling.x=swell*(.88+(index%3)*.08);
+        puff.mesh.scaling.y=swell*(1.35+(index%4)*.16);
+        puff.mesh.scaling.z=swell*(.9+(index%2)*.12);
+      });
+      bathActors.forEach(actor=>{
+        actor.root.position.y=actor.baseY+Math.sin(time*.72+actor.phase)*.018;
+        if(actor.pose==="attendant")actor.root.rotation.z=Math.sin(time*1.15+actor.phase)*.025;
+      });
       canopy.forEach(o=>{o.mesh.rotation.z=o.base+Math.sin(time*.35+o.phase)*.025;o.mesh.position.y=o.baseY+Math.sin(time*.35+o.phase)*.16;});
       // Subtle fountain ripples and falling droplets keep the water from feeling static.
       waterRing.scaling.x=1+Math.sin(time*1.2)*.025;
