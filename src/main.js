@@ -20,9 +20,9 @@ async function boot() {
     powerPreference:isTouch?"low-power":"high-performance",
     adaptToDeviceRatio:!isTouch,
   });
-  // Mobile uses a smaller drawing buffer to stay within Safari's WebGL memory budget.
-  // World geometry and texture assets remain full detail.
-  engine.setHardwareScalingLevel(isTouch?2.0:1);
+  // Mobile renders at 40% of CSS resolution per axis to reduce GPU fill cost.
+  // Antialiasing and desktop post-processing are disabled separately for touch devices.
+  engine.setHardwareScalingLevel(isTouch?2.5:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
