@@ -1918,14 +1918,14 @@ export async function createRoyalCity(engine, canvas) {
     finial.position.set(x,level+4.12,z);finial.material=castleGold;
   }
   // Level threshold between the last tread, the open gate and the lobby.
-  box(scene,"palace-entry-landing",[0,8.44,-147.0],[44,.36,54.0],castleStone);
+  box(scene,"palace-entry-landing",[0,8.44,-143.1],[44,.36,61.8],castleStone);
   // A broad, open first-floor royal lobby: deliberately no exterior facade yet.
   const openHallLobbyWall=mat(scene,"royal-lobby-limestone",new Color3(.72,.68,.58),.92);
   const openHallLobbyTrim=mat(scene,"royal-lobby-gilt",new Color3(.78,.57,.25),.32,.72);
   const openHallLobbyCeiling=mat(scene,"royal-lobby-ceiling",new Color3(.82,.78,.68),.9);
   const openHallLobbyFloorMat=mat(scene,"royal-lobby-marble",new Color3(.78,.75,.68),.25,.08);
   const openHallLobbyTop=8.62, openHallLobbyHeight=18.0, openHallLobbyMidY=openHallLobbyTop+openHallLobbyHeight/2;
-  const openHallLobbyFloor=box(scene,"royal-lobby-marble-floor",[0,8.61,-147.0],[43.6,.12,53.6],openHallLobbyFloorMat);
+  const openHallLobbyFloor=box(scene,"royal-lobby-marble-floor",[0,8.61,-143.1],[43.6,.12,61.4],openHallLobbyFloorMat);
   openHallLobbyFloor.receiveShadows=true;
   box(scene,"royal-lobby-ceiling",[0,26.82,-147.0],[44,.5,54],openHallLobbyCeiling);
   // Tall side and rear walls enclose the walkable hall; the front remains a wide open entrance.
@@ -1979,6 +1979,9 @@ export async function createRoyalCity(engine, canvas) {
   }
   const openHallChandelierCore=MeshBuilder.CreateSphere("royal-lobby-chandelier-core",{diameter:1.0,segments:24},scene);
   openHallChandelierCore.position.set(0,21.3,-147);openHallChandelierCore.material=openHallChandelierGlow;
+  // A brass-and-marble threshold bridges the last stair tread into the lobby floor.
+  box(scene,"royal-lobby-entry-threshold",[0,8.69,-115.0],[13.8,.055,4.4],openHallLobbyTrim);
+  box(scene,"royal-lobby-entry-threshold-inset",[0,8.725,-115.0],[11.8,.025,3.7],openHallLobbyFloorMat);
   // Wall colliders bound the full hall while leaving the entrance completely open.
   colliders.push(
     {minX:-22.7,maxX:-21.3,minZ:-174.5,maxZ:-119.5},
@@ -2413,6 +2416,56 @@ export async function createRoyalCity(engine, canvas) {
       }
     }
   }
+  // Dense, individually modeled rose bushes fill both long beds.
+  // Each plant has several thorny canes, serrated-looking leaf blades and layered blooms.
+  function addRoseBush(cx,cz,phase=0) {
+    for(let stem=0;stem<4;stem++) {
+      const a=phase+stem*Math.PI*.5, lean=.22+(stem%2)*.12;
+      const base=new Vector3(cx+Math.cos(a)*.12,8.92,cz+Math.sin(a)*.12);
+      const tip=new Vector3(cx+Math.cos(a)*lean,9.85+(stem%3)*.13,cz+Math.sin(a)*lean);
+      const cane=MeshBuilder.CreateTube("garden-rose-cane",{path:[base,Vector3.Lerp(base,tip,.52).add(new Vector3(0,.12,0)),tip],radius:.032,tessellation:8},scene);
+      cane.material=stemMat;cane.isPickable=false;
+      for(let leaf=0;leaf<3;leaf++) {
+        const t=.28+leaf*.22,anchor=Vector3.Lerp(base,tip,t);
+        const side=leaf%2?1:-1;
+        const leafTip=anchor.add(new Vector3(Math.cos(a+side*.9)*.34,.08,Math.sin(a+side*.9)*.34));
+        roseLeaf(anchor,leafTip,.22,leafMats[(stem+leaf)%leafMats.length]);
+        const secondTip=anchor.add(new Vector3(Math.cos(a-side*.9)*.28,.045,Math.sin(a-side*.9)*.28));
+        roseLeaf(anchor,secondTip,.18,leafMats[(stem+leaf+1)%leafMats.length]);
+      }
+      const bloomMat=roseMats[(stem+Math.floor(phase*2))%roseMats.length];
+      tunnelRose(new Vector3(tip.x,tip.y+.05,tip.z),.25+(stem%2)*.025,bloomMat,phase+stem*.71);
+    }
+  }
+  for(const side of [-1,1]) {
+    for(let i=0;i<9;i++) addRoseBush(side*6.55,-173.0+i*4.35,side*.7+i*.43);
+  }
+
+  // A small carved fountain sits in the garden path, with a shallow bird-sized basin.
+  const roseFountainStone=mat(scene,"rose-garden-fountain-stone",new Color3(.68,.63,.53),.76,.06);
+  const roseFountainGold=mat(scene,"rose-garden-fountain-bronze",new Color3(.60,.43,.22),.34,.62);
+  const roseFountainWater=mat(scene,"rose-garden-fountain-water",new Color3(.22,.53,.61),.16,.22);
+  roseFountainWater.alpha=.86;
+  cylinder(scene,"rose-garden-fountain-foot",[0,8.68,-164],3.0,.34,roseFountainStone,40);
+  cylinder(scene,"rose-garden-fountain-basin",[0,8.91,-164],2.72,.34,roseFountainStone,40);
+  const fountainWater=MeshBuilder.CreateCylinder("rose-garden-fountain-water-surface",{diameter:2.42,height:.035,tessellation:40},scene);
+  fountainWater.position.set(0,9.10,-164);fountainWater.material=roseFountainWater;
+  cylinder(scene,"rose-garden-fountain-pedestal-lower",[0,9.35,-164],.72,.68,roseFountainGold,24);
+  cylinder(scene,"rose-garden-fountain-pedestal-upper",[0,9.77,-164],.48,.32,roseFountainStone,24);
+  cylinder(scene,"rose-garden-fountain-upper-bowl",[0,9.98,-164],1.42,.22,roseFountainStone,32);
+  const upperRim=MeshBuilder.CreateTorus("rose-garden-fountain-upper-rim",{diameter:1.48,thickness:.09,tessellation:32},scene);
+  upperRim.position.set(0,10.10,-164);upperRim.material=roseFountainGold;
+  cylinder(scene,"rose-garden-fountain-finial",[0,10.32,-164],.24,.48,roseFountainGold,20);
+  for(let i=0;i<6;i++) {
+    const a=i*Math.PI/3;
+    const jet=MeshBuilder.CreateTube("rose-garden-fountain-water-jet",{path:[
+      new Vector3(Math.cos(a)*.16,10.42,-164+Math.sin(a)*.16),
+      new Vector3(Math.cos(a)*.48,10.52,-164+Math.sin(a)*.48),
+      new Vector3(Math.cos(a)*.72,10.18,-164+Math.sin(a)*.72)
+    ],radius:.025,tessellation:6},scene);
+    jet.material=roseFountainWater;jet.isPickable=false;
+  }
+
   // Stone paths and low balustrades define a quiet, enclosed palace garden.
   for(const side of [-1,1]) {
     for(let z=-178;z<=-134;z+=4) {
@@ -2432,28 +2485,46 @@ export async function createRoyalCity(engine, canvas) {
     ],sideOrientation:2},scene);
     mesh.material=material;mesh.isPickable=false;
   }
+  const roseHeartMat=mat(scene,"garden-rose-heart",new Color3(.96,.68,.19),.52,.08);
   function tunnelRose(center,radius,material,phase=0) {
+    // A rose is built from individually cupped, overlapping petals, not a flat radial disc.
     const pieces=[];
-    for(let layer=0;layer<3;layer++) {
-      const count=layer===0?7:layer===1?6:5;
-      for(let p=0;p<count;p++) {
-        const angle=phase+p*Math.PI*2/count+layer*.28;
-        const inner=radius*(layer===0?.08:layer===1?.28:.48),outer=radius*(layer===0?1:.78);
+    const layers=[{count:8,inner:.08,outer:1.0,spread:.30,lift:.18},{count:7,inner:.20,outer:.86,spread:.27,lift:.28},{count:6,inner:.28,outer:.68,spread:.24,lift:.38}];
+    for(let layer=0;layer<layers.length;layer++) {
+      const spec=layers[layer];
+      for(let p=0;p<spec.count;p++) {
+        const angle=phase+p*Math.PI*2/spec.count+layer*.34;
         const left=[],right=[];
-        for(let k=0;k<5;k++) {
-          const t=k/4,rr=inner+(outer-inner)*t,spread=(.08+Math.sin(t*Math.PI)*.34)*radius;
-          const px=center.x+Math.cos(angle)*rr,pz=center.z+Math.sin(angle)*rr,py=center.y+Math.sin(t*Math.PI)*radius*.24+layer*.018;
+        for(let k=0;k<=8;k++) {
+          const t=k/8;
+          const rr=radius*(spec.inner+(spec.outer-spec.inner)*t);
+          const edgeWave=1+Math.sin(t*Math.PI*3+phase+p)*.035;
+          const spread=radius*(.035+Math.sin(t*Math.PI)*spec.spread)*edgeWave;
+          const cup=Math.sin(t*Math.PI)*radius*spec.lift + layer*.025*radius;
+          const px=center.x+Math.cos(angle)*rr, pz=center.z+Math.sin(angle)*rr, py=center.y+cup;
           left.push(new Vector3(px-Math.sin(angle)*spread,py,pz+Math.cos(angle)*spread));
           right.push(new Vector3(px+Math.sin(angle)*spread,py,pz-Math.cos(angle)*spread));
         }
         const petal=MeshBuilder.CreateRibbon("rose-tunnel-cupped-petal",{pathArray:[left,right],sideOrientation:2},scene);
-        petal.material=material;pieces.push(petal);
+        petal.material=material;petal.isPickable=false;pieces.push(petal);
       }
     }
     const flower=Mesh.MergeMeshes(pieces,true,true,undefined,false,false);
-    if(flower){flower.name="rose-tunnel-bloom";flower.material=material;flower.isPickable=false;}
-    const heart=MeshBuilder.CreateSphere("rose-tunnel-flower-heart",{diameter:radius*.22,segments:10},scene);
-    heart.position.copyFrom(center);heart.material=roseMats[2];
+    if(flower){flower.name="garden-rose-layered-petals";flower.material=material;flower.isPickable=false;}
+    // A rounded golden centre and five pointed sepals make the underside read as a rose.
+    const heart=MeshBuilder.CreateSphere("garden-rose-golden-heart",{diameter:radius*.24,segments:16},scene);
+    heart.position.copyFrom(center);heart.position.y+=radius*.19;heart.material=roseHeartMat;heart.isPickable=false;
+    const sepals=[];
+    for(let i=0;i<5;i++) {
+      const a=phase+i*Math.PI*2/5,base=new Vector3(center.x,center.y-radius*.08,center.z);
+      const tip=new Vector3(center.x+Math.cos(a)*radius*.62,center.y-radius*.17,center.z+Math.sin(a)*radius*.62);
+      const mid=Vector3.Lerp(base,tip,.52).add(new Vector3(0,radius*.045,0));
+      const side=Vector3.Cross(tip.subtract(base),new Vector3(.1,1,.1)).normalize().scale(radius*.12);
+      const sepal=MeshBuilder.CreateRibbon("garden-rose-sepal",{pathArray:[[base,mid.add(side),tip],[base,mid.subtract(side),tip]],sideOrientation:2},scene);
+      sepal.material=stemMat;sepal.isPickable=false;sepals.push(sepal);
+    }
+    const calyx=Mesh.MergeMeshes(sepals,true,true,undefined,false,false);
+    if(calyx){calyx.name="garden-rose-calyx";calyx.material=stemMat;calyx.isPickable=false;}
   }
   // One graceful rose arch keeps the garden open and airy.
   const tunnelZs=[-156];
@@ -2513,6 +2584,27 @@ export async function createRoyalCity(engine, canvas) {
     mesh.position.z+=74;
     if(mesh.name.startsWith("rose-tunnel")||mesh.name.startsWith("inner-rose")||mesh.name.startsWith("palace-inner-rose")) {
       mesh.receiveShadows=true;mesh.isPickable=false;
+    }
+  }
+
+  // The outdoor garden fountain is a solid, small-scale landmark; leave a clear route around it.
+  addObstacle(48,-90,1.25);
+  // Batch the individually sculpted rose petals, sepals, canes and leaves by their
+  // original materials. The detail stays intact while Safari draws far fewer meshes.
+  const roseGardenBatches=new Map();
+  for(const mesh of [...scene.meshes]) {
+    if(!/^(garden-rose-|rose-tunnel-|inner-court-urn-rose-)/.test(mesh.name)) continue;
+    if(mesh.parent||mesh.isDisposed()||!mesh.material||Array.isArray(mesh.material)) continue;
+    if(!roseGardenBatches.has(mesh.material)) roseGardenBatches.set(mesh.material,[]);
+    roseGardenBatches.get(mesh.material).push(mesh);
+  }
+  let roseGardenBatchIndex=0;
+  for(const [material,parts] of roseGardenBatches) {
+    if(parts.length<2) continue;
+    const merged=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+    if(merged) {
+      merged.name="rose-garden-detail-batch-"+roseGardenBatchIndex++;
+      merged.material=material;merged.isPickable=false;
     }
   }
 
@@ -3291,7 +3383,7 @@ export async function createRoyalCity(engine, canvas) {
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
       const onLanding=camera.position.z<stairEndZ&&camera.position.z>=-129.0&&Math.abs(camera.position.x)<14.0;
-      const insideRoyalLobby=camera.position.x>-21.0&&camera.position.x<21.0&&camera.position.z<-120.7&&camera.position.z>-173.1;
+      const insideRoyalLobby=camera.position.x>-21.0&&camera.position.x<21.0&&camera.position.z<-112.0&&camera.position.z>-173.1;
       const onGreatBridge=Math.abs(camera.position.x-bridgeX)<2.7&&camera.position.z>=bridgeZ-bridgeHalf&&camera.position.z<=bridgeZ+bridgeHalf;
       const onSmallBridge=Math.abs(camera.position.x-sx)<2.0&&camera.position.z>=sz-smallHalf&&camera.position.z<=sz+smallHalf;
       camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
