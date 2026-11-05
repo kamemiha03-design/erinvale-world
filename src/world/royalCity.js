@@ -3027,19 +3027,77 @@ export async function createRoyalCity(engine, canvas) {
       }
     }
   }
-  // Reading desks, chairs and green-shaded lamps form a welcoming shared study area.
+  // Salamanca-inspired historic reading room: a full-height wall of oak shelves,
+  // closely packed leather-bound volumes, carved cornices and a quiet gallery feel.
+  for(let bay=0;bay<5;bay++) {
+    const z=-92+bay*4;
+    box(scene,"public-library-west-wall-bookcase",[-62.45,4.25,z],[.72,6.35,3.72],libraryWood);
+    box(scene,"public-library-west-bookcase-crown",[-62.02,7.52,z],[.18,.28,3.92],libraryGold);
+    box(scene,"public-library-west-bookcase-plinth",[-62.02,1.12,z],[.18,.24,3.92],libraryGold);
+    for(let level=0;level<5;level++) {
+      const y=1.62+level*1.18;
+      box(scene,"public-library-west-wall-shelf",[-61.99,y,z],[.16,.12,3.58],libraryGold);
+      for(let b=0;b<14;b++) {
+        const book=box(scene,"public-library-west-wall-volume",[-61.83,y+.48,z-1.62+b*.25],[.34,.88,.19],libraryBookMats[(b+level+bay)%libraryBookMats.length]);
+        book.rotation.x=(b%3-1)*.025;
+        if(b%3===0) box(scene,"public-library-book-gilt-band",[-61.64,y+.48,z-1.62+b*.25],[.025,.08,.16],libraryGold);
+      }
+    }
+    for(const side of [-1,1]) {
+      box(scene,"public-library-bookcase-carved-post",[-61.92,4.3,z+side*1.82],[.22,6.5,.22],libraryTrim);
+      for(let level=0;level<5;level++)
+        box(scene,"public-library-bookcase-post-cap",[-61.78,1.72+level*1.18,z+side*1.82],[.28,.12,.3],libraryGold);
+    }
+  }
+  // Tall oak shelving also fills the solid stretches of the north and south walls.
+  for(const z of [-95.0,-73.0]) {
+    for(const x of [-60.0,-56.0,-48.0,-44.0]) {
+      box(scene,"public-library-perimeter-bookcase",[x,4.15,z],[3.55,6.15,.68],libraryWood);
+      for(let level=0;level<5;level++) {
+        const y=1.62+level*1.16;
+        box(scene,"public-library-perimeter-shelf",[x,y,z-.36],[3.42,.12,.12],libraryGold);
+        for(let b=0;b<12;b++) {
+          const book=box(scene,"public-library-perimeter-volume",[x-1.48+b*.27,y+.46,z-.48],[.21,.84,.3],libraryBookMats[(b+level)%libraryBookMats.length]);
+          book.rotation.z=(b%2?-.025:.02);
+        }
+      }
+    }
+  }
+  // Study tables now have real aprons and four legs; chairs sit on the marble floor
+  // with visible legs, a lower seat, and a properly joined backrest.
+  const librarySeats=[];
   for(const z of [-89,-78]) {
-    box(scene,"public-library-reading-table",[-47.2,1.95,z],[5.8,.22,1.8],libraryWood);
+    box(scene,"public-library-reading-table-top",[-47.2,2.04,z],[5.8,.20,1.8],libraryWood);
+    box(scene,"public-library-reading-table-apron",[-47.2,1.78,z],[5.35,.34,1.42],libraryWood);
+    for(const lx of [-2.55,2.55]) for(const lz of [-.65,.65])
+      box(scene,"public-library-reading-table-leg",[-47.2+lx,1.42,z+lz],[.18,.92,.18],libraryWood);
     for(const side of [-1,1]) for(const x of [-49.2,-47.2,-45.2]) {
-      box(scene,"public-library-reading-chair",[x,1.45,z+side*1.55],[.72,.16,.72],libraryWood);
-      box(scene,"public-library-chair-back",[x,1.95,z+side*1.85],[.72,1.0,.14],libraryWood);
+      const chairZ=z+side*1.55;
+      box(scene,"public-library-reading-chair-seat",[x,1.22,chairZ],[.76,.18,.76],libraryWood);
+      box(scene,"public-library-chair-back",[x,1.70,chairZ+side*.34],[.76,.86,.16],libraryWood);
+      for(const lx of [-.27,.27]) for(const lz of [-.27,.27])
+        box(scene,"public-library-chair-leg",[x+lx,1.12,chairZ+lz],[.10,.48,.10],libraryWood);
+      // A brass foot rail and carved side rails make the chair feel like real furniture.
+      box(scene,"public-library-chair-back-rail",[x,2.12,chairZ+side*.34],[.78,.10,.20],libraryGold);
+      librarySeats.push({x,z:chairZ,yaw:side>0?Math.PI:0});
     }
     const lamp=MeshBuilder.CreateCylinder("public-library-reading-lamp",{diameter:.16,height:.9,tessellation:12},scene);
-    lamp.position.set(-47.2,2.5,z);lamp.material=libraryGold;
+    lamp.position.set(-47.2,2.56,z);lamp.material=libraryGold;
     const shade=MeshBuilder.CreateCylinder("public-library-lamp-shade",{diameterTop:.38,diameterBottom:.72,height:.32,tessellation:16},scene);
-    shade.position.set(-47.2,2.98,z);shade.material=libraryBookMats[1];
+    shade.position.set(-47.2,3.04,z);shade.material=libraryBookMats[1];
+    const pool=MeshBuilder.CreateCylinder("public-library-lamp-light-pool",{diameter:1.5,height:.025,tessellation:20},scene);
+    pool.position.set(-47.2,2.16,z);pool.material=libraryTrim;
   }
-  box(scene,"public-library-central-carpet",[-52,1.06,-84],[4.2,.035,8.5],libraryBookMats[0]);
+  // A patterned runner, reading-gallery balustrade and timber ceiling ribs complete the hall.
+  box(scene,"public-library-central-carpet",[-52,1.075,-84],[4.2,.035,8.5],libraryBookMats[0]);
+  for(let z=-94;z<=-74;z+=4) {
+    box(scene,"public-library-ceiling-rib",[-52,9.02,z],[22.2,.22,.24],libraryWood);
+    for(const x of [-62.5,-41.5])
+      box(scene,"public-library-rib-gilt-cap",[x,9.02,z],[.12,.28,.34],libraryGold);
+  }
+  box(scene,"public-library-gallery-balustrade",[-52,7.95,-90.2],[17.5,.18,.28],libraryGold);
+  for(let x=-60.5;x<=-43.5;x+=1.25)
+    box(scene,"public-library-gallery-baluster",[x,7.62,-90.2],[.12,.62,.12],libraryWood);
   // Small public notice desk immediately inside the entrance.
   box(scene,"public-library-help-desk",[-43.2,1.75,-84],[2.2,1.4,1.0],libraryWood);
   box(scene,"public-library-help-desk-top",[-43.2,2.5,-84],[2.5,.16,1.2],libraryGold);
@@ -4259,7 +4317,36 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
     return "王都エリンヴェイル";
   }
+  let seatedAt=null;
+  let savedStandingY=1.72;
   function interact() {
+    const px=camera.position.x,pz=camera.position.z;
+    if(seatedAt) {
+      camera.position.x=seatedAt.standX;
+      camera.position.z=seatedAt.standZ;
+      camera.position.y=savedStandingY;
+      seatedAt=null;
+      document.querySelector("#hint").textContent="椅子から立ち上がった。";
+      return;
+    }
+    let nearestSeat=null,seatDistance=Infinity;
+    for(const seat of librarySeats) {
+      const d=Math.hypot(px-seat.x,pz-seat.z);
+      if(d<1.45&&d<seatDistance){nearestSeat=seat;seatDistance=d;}
+    }
+    if(nearestSeat) {
+      savedStandingY=camera.position.y;
+      seatedAt={...nearestSeat,standX:px,standZ:pz};
+      camera.position.x=nearestSeat.x;
+      camera.position.z=nearestSeat.z;
+      camera.position.y=2.02;
+      yaw=nearestSeat.yaw;
+      pitch=0;
+      camera.rotation.y=Math.PI-yaw;
+      camera.rotation.x=0;
+      document.querySelector("#hint").textContent="読書席に座った。もう一度「調べる／座る」を押すと立ち上がる。";
+      return;
+    }
     const doors=scene.metadata?.doorLeaves||[];
     let nearest=null,nearestDistance=Infinity;
     for(const door of doors) {
@@ -4417,7 +4504,7 @@ export async function createRoyalCity(engine, canvas) {
     turn(dx,dy){yaw+=dx;pitch=Scalar.Clamp(pitch+dy,-1.05,1.05);camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;},
     interact,
     update(dt){
-      const input=moveSource();
+      const input=seatedAt?Vector3.Zero():moveSource();
       const step=Math.min(dt,.045);
       const inBathPool=camera.position.x>24.15&&camera.position.x<35.85&&camera.position.z>58.35&&camera.position.z<66.05;
       const speed=inBathPool?2.25:4.4;
@@ -4448,9 +4535,9 @@ export async function createRoyalCity(engine, canvas) {
       const onLobbyStairLanding=camera.position.z<-171.0&&camera.position.z>=-174.0&&Math.abs(camera.position.x)<5.2;
       const onLobbyUpperGallery=camera.position.z<-173.35&&camera.position.z>-182.4&&Math.abs(camera.position.x)<19.2;
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
-      camera.position.y=inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
+      camera.position.y=seatedAt?2.02:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
-        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))));
+        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
