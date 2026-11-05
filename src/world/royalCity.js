@@ -3151,31 +3151,39 @@ export async function createRoyalCity(engine, canvas) {
   bathFrontOculus.position.set(hammamX,17.2,hammamFront-.66);bathFrontOculus.rotation.x=Math.PI/2;bathFrontOculus.material=hammamGold;
   const bathFrontGrille=MeshBuilder.CreateCylinder("imperial-hammam-front-oculus-grille",{diameter:1.92,height:.10,tessellation:12},scene);
   bathFrontGrille.position.set(hammamX,17.2,hammamFront-.68);bathFrontGrille.rotation.x=Math.PI/2;bathFrontGrille.material=hammamTile;
-  // Four substantial load-bearing columns frame the hall; the clutter of
-  // decorative pilasters and repeated small arches is removed.
-  for(const side of [-1,1]) for(const zz of [-70,-46]) {
-    const px=hammamX+side*15.2;
-    cylinder(scene,"imperial-hammam-main-support-column-base",[px,.72,zz],1.72,.62,hammamGold,32);
-    cylinder(scene,"imperial-hammam-main-support-column",[px,5.85,zz],1.12,9.8,hammamIvory,32);
-    cylinder(scene,"imperial-hammam-main-support-column-capital",[px,10.9,zz],1.88,.72,hammamGold,32);
-    cylinder(scene,"imperial-hammam-main-support-column-abacus",[px,11.34,zz],2.05,.20,hammamIvory,32);
-  }
+  // A continuous ceiling closes the bath hall; only the central dome remains glazed.
+  // Four plastered ceiling panels meet the glass dome without covering its opening.
+  const hammamCeiling=mat(scene,"imperial-hammam-ceiling-plaster",new Color3(.34,.33,.29),.96);
+  box(scene,"imperial-hammam-ceiling-north",[hammamX,11.92,hammamZ-13.65],[35.2,.62,5.7],hammamCeiling);
+  box(scene,"imperial-hammam-ceiling-south",[hammamX,11.92,hammamZ+13.65],[35.2,.62,5.7],hammamCeiling);
+  box(scene,"imperial-hammam-ceiling-west",[hammamX-14.45,11.92,hammamZ],[6.3,.62,22.0],hammamCeiling);
+  box(scene,"imperial-hammam-ceiling-east",[hammamX+14.45,11.92,hammamZ],[6.3,.62,22.0],hammamCeiling);
 
-  // The great central dome and two smaller steam-room cupolas rise above the colonnades.
-  const hammamDome=MeshBuilder.CreateSphere("imperial-hammam-great-dome",{diameter:23,segments:40,slice:.5},scene);
-  hammamDome.position.set(hammamX,12.25,hammamZ);hammamDome.scaling.y=.78;hammamDome.material=hammamStone;
+  // The central vaulted roof is glazed, with slender bronze ribs and a small oculus.
+  const hammamGlass=new StandardMaterial("imperial-hammam-central-glass",scene);
+  hammamGlass.diffuseColor=new Color3(.30,.48,.57);
+  hammamGlass.emissiveColor=new Color3(.035,.065,.08);
+  hammamGlass.specularColor=new Color3(.82,.90,.96);
+  hammamGlass.specularPower=96;
+  hammamGlass.alpha=.30;
+  hammamGlass.backFaceCulling=false;
+  const hammamDome=MeshBuilder.CreateSphere("imperial-hammam-great-glass-dome",{diameter:23,segments:48,slice:.5},scene);
+  hammamDome.position.set(hammamX,12.25,hammamZ);hammamDome.scaling.y=.78;hammamDome.material=hammamGlass;
   const hammamDomeRim=MeshBuilder.CreateTorus("imperial-hammam-great-dome-rim",{diameter:22.7,thickness:.42,tessellation:80},scene);
-  hammamDomeRim.position.set(hammamX,11.15,hammamZ);hammamDomeRim.material=hammamGold;
-  const hammamOculus=MeshBuilder.CreateCylinder("imperial-hammam-dome-oculus",{diameter:4.1,height:.32,tessellation:48},scene);
-  hammamOculus.position.set(hammamX,20.95,hammamZ);hammamOculus.material=hammamTile;
-  const hammamOculusRing=MeshBuilder.CreateTorus("imperial-hammam-oculus-bronze-ring",{diameter:4.35,thickness:.16,tessellation:48},scene);
-  hammamOculusRing.position.set(hammamX,21.12,hammamZ);hammamOculusRing.material=hammamGold;
-  for(const side of [-1,1]) {
-    const cupola=MeshBuilder.CreateSphere("imperial-hammam-side-cupola",{diameter:10.5,segments:28,slice:.5},scene);
-    cupola.position.set(hammamX+side*11.4,10.8,hammamZ);cupola.scaling.y=.72;cupola.material=hammamIvory;
-    const cupolaRing=MeshBuilder.CreateTorus("imperial-hammam-side-cupola-ring",{diameter:10.2,thickness:.24,tessellation:48},scene);
-    cupolaRing.position.set(hammamX+side*11.4,7.15,hammamZ);cupolaRing.material=hammamGold;
+  hammamDomeRim.position.set(hammamX,12.22,hammamZ);hammamDomeRim.material=hammamGold;
+  for(let rib=0;rib<12;rib++) {
+    const a=rib*Math.PI/6,points=[];
+    for(let step=0;step<=20;step++) {
+      const t=(Math.PI/2)*step/20,r=11.42*Math.cos(t);
+      points.push(new Vector3(hammamX+Math.cos(a)*r,12.25+8.92*Math.sin(t),hammamZ+Math.sin(a)*r));
+    }
+    const strut=MeshBuilder.CreateTube("imperial-hammam-glass-dome-bronze-rib",{path:points,radius:.045,tessellation:8},scene);
+    strut.material=hammamGold;
   }
+  const hammamOculus=MeshBuilder.CreateCylinder("imperial-hammam-dome-oculus",{diameter:4.1,height:.18,tessellation:48},scene);
+  hammamOculus.position.set(hammamX,21.12,hammamZ);hammamOculus.material=hammamGlass;
+  const hammamOculusRing=MeshBuilder.CreateTorus("imperial-hammam-oculus-bronze-ring",{diameter:4.35,thickness:.16,tessellation:48},scene);
+  hammamOculusRing.position.set(hammamX,21.18,hammamZ);hammamOculusRing.material=hammamGold;
   addAntiqueDoor(scene,"imperial-hammam-entry-double-door",hammamX,.48,hammamFront,hammamDoorWidth,6.0,mats,0);
 
   // A large heated central pool with submerged steps, carved coping and turquoise water.
@@ -3203,7 +3211,7 @@ export async function createRoyalCity(engine, canvas) {
   // Warm resting bays, massage benches, towel shelves and oil jars line the side aisles.
   for(const side of [-1,1]) {
     const bx=hammamX+side*13.0;
-    for(const zz of [-51,-69]) {
+    for(const zz of [-69]) {
       box(scene,"imperial-hammam-rest-bench",[bx,.68,zz],[3.4,.42,1.05],hammamWood);
       box(scene,"imperial-hammam-rest-bench-cushion",[bx,1.0,zz-.04],[3.15,.18,.88],hammamTile);
       for(const dx of [-1.25,1.25])box(scene,"imperial-hammam-bench-leg",[bx+dx,.34,zz],[.18,.62,.85],hammamGold);
@@ -3390,7 +3398,7 @@ export async function createRoyalCity(engine, canvas) {
   // Cool daylight spills through the oculus while warm lanterns create small
   // amber islands around the darker bath hall.
   const skylight=new PointLight("imperial-bath-oculus-daylight",new Vector3(30,18.5,62),scene);
-  skylight.diffuse=new Color3(.68,.78,.86);skylight.specular=new Color3(.42,.52,.62);skylight.intensity=.62;skylight.range=27;
+  skylight.diffuse=new Color3(.68,.78,.86);skylight.specular=new Color3(.42,.52,.62);skylight.intensity=.30;skylight.range=23;
   const bathLanterns=[];
   for(const [x,z] of [[15.2,51],[44.8,51],[15.2,74],[44.8,74],[19,62],[41,62]]) {
     const fixture=MeshBuilder.CreateBox("imperial-bath-wall-lantern-bracket",{width:.52,height:.12,depth:.18},scene);
@@ -3400,7 +3408,7 @@ export async function createRoyalCity(engine, canvas) {
     const flame=MeshBuilder.CreateSphere("imperial-bath-wall-lantern-flame",{diameter:.22,segments:12},scene);
     flame.position.set(x,4.22,z);flame.material=hammamGlow;
     const light=new PointLight("imperial-bath-warm-wall-light",new Vector3(x,4.15,z),scene);
-    light.diffuse=new Color3(1,.58,.30);light.specular=new Color3(1,.72,.42);light.intensity=.48;light.range=13;
+    light.diffuse=new Color3(1,.58,.30);light.specular=new Color3(1,.72,.42);light.intensity=.30;light.range=10;
     bathLanterns.push({flame,light,phase:bathLanterns.length*.9});
   }
   const skylightShaft=MeshBuilder.CreateCylinder("imperial-bath-soft-skylight-shaft",{diameterTop:1.0,diameterBottom:3.8,height:13,tessellation:32},scene);
@@ -3410,7 +3418,7 @@ export async function createRoyalCity(engine, canvas) {
   // Layered steam rises from every pool and gathers beneath the warm vaulted ceiling.
   const bathSteamPuffs=[];
   const bathSteamMaterial=mat(scene,"imperial-bath-living-steam",new Color3(.91,.94,.92),.98);
-  bathSteamMaterial.alpha=.19;
+  bathSteamMaterial.alpha=.25;
   bathSteamMaterial.transparencyMode=2;
   for(let i=0;i<34;i++) {
     const poolSide=i%3;
@@ -3422,16 +3430,16 @@ export async function createRoyalCity(engine, canvas) {
     puff.material=bathSteamMaterial;puff.isPickable=false;
     bathSteamPuffs.push({mesh:puff,x:baseX,y:puff.position.y,z:baseZ,phase:i*.73,speed:.22+(i%4)*.035,drift:.35+(i%3)*.12});
   }
-  for(let i=0;i<8;i++) {
-    const x=23+(i%4)*4.6,z=70+Math.floor(i/4)*1.8;
+  for(let i=0;i<12;i++) {
+    const x=17+(i%4)*8.35,z=52.8+Math.floor(i/4)*.95;
     const puff=MeshBuilder.CreateSphere("imperial-bath-treatment-steam",{diameter:1,segments:12},scene);
-    puff.position.set(x,1.35+(i%3)*.4,z);puff.scaling.set(.48,1.25,.48);
+    puff.position.set(x,1.35+(i%3)*.4,z);puff.scaling.set(.62,1.55,.62);
     puff.material=bathSteamMaterial;puff.isPickable=false;
     bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*1.13,speed:.19,drift:.28});
   }
   // Broader, overlapping steam banks create a visible humid atmosphere instead
   // of a few isolated puffs. Each billow has its own slow rise and lateral drift.
-  for(let i=0;i<30;i++) {
+  for(let i=0;i<38;i++) {
     const pool=i%3;
     const x=pool===0?30+((i*7)%9-4)*.92:pool===1?18+((i*3)%5-2)*.48:42+((i*5)%5-2)*.48;
     const z=pool===0?59.8+((i*11)%13)*.62:61.0+((i*7)%11)*.82;
@@ -3442,7 +3450,7 @@ export async function createRoyalCity(engine, canvas) {
     bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*.51,speed:.15+(i%4)*.018,drift:.55+(i%3)*.13});
   }
   // Fine wisps rise from the waterline and dissolve into the dome's humid air.
-  for(let i=0;i<18;i++) {
+  for(let i=0;i<22;i++) {
     const x=24+(i%9)*1.5,z=59.4+Math.floor(i/9)*7.2;
     const puff=MeshBuilder.CreateSphere("imperial-bath-fine-steam-wisp",{diameter:1,segments:10},scene);
     puff.position.set(x,1.0+(i%4)*.25,z);puff.scaling.set(.24,.95,.24);
@@ -3615,20 +3623,26 @@ export async function createRoyalCity(engine, canvas) {
     return root;
   }
 
-  // Guests soak in the central pool; a modestly draped treatment pair shares a marble bench.
+  // Bathers remain around the pools; four treatment alcoves sit just inside the entrance.
   makeBathGuest(27.0,.88,61.0,"soaking",-.25,0);
   makeBathGuest(32.8,.88,64.5,"soaking",Math.PI+.25,1);
   makeBathGuest(29.8,.88,66.0,"soaking",Math.PI/2,2);
   makeBathGuest(25.8,.88,64.4,"soaking",-Math.PI/2,3);
-  makeBathGuest(42.2,.38,73.0,"scrubbed",Math.PI/2,4);
-  makeBathGuest(40.8,.38,72.8,"attendant",-Math.PI/2,5);
-  // Quiet conversations in the two side plunge pools and a second treatment pair.
   makeBathGuest(18.0,.79,60.5,"soaking",Math.PI/2,6);
   makeBathGuest(18.2,.79,63.1,"soaking",-Math.PI/2,7);
   makeBathGuest(42.0,.79,60.8,"soaking",Math.PI/2,8);
   makeBathGuest(43.0,.79,63.4,"soaking",-Math.PI/2,9);
-  makeBathGuest(20.6,.38,72.7,"scrubbed",Math.PI/2,10);
-  makeBathGuest(19.2,.38,72.5,"attendant",-Math.PI/2,11);
+
+  const treatmentStations=[18.0,26.0,34.0,42.0];
+  for(let station=0;station<treatmentStations.length;station++) {
+    const x=treatmentStations[station],z=52.8;
+    box(scene,"imperial-bath-treatment-marble-bed",[x,.55,z],[1.72,.42,2.35],hammamIvory);
+    box(scene,"imperial-bath-treatment-linen",[x,.79,z-.04],[1.48,.12,2.08],bathTowel);
+    box(scene,"imperial-bath-treatment-headrest",[x,.91,z-.78],[.72,.16,.46],hammamTile);
+    cylinder(scene,"imperial-bath-treatment-oil-bowl",[x-1.12,.72,z+.48],.38,.20,hammamGold,16);
+    makeBathGuest(x-.05,.38,z,"scrubbed",Math.PI/2,12+station*2);
+    makeBathGuest(x+1.28,.10,z+.08,"attendant",-Math.PI/2,13+station*2);
+  }
 
   // Palace attendants welcome visitors and keep the reception hall lived-in.
   makeTownsperson(-9.0,-126.0,"maid",21.1,-Math.PI/2,false);
