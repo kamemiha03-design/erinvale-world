@@ -2999,12 +2999,62 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"public-library-side-window-glass",[-52,5.8,z],[2.3,3.7,.06],libraryGlass);
     box(scene,"public-library-side-window-mullion",[-52,5.8,z],[.12,3.8,.06],libraryGold);
   }
+  // Additional high clerestory windows on the west wall bring daylight over the
+  // bookcases without sacrificing the continuous wall of books below.
+  for(const z of [-91.0,-84.0,-77.0]) {
+    box(scene,"public-library-west-window-recess",[-64.08,7.55,z],[.10,1.75,2.45],libraryWood);
+    box(scene,"public-library-west-window-glass",[-64.15,7.55,z],[.055,1.42,2.05],libraryGlass);
+    box(scene,"public-library-west-window-vertical-mullion",[-64.19,7.55,z],[.07,1.48,.10],libraryGold);
+    box(scene,"public-library-west-window-crossbar",[-64.19,7.55,z],[.07,.10,2.12],libraryGold);
+    for(const dz of [-1.18,1.18])
+      box(scene,"public-library-west-window-stone-jamb",[-64.12,7.55,z+dz],[.24,1.95,.16],libraryTrim);
+    box(scene,"public-library-west-window-sill",[-64.18,6.62,z],[.38,.16,2.65],libraryTrim);
+    box(scene,"public-library-west-window-hood",[-64.18,8.48,z],[.38,.18,2.65],libraryGold);
+  }
+  // Three high south clerestory windows sit above the lower shelves.
+  for(const x of [-59.0,-52.0,-45.0]) {
+    box(scene,"public-library-south-clerestory-recess",[x,7.75,-72.08],[2.45,1.55,.10],libraryWood);
+    box(scene,"public-library-south-clerestory-glass",[x,7.75,-72.15],[2.08,1.22,.055],libraryGlass);
+    box(scene,"public-library-south-clerestory-mullion",[x,7.75,-72.19],[.08,1.28,.07],libraryGold);
+    box(scene,"public-library-south-clerestory-crossbar",[x,7.75,-72.19],[2.15,.08,.07],libraryGold);
+    for(const dx of [-1.18,1.18])
+      box(scene,"public-library-south-window-jamb",[x+dx,7.75,-72.12],[.16,1.75,.22],libraryTrim);
+    box(scene,"public-library-south-window-hood",[x,8.62,-72.16],[2.62,.16,.28],libraryGold);
+  }
   // Classical entrance portal and public-library sign.
   box(scene,"public-library-door-pier-left",[-40.55,3.8,-86.15],[.75,6.0,.55],libraryTrim);
   box(scene,"public-library-door-pier-right",[-40.55,3.8,-81.85],[.75,6.0,.55],libraryTrim);
   box(scene,"public-library-door-lintel",[-40.55,6.95,-84],[.85,.55,5.0],libraryGold);
   addAntiqueDoor(scene,"public-library-main-double-door",-40.1,1.05,-84,4.1,5.2,
     {wood:libraryWood,woodLight:libraryWood,gold:libraryGold,trim:libraryTrim},.88,"x");
+  // Extra royal ornamentation layered onto the working double doors: deep carved
+  // panels, gilt borders, floral bosses and a large heraldic crest above the arch.
+  for(const z of [-85.0,-83.0]) {
+    for(const y of [2.35,4.05]) {
+      box(scene,"public-library-door-gilt-panel-border",[-40.43,y,z],[.10,1.32,.72],libraryGold);
+      box(scene,"public-library-door-dark-panel",[-40.49,y,z],[.055,1.16,.56],libraryWood);
+      box(scene,"public-library-door-ivory-inlay",[-40.53,y,z],[.035,.92,.035],libraryTrim);
+      for(const yy of [y-.54,y+.54])
+        box(scene,"public-library-door-panel-cross-inlay",[-40.53,yy,z],[.035,.035,.48],libraryTrim);
+      const boss=MeshBuilder.CreateSphere("public-library-door-floral-boss",{diameter:.22,segments:12},scene);
+      boss.position.set(-40.56,y,z);boss.scaling.set(.35,1,1);boss.material=libraryGold;
+    }
+  }
+  for(const z of [-86.2,-81.8]) {
+    box(scene,"public-library-door-outer-gilt-pilaster",[-40.88,3.8,z],[.18,5.9,.22],libraryGold);
+    for(let y=1.35;y<6.4;y+=.62) {
+      const stud=MeshBuilder.CreateSphere("public-library-door-pilaster-stud",{diameter:.10,segments:8},scene);
+      stud.position.set(-40.99,y,z);stud.material=libraryGold;
+    }
+  }
+  const doorCrest=MeshBuilder.CreateCylinder("public-library-great-heraldic-crest",{diameter:1.05,height:.16,tessellation:12},scene);
+  doorCrest.position.set(-41.08,7.62,-84);doorCrest.rotation.x=Math.PI/2;doorCrest.material=libraryGold;
+  const crestBook=box(scene,"public-library-door-crest-book",[-41.19,7.62,-84],[.035,.46,.62],libraryTrim);
+  crestBook.rotation.x=.18;
+  for(const z of [-85.7,-82.3]) {
+    const rosette=MeshBuilder.CreateTorus("public-library-door-arch-rosette",{diameter:.42,thickness:.075,tessellation:16},scene);
+    rosette.position.set(-41.02,7.02,z);rosette.rotation.y=Math.PI/2;rosette.material=libraryGold;
+  }
   box(scene,"public-library-sign-board",[-40.82,8.1,-84],[.22,1.1,5.6],libraryWood);
   box(scene,"public-library-sign-inlay",[-40.96,8.1,-84],[.08,.82,5.15],libraryGold);
   // A luminous heraldic book emblem above the sign gives the building its civic identity.
