@@ -2417,6 +2417,52 @@ export async function createRoyalCity(engine, canvas) {
       }
     }
   }
+  // Dense rose shrubs with individually cupped, layered blooms.
+  function addRoseBush(cx,cz,phase=0) {
+    for(let stem=0;stem<4;stem++) {
+      const a=phase+stem*Math.PI*.5,lean=.22+(stem%2)*.12;
+      const base=new Vector3(cx+Math.cos(a)*.12,8.92,cz+Math.sin(a)*.12);
+      const tip=new Vector3(cx+Math.cos(a)*lean,9.85+(stem%3)*.13,cz+Math.sin(a)*lean);
+      const cane=MeshBuilder.CreateTube("garden-rose-cane",{path:[base,Vector3.Lerp(base,tip,.52).add(new Vector3(0,.12,0)),tip],radius:.032,tessellation:8},scene);
+      cane.material=stemMat;cane.isPickable=false;
+      for(let leaf=0;leaf<3;leaf++) {
+        const t=.28+leaf*.22,anchor=Vector3.Lerp(base,tip,t),side=leaf%2?1:-1;
+        const leafTip=anchor.add(new Vector3(Math.cos(a+side*.9)*.34,.08,Math.sin(a+side*.9)*.34));
+        roseLeaf(anchor,leafTip,.22,leafMats[(stem+leaf)%leafMats.length]);
+        const secondTip=anchor.add(new Vector3(Math.cos(a-side*.9)*.28,.045,Math.sin(a-side*.9)*.28));
+        roseLeaf(anchor,secondTip,.18,leafMats[(stem+leaf+1)%leafMats.length]);
+      }
+      const bloomMat=roseMats[(stem+Math.floor(phase*2))%roseMats.length];
+      tunnelRose(new Vector3(tip.x,tip.y+.05,tip.z),.25+(stem%2)*.025,bloomMat,phase+stem*.71);
+    }
+  }
+  for(const side of [-1,1]) for(let i=0;i<9;i++) addRoseBush(side*6.55,-173.0+i*4.35,side*.7+i*.43);
+
+  // Small carved stone fountain with a shallow bird-sized basin.
+  const roseFountainStone=mat(scene,"rose-garden-fountain-stone",new Color3(.68,.63,.53),.76,.06);
+  const roseFountainGold=mat(scene,"rose-garden-fountain-bronze",new Color3(.60,.43,.22),.34,.62);
+  const roseFountainWater=mat(scene,"rose-garden-fountain-water",new Color3(.22,.53,.61),.16,.22);
+  roseFountainWater.alpha=.86;
+  cylinder(scene,"rose-garden-fountain-foot",[0,8.68,-164],3.0,.34,roseFountainStone,40);
+  cylinder(scene,"rose-garden-fountain-basin",[0,8.91,-164],2.72,.34,roseFountainStone,40);
+  const roseFountainSurface=MeshBuilder.CreateCylinder("rose-garden-fountain-water-surface",{diameter:2.42,height:.035,tessellation:40},scene);
+  roseFountainSurface.position.set(0,9.10,-164);roseFountainSurface.material=roseFountainWater;
+  cylinder(scene,"rose-garden-fountain-pedestal-lower",[0,9.35,-164],.72,.68,roseFountainGold,24);
+  cylinder(scene,"rose-garden-fountain-pedestal-upper",[0,9.77,-164],.48,.32,roseFountainStone,24);
+  cylinder(scene,"rose-garden-fountain-upper-bowl",[0,9.98,-164],1.42,.22,roseFountainStone,32);
+  const roseFountainUpperRim=MeshBuilder.CreateTorus("rose-garden-fountain-upper-rim",{diameter:1.48,thickness:.09,tessellation:32},scene);
+  roseFountainUpperRim.position.set(0,10.10,-164);roseFountainUpperRim.material=roseFountainGold;
+  cylinder(scene,"rose-garden-fountain-finial",[0,10.32,-164],.24,.48,roseFountainGold,20);
+  for(let i=0;i<6;i++) {
+    const a=i*Math.PI/3;
+    const jet=MeshBuilder.CreateTube("rose-garden-fountain-water-jet",{path:[
+      new Vector3(Math.cos(a)*.16,10.42,-164+Math.sin(a)*.16),
+      new Vector3(Math.cos(a)*.48,10.52,-164+Math.sin(a)*.48),
+      new Vector3(Math.cos(a)*.72,10.18,-164+Math.sin(a)*.72)
+    ],radius:.025,tessellation:6},scene);
+    jet.material=roseFountainWater;jet.isPickable=false;
+  }
+
   // Stone paths and low balustrades define a quiet, enclosed palace garden.
   for(const side of [-1,1]) {
     for(let z=-178;z<=-134;z+=4) {
@@ -2535,6 +2581,22 @@ export async function createRoyalCity(engine, canvas) {
     if(mesh.name.startsWith("rose-tunnel")||mesh.name.startsWith("inner-rose")||mesh.name.startsWith("palace-inner-rose")) {
       mesh.receiveShadows=true;mesh.isPickable=false;
     }
+  }
+
+  // Combine the fine rose details by material to preserve quality without excessive draw calls.
+  addObstacle(48,-90,1.25);
+  const roseGardenBatches=new Map();
+  for(const mesh of [...scene.meshes]) {
+    if(!/^(garden-rose-|rose-tunnel-|inner-court-urn-rose-)/.test(mesh.name)) continue;
+    if(mesh.parent||mesh.isDisposed()||!mesh.material||Array.isArray(mesh.material)) continue;
+    if(!roseGardenBatches.has(mesh.material)) roseGardenBatches.set(mesh.material,[]);
+    roseGardenBatches.get(mesh.material).push(mesh);
+  }
+  let roseGardenBatchIndex=0;
+  for(const [material,parts] of roseGardenBatches) {
+    if(parts.length<2) continue;
+    const merged=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+    if(merged){merged.name="rose-garden-detail-batch-"+roseGardenBatchIndex++;merged.material=material;merged.isPickable=false;}
   }
 
   // Temporary reset: remove the palace building shell and all interior architecture.
