@@ -71,12 +71,93 @@ export function createWorldAudio() {
     }
   }
 
+  let musicGain = null;
+  let musicStep = 0;
+  let nextMusicTime = 0;
+  let musicEnabled = true;
+  const beat = 60 / 76;
+  const chordProgression = [
+    [146.83, 185.00, 220.00],
+    [123.47, 146.83, 185.00],
+    [98.00, 123.47, 146.83],
+    [110.00, 138.59, 164.81],
+  ];
+  const melody = [
+    587.33, null, 440.00, 493.88, 587.33, null, 659.25, 587.33,
+    493.88, null, 369.99, 440.00, 493.88, null, 587.33, null,
+    659.25, null, 587.33, 493.88, 440.00, null, 493.88, 587.33,
+    440.00, null, 369.99, 329.63, 369.99, null, 440.00, null
+  ];
+
+  function pluck(frequency, time, duration, volume, type="sine") {
+    if (!audioContext || !musicGain || !frequency) return;
+    const osc=audioContext.createOscillator();
+    const envelope=audioContext.createGain();
+    const filter=audioContext.createBiquadFilter();
+    osc.type=type;
+    osc.frequency.setValueAtTime(frequency,time);
+    filter.type="lowpass";
+    filter.frequency.setValueAtTime(type==="triangle"?1900:2600,time);
+    envelope.gain.setValueAtTime(.0001,time);
+    envelope.gain.exponentialRampToValueAtTime(volume,time+.018);
+    envelope.gain.exponentialRampToValueAtTime(.0001,time+duration);
+    osc.connect(filter);filter.connect(envelope);envelope.connect(musicGain);
+    osc.start(time);osc.stop(time+duration+.03);
+  }
+
+  function scheduleMusic() {
+    if(!audioContext || !musicGain || !musicEnabled) return;
+    while(nextMusicTime<audioContext.currentTime+.24) {
+      const step=musicStep%32;
+      const bar=Math.floor(step/8);
+      const beatInBar=step%8;
+      const chord=chordProgression[bar];
+      if(beatInBar===0) chord.forEach(frequency=>{
+        pluck(frequency/2,nextMusicTime,1.48,.008,"sine");
+        pluck(frequency,nextMusicTime,1.18,.0045,"sine");
+      });
+      if(beatInBar%2===0) pluck(chord[0]/2,nextMusicTime,.62,.026,"sine");
+      const note=melody[step];
+      if(note) pluck(note,nextMusicTime,beat*.82,.024,"triangle");
+      if(beatInBar===2||beatInBar===6) pluck(chord[beatInBar===2?1:2]*2,nextMusicTime,.5,.012,"sine");
+      nextMusicTime+=beat/2;
+      musicStep++;
+    }
+  }
+
+  function startMusic() {
+    if(!audioContext || musicGain) return;
+    musicGain=audioContext.createGain();
+    musicGain.gain.value=0;
+    const filter=audioContext.createBiquadFilter();
+    filter.type="lowpass";filter.frequency.value=3200;
+    musicGain.connect(filter);filter.connect(audioContext.destination);
+    musicGain.gain.setTargetAtTime(musicEnabled?.12:0,audioContext.currentTime,1.1);
+    nextMusicTime=audioContext.currentTime+.12;
+    scheduleMusic();
+    window.setInterval(scheduleMusic,100);
+  }
+
+  function toggleMusic() {
+    musicEnabled=!musicEnabled;
+    if(musicEnabled) {
+      if(!audioContext) startWind();
+      audioContext?.resume?.();
+      startMusic();
+      if(musicGain&&audioContext)musicGain.gain.setTargetAtTime(.12,audioContext.currentTime,.35);
+    } else if(musicGain&&audioContext) {
+      musicGain.gain.setTargetAtTime(0,audioContext.currentTime,.35);
+    }
+    return musicEnabled;
+  }
+
   function unlock() {
     if (unlocked) return;
     unlocked = true;
     Object.values(layers).forEach(safePlay);
     startWind();
     audioContext?.resume?.();
+    startMusic();
   }
 
   function setMovement(active, position, location) {
@@ -141,5 +222,5 @@ export function createWorldAudio() {
     } catch(error) { console.warn("Door sound unavailable",error); }
   }
 
-  return { unlock, setMovement, playDoor };
+  return { unlock, setMovement, playDoor, toggleMusic };
 }
