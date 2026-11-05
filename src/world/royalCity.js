@@ -3011,6 +3011,17 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"public-library-west-window-sill",[-64.18,6.62,z],[.38,.16,2.65],libraryTrim);
     box(scene,"public-library-west-window-hood",[-64.18,8.48,z],[.38,.18,2.65],libraryGold);
   }
+  // North-facing clerestory windows add daylight above the stacks.
+  for(const x of [-59.0,-52.0,-45.0]) {
+    box(scene,"public-library-north-clerestory-recess",[x,7.65,-96.12],[2.55,1.72,.12],libraryWood);
+    box(scene,"public-library-north-clerestory-glass",[x,7.65,-96.22],[2.18,1.38,.055],libraryGlass);
+    box(scene,"public-library-north-clerestory-mullion",[x,7.65,-96.27],[.09,1.46,.07],libraryGold);
+    box(scene,"public-library-north-clerestory-crossbar",[x,7.65,-96.27],[2.22,.09,.07],libraryGold);
+    for(const dx of [-1.24,1.24])
+      box(scene,"public-library-north-window-jamb",[x+dx,7.65,-96.18],[.16,1.9,.22],libraryTrim);
+    box(scene,"public-library-north-window-sill",[x,6.72,-96.22],[2.78,.18,.3],libraryTrim);
+    box(scene,"public-library-north-window-hood",[x,8.62,-96.2],[2.82,.18,.32],libraryGold);
+  }
   // Three high south clerestory windows sit above the lower shelves.
   for(const x of [-59.0,-52.0,-45.0]) {
     box(scene,"public-library-south-clerestory-recess",[x,7.75,-72.08],[2.45,1.55,.10],libraryWood);
@@ -3046,6 +3057,27 @@ export async function createRoyalCity(engine, canvas) {
       const stud=MeshBuilder.CreateSphere("public-library-door-pilaster-stud",{diameter:.10,segments:8},scene);
       stud.position.set(-40.99,y,z);stud.material=libraryGold;
     }
+  }
+  // Hand-forged brass ring handles, hinge straps and rivets add weight and craft.
+  for(const z of [-84.34,-83.66]) {
+    const handle=MeshBuilder.CreateTorus("public-library-door-ring-handle",{diameter:.34,thickness:.055,tessellation:16},scene);
+    handle.position.set(-40.62,3.15,z);handle.rotation.y=Math.PI/2;handle.material=libraryGold;
+    const plate=MeshBuilder.CreateCylinder("public-library-door-handle-plate",{diameter:.22,height:.045,tessellation:12},scene);
+    plate.position.set(-40.61,3.15,z);plate.rotation.z=Math.PI/2;plate.material=libraryTrim;
+    for(const y of [1.55,3.0,4.55]) {
+      box(scene,"public-library-door-forged-hinge-strap",[-40.59,y,z+(z<-84?.23:-.23)],[.07,.52,.10],libraryGold);
+      const pin=MeshBuilder.CreateSphere("public-library-door-hinge-stud",{diameter:.12,segments:8},scene);
+      pin.position.set(-40.65,y,z+(z<-84?.23:-.23));pin.material=libraryTrim;
+    }
+  }
+  // Alternating limestone and gilt voussoirs form a richer arched doorway crown.
+  for(let i=0;i<=10;i++) {
+    const a=Math.PI-i*Math.PI/10;
+    const voussoir=MeshBuilder.CreateBox("public-library-door-arch-voussoir",{width:.28,height:.46,depth:.42},scene);
+    voussoir.position.set(-40.98,5.65+Math.sin(a)*1.35,-84+Math.cos(a)*2.05);
+    voussoir.rotation.z=a-Math.PI/2;
+    voussoir.material=i%2?libraryTrim:libraryGold;
+    voussoir.isPickable=false;
   }
   const doorCrest=MeshBuilder.CreateCylinder("public-library-great-heraldic-crest",{diameter:1.05,height:.16,tessellation:12},scene);
   doorCrest.position.set(-41.08,7.62,-84);doorCrest.rotation.x=Math.PI/2;doorCrest.material=libraryGold;
