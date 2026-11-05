@@ -16,13 +16,17 @@ async function boot() {
   const engine=new Engine(canvas,true,{
     preserveDrawingBuffer:false,
     stencil:false,
-    antialias:true,
+    // MSAA costs extra GPU memory on iPhone; retain it on desktop only.
+    antialias:!isTouch,
     powerPreference:"high-performance",
     adaptToDeviceRatio:true,
   });
-  // Render mobile at a higher device-pixel density with MSAA enabled.
-  // Keep the 24 FPS cap and optimize scene submission instead of lowering geometry detail.
-  engine.setHardwareScalingLevel(isTouch?1.5:1);
+  // Keep all world geometry and textures. On phones, dynamically trade only
+  // framebuffer resolution when the GPU is struggling, then restore it slowly.
+  let mobileScale=1.5;
+  let lastScaleCheck=performance.now();
+  let stableSince=lastScaleCheck;
+  if(isTouch) engine.setHardwareScalingLevel(mobileScale);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
@@ -51,12 +55,41 @@ async function boot() {
   // textures remain unchanged; optional model downloads are deferred by the world builder.
   let lastMobileFrame=0;
   engine.runRenderLoop(()=>{
+    if(document.hidden)return;
     const now=performance.now();
     if(isTouch && now-lastMobileFrame<1000/24)return;
     const elapsed=lastMobileFrame?Math.min((now-lastMobileFrame)/1000,.1):engine.getDeltaTime()/1000;
     lastMobileFrame=now;
+
+    // Adaptive resolution is a safety valve for mobile GPUs. It never removes
+    // meshes, polygons, materials, animation, or world detail.
+    if(isTouch && now-lastScaleCheck>1800) {
+      lastScaleCheck=now;
+      const fps=engine.getFps();
+      if(fps<19 && mobileScale<2.8) {
+        mobileScale=Math.min(2.8,mobileScale+.25);
+        engine.setHardwareScalingLevel(mobileScale);
+        stableSince=now;
+      } else if(fps>23 && mobileScale>1.5) {
+        if(now-stableSince>9000) {
+          mobileScale=Math.max(1.5,mobileScale-.1);
+          engine.setHardwareScalingLevel(mobileScale);
+          stableSince=now;
+        }
+      } else if(fps<=23) {
+        stableSince=now;
+      }
+    }
+
     world.update(elapsed);
     world.scene.render();
+  });
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden) {
+      lastMobileFrame=0;
+      lastScaleCheck=performance.now();
+      stableSince=lastScaleCheck;
+    }
   });
   window.addEventListener("resize",()=>engine.resize(),{passive:true});
   loading.classList.add("fade-out");
