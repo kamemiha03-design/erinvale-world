@@ -1865,36 +1865,36 @@ export async function createRoyalCity(engine, canvas) {
   const lobbyWall=mat(scene,"palace-lobby-wall",new Color3(.79,.74,.64),.88);
   const lobbyWood=mat(scene,"palace-lobby-walnut",new Color3(.20,.105,.06),.72);
   const lobbyVelvet=mat(scene,"palace-lobby-velvet",new Color3(.38,.08,.16),.88);
-  box(scene,"palace-lobby-floor",[0,8.62,-80],[18,.24,11],lobbyFloor);
-  box(scene,"palace-lobby-runner",[0,8.77,-80],[4.6,.06,10.2],lobbyVelvet);
+  box(scene,"palace-lobby-floor",[0,8.62,-120],[18,.24,11],lobbyFloor);
+  box(scene,"palace-lobby-runner",[0,8.77,-120],[4.6,.06,10.2],lobbyVelvet);
   for(const side of [-1,1]) {
-    box(scene,"palace-lobby-side-wall",[side*9,15,-80],[.55,12,11],lobbyWall);
+    box(scene,"palace-lobby-side-wall",[side*9,15,-120],[.55,12,11],lobbyWall);
     for(let z=-84;z<=-76;z+=4) {
       cylinder(scene,"palace-lobby-column-base",[side*7.8,9.0,z],.95,.38,palaceGold,16);
       cylinder(scene,"palace-lobby-column",[side*7.8,15.0,z],.42,11.6,palaceIvory,16);
       cylinder(scene,"palace-lobby-column-capital",[side*7.8,21.0,z],.82,.42,palaceGold,16);
     }
-    box(scene,"palace-lobby-welcome-desk",[side*5.9,9.55,-80],[2.9,1.7,1.35],lobbyWood);
-    box(scene,"palace-lobby-desk-top",[side*5.9,10.45,-80],[3.1,.18,1.5],palaceGold);
+    box(scene,"palace-lobby-welcome-desk",[side*5.9,9.55,-120],[2.9,1.7,1.35],lobbyWood);
+    box(scene,"palace-lobby-desk-top",[side*5.9,10.45,-120],[3.1,.18,1.5],palaceGold);
     box(scene,"palace-lobby-desk-front-inlay",[side*5.9,9.55,-79.29],[2.1,.9,.08],lobbyVelvet);
     for(let j=0;j<2;j++) {
-      box(scene,"palace-lobby-waiting-seat",[side*4.8,9.1,-84+j*2.0],[2.0,.38,.82],lobbyWood);
-      box(scene,"palace-lobby-waiting-seat-back",[side*4.8,10.0,-84.4+j*2.0],[2.0,1.35,.2],lobbyVelvet);
+      box(scene,"palace-lobby-waiting-seat",[side*4.8,9.1,-124+j*2.0],[2.0,.38,.82],lobbyWood);
+      box(scene,"palace-lobby-waiting-seat-back",[side*4.8,10.0,-124.4+j*2.0],[2.0,1.35,.2],lobbyVelvet);
     }
-    box(scene,"palace-lobby-wall-panel",[side*8.68,15,-80],[.08,5.5,4.4],palaceBlue);
-    box(scene,"palace-lobby-wall-panel-frame",[side*8.58,15,-80],[.08,6.0,4.8],palaceGold);
+    box(scene,"palace-lobby-wall-panel",[side*8.68,15,-120],[.08,5.5,4.4],palaceBlue);
+    box(scene,"palace-lobby-wall-panel-frame",[side*8.58,15,-120],[.08,6.0,4.8],palaceGold);
   }
   // A reception chandelier and royal crest make the entrance read as a palace lobby.
   const lobbyChandelier=MeshBuilder.CreateCylinder("palace-lobby-chandelier-ring",{diameter:4.6,height:.18,tessellation:28},scene);
-  lobbyChandelier.position.set(0,24,-80);lobbyChandelier.material=palaceGold;
+  lobbyChandelier.position.set(0,24,-120);lobbyChandelier.material=palaceGold;
   for(let i=0;i<8;i++) {
     const a=i*Math.PI/4;
     const bulb=MeshBuilder.CreateSphere("palace-lobby-chandelier-bulb",{diameter:.34,segments:8},scene);
-    bulb.position.set(Math.cos(a)*1.85,24.35,-80+Math.sin(a)*1.85);bulb.material=mats.lantern;
+    bulb.position.set(Math.cos(a)*1.85,24.35,-120+Math.sin(a)*1.85);bulb.material=mats.lantern;
   }
-  box(scene,"palace-lobby-back-crest-plaque",[0,17.5,-85.1],[3.6,4.0,.28],palaceBlue);
+  box(scene,"palace-lobby-back-crest-plaque",[0,17.5,-125.1],[3.6,4.0,.28],palaceBlue);
   const lobbyCrest=MeshBuilder.CreateCylinder("palace-lobby-national-crest",{diameter:2.1,height:.18,tessellation:8},scene);
-  lobbyCrest.position.set(0,17.6,-84.88);lobbyCrest.rotation.x=Math.PI/2;lobbyCrest.material=palaceGold;
+  lobbyCrest.position.set(0,17.6,-124.88);lobbyCrest.rotation.x=Math.PI/2;lobbyCrest.material=palaceGold;
 
   const royalGardenStartIndex=scene.meshes.length;
   // The approach is a broad carriage boulevard; formal rose gardens sit on both sides BEFORE the stair.
