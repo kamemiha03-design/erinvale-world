@@ -3018,13 +3018,7 @@ export async function createRoyalCity(engine, canvas) {
   // Small public notice desk immediately inside the entrance.
   box(scene,"public-library-help-desk",[-43.2,1.75,-84],[2.2,1.4,1.0],libraryWood);
   box(scene,"public-library-help-desk-top",[-43.2,2.5,-84],[2.5,.16,1.2],libraryGold);
-  // The player can enter through the east double doors; the rest of the shell is solid.
-  const inLibrary=x>-63.0&&x<-40.8&&z>-95.2&&z<-72.8;
-  const libraryDoorway=z>-86.2&&z<-81.8&&x<-40.8;
-  if(inLibrary&&!libraryDoorway)return true;
-  if(x<-63.0&&x>-64.4&&z>-96.5&&z<-71.5)return true;
-  if(z<-95.2&&z>-96.8&&x>-40.0&&x<-64.0)return true;
-  if(z>-72.8&&z<-71.2&&x>-64.0&&x<-40.0)return true;
+  // Collision is handled in collides() so visitors can freely walk between the shelves.
 
   // Yggdrasil now floats much higher in the open sky, with its roots fully exposed beneath the island.
   const treeX=34,treeZ=-165,treeLift=18;
@@ -4192,13 +4186,12 @@ export async function createRoyalCity(engine, canvas) {
   const velocity=new Vector3();
   const collides=(x,z)=>{
     if(Math.abs(x)>112)return true;
-    // The public library is entered from its east-facing double doors.
-    const inLibrary=x>-63.0&&x<-40.8&&z>-95.2&&z<-72.8;
-    const libraryDoorway=z>-86.2&&z<-81.8&&x<-40.8;
-    if(inLibrary&&!libraryDoorway)return true;
-    if(x<-63.0&&x>-64.4&&z>-96.5&&z<-71.5)return true;
-    if(z<-95.2&&z>-96.8&&x>-64.0&&x<-40.0)return true;
-    if(z>-72.8&&z<-71.2&&x>-64.0&&x<-40.0)return true;
+    // Library walls block movement, while the east-facing doorway and reading hall stay walkable.
+    if(x>-40.65&&x<-40.0&&z>-96.2&&z<-85.95)return true;
+    if(x>-40.65&&x<-40.0&&z>-82.05&&z<-71.8)return true;
+    if(x>-64.1&&x<-63.4&&z>-96.2&&z<-71.8)return true;
+    if(z>-96.3&&z<-95.7&&x>-64.1&&x<-40.0)return true;
+    if(z>-72.3&&z<-71.7&&x>-64.1&&x<-40.0)return true;
     // The hall is checked before the legacy z=-116 boundary and town obstacles.
     if(x>-26.2&&x<26.2&&z>-183.0&&z<-113.0) {
       if(Math.abs(x)>25.9||z<-182.5)return true;
