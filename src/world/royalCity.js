@@ -3185,7 +3185,10 @@ export async function createRoyalCity(engine, canvas) {
   }
   // A true upper reading gallery: timber floor, carved balustrade and a second
   // tier of shelves tucked behind the stone columns, like a historic university hall.
-  box(scene,"public-library-mezzanine-floor",[-53.0,5.25,-92.7],[18.5,.28,6.0],libraryWood);
+  // The gallery deck is built around a real stairwell opening; the stair must not pass through a solid slab.
+  box(scene,"public-library-mezzanine-floor-west",[-55.775,5.25,-92.7],[12.95,.28,6.0],libraryWood);
+  box(scene,"public-library-mezzanine-floor-north",[-46.525,5.25,-94.425],[5.55,.28,2.55],libraryWood);
+  box(scene,"public-library-mezzanine-floor-south",[-46.525,5.25,-90.625],[5.55,.28,1.85],libraryWood);
   // Upper-gallery wall stacks: books line the north and west walls above the
   // lower-floor collections, with compact human-scale volumes and extra tiers.
   for(const x of [-60.5,-57.0,-53.5,-50.0,-46.5]) {
@@ -3226,7 +3229,7 @@ export async function createRoyalCity(engine, canvas) {
       box(scene,"public-library-grand-stair-baluster",[-42.55-t*6,treadTop+.42,-92.35+side*.74],[.085,.84,.085],libraryGold);
     }
   }
-  box(scene,"public-library-grand-stair-landing",[-48.9,5.25,-92.35],[.9,.28,1.65],libraryWood);
+  box(scene,"public-library-grand-stair-landing",[-49.65,5.25,-92.35],[.8,.28,1.65],libraryWood);
   box(scene,"public-library-mezzanine-front-beam",[-53.0,5.12,-89.85],[16.6,.34,.24],libraryGold);
   for(const x of [-57.8,-54.9,-52.0,-49.1,-46.2,-43.3]) {
     box(scene,"public-library-mezzanine-baluster",[x,5.78,-89.9],[.12,.78,.12],libraryWood);
@@ -4616,7 +4619,8 @@ export async function createRoyalCity(engine, canvas) {
     // Block every upper-gallery edge not covered by the mezzanine deck or stair.
     if(libraryUpperLevel&&inLibraryX&&inLibraryZ) {
       const onStair=x>-49.25&&x<-42.15&&z>-93.1&&z<-91.6;
-      const onMainGallery=x>-62.0&&x<-44.0&&z>-95.45&&z<-90.0;
+      const inStairwellOpening=x>-49.3&&z>-93.15&&z<-91.55;
+      const onMainGallery=x>-62.0&&x<-44.0&&z>-95.45&&z<-90.0&&!inStairwellOpening;
       const onWestGallery=x>-62.0&&x<-60.0&&z>-90.5&&z<-73.6;
       if(!onStair&&!onMainGallery&&!onWestGallery)return true;
     }
@@ -4908,7 +4912,7 @@ export async function createRoyalCity(engine, canvas) {
         (camera.position.x>-62.0&&camera.position.x<-44.0&&camera.position.z>-95.45&&camera.position.z<-90.0)||
         (camera.position.x>-62.0&&camera.position.x<-60.0&&camera.position.z>-90.5&&camera.position.z<-73.6)
       );
-      const libraryFloorY=onLibraryStair?2.76+libraryStairT*4.35:(onLibraryGallery?7.11:1.72);
+      const libraryFloorY=onLibraryStair?1.72+libraryStairT*5.25:(onLibraryGallery?6.97:1.72);
       camera.position.y=seatedAt?2.02:(camera.position.x>-64.5&&camera.position.x<-39.4&&camera.position.z>-97&&camera.position.z<-71?libraryFloorY:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
         (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))))));
