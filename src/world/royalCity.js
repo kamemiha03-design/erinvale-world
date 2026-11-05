@@ -2258,13 +2258,9 @@ export async function createRoyalCity(engine, canvas) {
     // Long clipped borders and planted islands frame the drive without narrowing it.
     for(let row=0;row<3;row++) {
       const x=side*(22+row*7.2);
-      // Leave a deliberate cross-path through the western garden borders for the public library.
-      if(row===0) {
-        box(scene,"palace-court-hedge-border",[x,.72,-85],[1.05,1.25,42],courtHedge);
-        box(scene,"palace-court-hedge-border",[x,.72,-58.5],[1.05,1.25,1],courtHedge);
-      } else {
-        box(scene,"palace-court-hedge-border",[x,.72,-82],[1.05,1.25,48],courtHedge);
-      }
+      // Leave a deliberate cross-path through every western garden hedge row.
+      box(scene,"palace-court-hedge-border",[x,.72,-85],[1.05,1.25,42],courtHedge);
+      box(scene,"palace-court-hedge-border",[x,.72,-58.5],[1.05,1.25,1],courtHedge);
       for(let z=-101;z<=-63;z+=9) {
         if(z===-65) continue;
         const bed=MeshBuilder.CreateBox("palace-court-shrub-island",{width:5.8,height:.34,depth:4.6},scene);
