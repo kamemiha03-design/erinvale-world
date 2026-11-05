@@ -2384,6 +2384,7 @@ export async function createRoyalCity(engine, canvas) {
     mat(scene,"inner-rose-blush",new Color3(.88,.31,.43),.64),
     mat(scene,"inner-rose-ivory",new Color3(.94,.81,.65),.68)
   ];
+  const roseHeartMat=mat(scene,"garden-rose-heart",new Color3(.96,.68,.19),.52,.08);
   const courtZ=-156;
   const innerCourt=MeshBuilder.CreateGround("palace-inner-rose-court-floor",{width:19,height:48,subdivisions:2},scene);
   innerCourt.position.set(0,8.48,courtZ);innerCourt.material=gardenFloor;
