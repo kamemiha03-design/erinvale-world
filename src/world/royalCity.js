@@ -3015,54 +3015,60 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"public-library-interior-north-wall",[libX,5.0,-95.55],[22.8,7.8,.18],libraryWall);
   box(scene,"public-library-interior-south-wall",[libX,5.0,-72.45],[22.8,7.8,.18],libraryWall);
   box(scene,"public-library-ceiling",[libX,9.3,libZ],[23.5,.28,23.5],libraryTrim);
-  for(const z of [-93,-87,-81,-75]) {
-    for(const x of [-61.4,-58.8,-56.2,-53.6]) {
-      box(scene,"public-library-bookcase",[x,4.2,z],[1.25,5.9,.85],libraryWood);
-      for(let level=0;level<4;level++) {
-        box(scene,"public-library-shelf",[x,2.0+level*1.25,z+.48],[1.32,.12,.12],libraryGold);
-        for(let b=0;b<6;b++) {
-          const book=box(scene,"public-library-book",[x-.48+b*.19,2.48+level*1.25,z+.40],[.14,.82,.38],libraryBookMats[(b+level)%libraryBookMats.length]);
-          book.rotation.z=(b%2?-.035:.025);
-        }
-      }
-    }
-  }
-  // Salamanca-inspired historic reading room: a full-height wall of oak shelves,
-  // closely packed leather-bound volumes, carved cornices and a quiet gallery feel.
+  // Human-scale Salamanca-inspired bookcases: individual volumes are about 28–34 cm tall,
+  // with narrow spines, thin pages and realistic shelf spacing (not oversized blocks).
+  const libraryBookCount=libraryBookMats.length;
   for(let bay=0;bay<5;bay++) {
-    const z=-92+bay*4;
-    box(scene,"public-library-west-wall-bookcase",[-62.45,4.25,z],[.72,6.35,3.72],libraryWood);
-    box(scene,"public-library-west-bookcase-crown",[-62.02,7.52,z],[.18,.28,3.92],libraryGold);
-    box(scene,"public-library-west-bookcase-plinth",[-62.02,1.12,z],[.18,.24,3.92],libraryGold);
+    const z=-92+bay*4.25;
+    box(scene,"public-library-west-bookcase-body",[-62.55,4.15,z],[.72,5.95,3.95],libraryWood);
+    box(scene,"public-library-west-bookcase-crown",[-62.12,7.22,z],[.18,.22,4.08],libraryGold);
+    box(scene,"public-library-west-bookcase-plinth",[-62.12,1.22,z],[.22,.28,4.08],libraryTrim);
     for(let level=0;level<5;level++) {
-      const y=1.62+level*1.18;
-      box(scene,"public-library-west-wall-shelf",[-61.99,y,z],[.16,.12,3.58],libraryGold);
-      for(let b=0;b<14;b++) {
-        const book=box(scene,"public-library-west-wall-volume",[-61.83,y+.48,z-1.62+b*.25],[.34,.88,.19],libraryBookMats[(b+level+bay)%libraryBookMats.length]);
-        book.rotation.x=(b%3-1)*.025;
-        if(b%3===0) box(scene,"public-library-book-gilt-band",[-61.64,y+.48,z-1.62+b*.25],[.025,.08,.16],libraryGold);
+      const y=1.62+level*1.08;
+      box(scene,"public-library-west-shelf",[-62.08,y,z],[.78,.075,3.78],libraryGold);
+      for(let b=0;b<12;b++) {
+        const book=box(scene,"public-library-west-volume",[-61.91,y+.205,z-1.60+b*.29],[.075,.34,.205],libraryBookMats[(b+level+bay)%libraryBookCount]);
+        book.rotation.x=(b%4-1.5)*.018;
+        if(b%3===0) box(scene,"public-library-west-gilt-spine-band",[-61.865,y+.205,z-1.60+b*.29],[.012,.045,.15],libraryGold);
       }
     }
     for(const side of [-1,1]) {
-      box(scene,"public-library-bookcase-carved-post",[-61.92,4.3,z+side*1.82],[.22,6.5,.22],libraryTrim);
-      for(let level=0;level<5;level++)
-        box(scene,"public-library-bookcase-post-cap",[-61.78,1.72+level*1.18,z+side*1.82],[.28,.12,.3],libraryGold);
+      box(scene,"public-library-west-carved-pilaster",[-62.02,4.2,z+side*1.98],[.26,6.2,.22],libraryTrim);
+      box(scene,"public-library-west-pilaster-cap",[-61.91,7.35,z+side*1.98],[.34,.22,.34],libraryGold);
     }
   }
-  // Tall oak shelving also fills the solid stretches of the north and south walls.
+  // Lower perimeter shelves carry matching human-sized books, leaving the tall windows readable.
   for(const z of [-95.0,-73.0]) {
-    for(const x of [-60.0,-56.0,-48.0,-44.0]) {
-      box(scene,"public-library-perimeter-bookcase",[x,4.15,z],[3.55,6.15,.68],libraryWood);
-      for(let level=0;level<5;level++) {
-        const y=1.62+level*1.16;
-        box(scene,"public-library-perimeter-shelf",[x,y,z-.36],[3.42,.12,.12],libraryGold);
-        for(let b=0;b<12;b++) {
-          const book=box(scene,"public-library-perimeter-volume",[x-1.48+b*.27,y+.46,z-.48],[.21,.84,.3],libraryBookMats[(b+level)%libraryBookMats.length]);
-          book.rotation.z=(b%2?-.025:.02);
+    for(const x of [-59.0,-54.5,-47.5,-43.5]) {
+      box(scene,"public-library-end-bookcase",[x,3.95,z],[3.65,5.55,.62],libraryWood);
+      for(let level=0;level<4;level++) {
+        const y=1.65+level*1.12;
+        box(scene,"public-library-end-shelf",[x,y,z-.34],[3.52,.075,.12],libraryGold);
+        for(let b=0;b<13;b++) {
+          const book=box(scene,"public-library-end-volume",[x-1.58+b*.263,y+.205,z-.43],[.205,.34,.075],libraryBookMats[(b+level)%libraryBookCount]);
+          book.rotation.z=(b%2?-.018:.018);
         }
       }
     }
   }
+  // Tall stone piers, carved capitals and shallow arches give the hall a university-library rhythm.
+  for(const z of [-94.2,-89.2,-84.2,-79.2,-74.2]) {
+    box(scene,"public-library-east-pier",[-40.72,4.85,z],[.34,7.55,.34],libraryTrim);
+    box(scene,"public-library-east-pier-base",[-40.72,1.35,z],[.58,.34,.58],libraryGold);
+    box(scene,"public-library-east-pier-cap",[-40.72,8.45,z],[.62,.38,.62],libraryGold);
+  }
+  // Burgundy heraldic banners, green-shaded brass reading lights and stone statuary.
+  for(const z of [-91.5,-76.5]) {
+    box(scene,"public-library-burgundy-banner",[-41.05,6.35,z],[.12,2.05,.92],libraryBookMats[0]);
+    box(scene,"public-library-banner-gilt-top",[-41.14,7.42,z],[.16,.12,1.08],libraryGold);
+    const tassel=MeshBuilder.CreateCylinder("public-library-banner-tassel",{diameter:.08,height:.38,tessellation:8},scene);
+    tassel.position.set(-41.05,5.15,z);tassel.material=libraryGold;
+  }
+  const statueBase=box(scene,"public-library-marble-statue-plinth",[-59.8,1.55,-84],[1.25,1.1,1.25],libraryTrim);
+  const statue=MeshBuilder.CreateSphere("public-library-marble-scholar-statue",{diameter:1.15,segments:16},scene);
+  statue.position.set(-59.8,2.65,-84);statue.scaling.y=1.65;statue.material=libraryWall;
+  const statueHead=MeshBuilder.CreateSphere("public-library-statue-head",{diameter:.48,segments:16},scene);
+  statueHead.position.set(-59.8,3.65,-84);statueHead.material=libraryWall;
   // Study tables now have real aprons and four legs; chairs sit on the marble floor
   // with visible legs, a lower seat, and a properly joined backrest.
   const librarySeats=[];
