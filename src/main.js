@@ -22,7 +22,7 @@ async function boot() {
   });
   // Mobile uses a smaller drawing buffer to stay within Safari's WebGL memory budget.
   // World geometry and texture assets remain full detail.
-  engine.setHardwareScalingLevel(isTouch?1.5:1);
+  engine.setHardwareScalingLevel(isTouch?2.0:1);
   const world=await createRoyalCity(engine,canvas);
   const audio=createWorldAudio();
   // Door movement uses the same unlocked Web Audio context as the ambience.
@@ -53,7 +53,7 @@ async function boot() {
   let lastMobileFrame=0;
   engine.runRenderLoop(()=>{
     const now=performance.now();
-    if(isTouch && now-lastMobileFrame<1000/30)return;
+    if(isTouch && now-lastMobileFrame<1000/24)return;
     const elapsed=lastMobileFrame?Math.min((now-lastMobileFrame)/1000,.1):engine.getDeltaTime()/1000;
     lastMobileFrame=now;
     world.update(elapsed);
