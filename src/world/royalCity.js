@@ -2592,21 +2592,26 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"royal-carriage-underframe",[x,.92,z+.72],[2.8,.28,3.55],carriageWood);
     // Keep the cabin open above its low upholstered base so seated passengers are visible.
     box(scene,"royal-carriage-body",[x,1.17,z+1.05],[3.35,.48,2.65],carriageWood);
-    box(scene,"royal-carriage-side-panel-left",[x-1.72,1.75,z+1.05],[.18,1.45,2.7],carriageGold);
-    box(scene,"royal-carriage-side-panel-right",[x+1.72,1.75,z+1.05],[.18,1.45,2.7],carriageGold);
-    box(scene,"royal-carriage-door-panel-left",[x-1.82,1.75,z+1.0],[.06,.78,1.45],carriageCloth);
-    box(scene,"royal-carriage-door-panel-right",[x+1.82,1.75,z+1.0],[.06,.78,1.45],carriageCloth);
-    box(scene,"royal-carriage-cabin-roof",[x,2.65,z+.95],[3.75,.28,2.95],carriageGold);
+    // Lower cabin sides leave the seated guests' faces and upper bodies clearly visible.
+    box(scene,"royal-carriage-side-panel-left",[x-1.72,1.53,z+1.05],[.18,.82,2.7],carriageGold);
+    box(scene,"royal-carriage-side-panel-right",[x+1.72,1.53,z+1.05],[.18,.82,2.7],carriageGold);
+    box(scene,"royal-carriage-door-panel-left",[x-1.82,1.48,z+1.0],[.06,.48,1.45],carriageCloth);
+    box(scene,"royal-carriage-door-panel-right",[x+1.82,1.48,z+1.0],[.06,.48,1.45],carriageCloth);
+    box(scene,"royal-carriage-cabin-roof",[x,3.28,z+.95],[3.75,.28,2.95],carriageGold);
     for(const side of [-1,1]) {
       for(const zz of [z-.25,z+2.15]) {
-        const pillar=box(scene,"royal-carriage-canopy-pillar",[x+side*1.62,2.15,zz],[.16,1.05,.16],carriageWood);
+        const pillar=box(scene,"royal-carriage-canopy-pillar",[x+side*1.62,2.48,zz],[.16,1.70,.16],carriageWood);
       }
-      box(scene,"royal-carriage-curtain",[x+side*1.55,2.15,z+.95],[.10,.9,1.9],carriageCloth);
+      box(scene,"royal-carriage-curtain",[x+side*1.55,2.35,z+.95],[.10,1.15,1.9],carriageCloth);
       const lamp=MeshBuilder.CreateSphere("royal-carriage-lantern",{diameter:.28,segments:10},scene);
-      lamp.position.set(x+side*1.92,2.55,z-.05);lamp.material=mats.lantern;
+      lamp.position.set(x+side*1.92,3.02,z-.05);lamp.material=mats.lantern;
     }
-    box(scene,"royal-carriage-driver-seat",[x,2.15,z-.48],[1.55,.24,.62],carriageCloth);
-    box(scene,"royal-carriage-front-board",[x,1.7,z-.58],[2.6,1.1,.18],carriageWood);
+    // An exposed coachman's box projects ahead of the cabin, with a real footboard,
+    // raised bench and low front rail. The driver sits outside the passenger canopy.
+    box(scene,"royal-carriage-driver-footboard",[x,1.16,z-1.20],[1.85,.18,1.02],carriageWood);
+    box(scene,"royal-carriage-driver-seat",[x,1.66,z-1.30],[1.55,.24,.72],carriageCloth);
+    box(scene,"royal-carriage-front-board",[x,1.40,z-.48],[2.6,.58,.18],carriageWood);
+    for(const side of [-1,1])box(scene,"royal-carriage-driver-side-rail",[x+side*.92,1.62,z-1.18],[.12,.72,.92],carriageGold);
     // Four gold-rimmed wheels and turned wooden spokes.
     carriageWheel(x-1.82,1.0,z+.15,1.0);
     carriageWheel(x+1.82,1.0,z+.15,1.0);
@@ -4449,8 +4454,9 @@ export async function createRoyalCity(engine, canvas) {
 
     // Four stallkeepers and two shoppers.
     for(let row=0;row<Math.min(2,marketStallRows.length);row++) {
-      makeTownsperson(-6.65,marketStallRows[row],"merchant",40+row,-Math.PI/2,false);
-      makeTownsperson(6.65,marketStallRows[row],"merchant",41+row,Math.PI/2,false);
+      // Place each merchant behind the counter, on the stall's outer/service side.
+      makeTownsperson(-8.85,marketStallRows[row],"merchant",40+row,Math.PI/2,false);
+      makeTownsperson(8.85,marketStallRows[row],"merchant",41+row,-Math.PI/2,false);
     }
     makeTownsperson(-3.2,-13.0,"villager",47.1,.2,false);
     makeTownsperson(3.0,-29.0,"villager",48.2,Math.PI-.2,false);
@@ -4468,10 +4474,10 @@ export async function createRoyalCity(engine, canvas) {
     root.rotation.y=heading;
     return root;
   }
-  addCoachPerson(parkedRoyalCarriage,"butler",52.1,[0,1.95,-.48]);
-  addCoachPerson(parkedRoyalCarriage,"hostess",53.2,[.48,1.08,1.12]);
-  addCoachPerson(travelingRoyalCarriage,"butler",54.3,[0,1.95,-.48]);
-  addCoachPerson(travelingRoyalCarriage,"villager",55.4,[-.48,1.08,1.12]);
+  addCoachPerson(parkedRoyalCarriage,"butler",52.1,[0,1.58,-1.30]);
+  addCoachPerson(parkedRoyalCarriage,"hostess",53.2,[.48,1.45,1.12]);
+  addCoachPerson(travelingRoyalCarriage,"butler",54.3,[0,1.58,-1.30]);
+  addCoachPerson(travelingRoyalCarriage,"villager",55.4,[-.48,1.45,1.12]);
   const coachAttendant=makeTownsperson(parkedRoyalCarriage.x+2.8,parkedRoyalCarriage.z+1.0,"butler",56.5,Math.PI/2,false);
   coachAttendant.position.y=0;
   const arrivingNoble=makeTownsperson(parkedRoyalCarriage.x-2.8,parkedRoyalCarriage.z+1.5,"hostess",57.6,-Math.PI/2,false);
