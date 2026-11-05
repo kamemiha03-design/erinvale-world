@@ -1982,6 +1982,63 @@ export async function createRoyalCity(engine, canvas) {
     glow.position.set(x,3.8,z);glow.material=mats.lantern;
   }
 
+  // A narrow garden stream runs along the open lane to the east of the tavern and guild.
+  // Its shallow banks and arched footbridge are decorative; the existing ground remains walkable.
+  const brookWater=mat(scene,"guildside-brook-water",new Color3(.12,.39,.47),.16,.22);
+  brookWater.alpha=.88;
+  const brookStone=mat(scene,"guildside-brook-stone",new Color3(.48,.45,.37),.92);
+  const brookEdge=mat(scene,"guildside-brook-edge",new Color3(.68,.62,.49),.78);
+  const brookPoints=[
+    new Vector3(-8,.055,-31.8),new Vector3(-3,.055,-31.2),
+    new Vector3(2,.055,-32.0),new Vector3(7,.055,-31.1),
+    new Vector3(12,.055,-31.7),new Vector3(17,.055,-30.8)
+  ];
+  const brookLeft=[],brookRight=[];
+  for(let i=0;i<brookPoints.length;i++) {
+    const before=brookPoints[Math.max(0,i-1)],after=brookPoints[Math.min(brookPoints.length-1,i+1)];
+    const tangent=after.subtract(before).normalize();
+    const normal=new Vector3(-tangent.z,0,tangent.x).scale(.72);
+    brookLeft.push(brookPoints[i].add(normal));
+    brookRight.push(brookPoints[i].subtract(normal));
+  }
+  const brook=MeshBuilder.CreateRibbon("guildside-meandering-brook",{pathArray:[brookLeft,brookRight],sideOrientation:2},scene);
+  brook.material=brookWater;brook.isPickable=false;
+  for(const side of [-1,1]) {
+    const bank=[];
+    for(let i=0;i<brookPoints.length;i++) {
+      const before=brookPoints[Math.max(0,i-1)],after=brookPoints[Math.min(brookPoints.length-1,i+1)];
+      const tangent=after.subtract(before).normalize();
+      const normal=new Vector3(-tangent.z,0,tangent.x).scale(side*1.02);
+      bank.push(brookPoints[i].add(normal));
+    }
+    for(let i=0;i<bank.length-1;i++) {
+      const mid=Vector3.Lerp(bank[i],bank[i+1],.5);
+      const stone=box(scene,"brook-rounded-bank-stone",[mid.x,.16,mid.z],[bank[i].subtract(bank[i+1]).length()+.35,.28,.48],i%2?brookStone:brookEdge);
+      stone.rotation.y=Math.atan2(bank[i+1].z-bank[i].z,bank[i+1].x-bank[i].x);
+    }
+  }
+  // A gently arched stone footbridge crosses the brook at its middle.
+  const bridgeX=3.1,bridgeZ=-31.55;
+  const bridgeDeck=box(scene,"brook-footbridge-deck",[bridgeX,.48,bridgeZ],[3.5,.32,3.1],brookEdge);
+  bridgeDeck.rotation.y=.08;
+  for(let side of [-1,1]) {
+    const rail=box(scene,"brook-footbridge-parapet",[bridgeX+side*1.58,.91,bridgeZ],[3.55,.22,.24],brookStone);
+    rail.rotation.y=.08;
+    for(let i=0;i<5;i++) {
+      const post=box(scene,"brook-footbridge-baluster",[bridgeX-1.35+i*.68,.72,bridgeZ+side*1.48],[.16,.52,.18],brookEdge);
+      post.rotation.y=.08;
+    }
+  }
+  for(let i=0;i<7;i++) {
+    const plank=box(scene,"brook-footbridge-paving",[bridgeX-1.35+i*.45,.655,bridgeZ],[.38,.035,2.65],i%2?mats.woodLight:brookEdge);
+    plank.rotation.y=.08;
+  }
+  // Flat stepping stones invite people to linger beside the water.
+  for(const [x,z] of [[-5,-29.5],[-1,-33.5],[8,-29.7],[13,-33.4]]) {
+    const stone=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1.0,height:.18,tessellation:8},scene);
+    stone.position.set(x,.16,z);stone.scaling.z=.72;stone.material=brookEdge;
+  }
+
   // Full-height townspeople are assembled locally so their proportions never depend
   // on third-party model downloads. Head height is kept close to one-seventh of stature.
   const people=[];
@@ -2130,6 +2187,75 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(91.0,-8.0,"hostess",30.9,Math.PI,false);
   makeTownsperson(88.5,-16.0,"hostess",32.1,0,false);
   makeTownsperson(94.0,-16.0,"hostess",33.3,0,false);
+
+  // Give the walking residents real street-to-street routes instead of tiny circles.
+  const walkingRoutes=[
+    [[-5,24],[-13,21],[-17,13],[-8,8],[1,14],[4,22],[-5,24]],
+    [[3,25],[12,23],[22,24],[30,17],[25,10],[17,14],[3,25]],
+    [[31,4],[36,10],[36,20],[29,24],[24,18],[28,10],[31,4]],
+    [[29,-20],[22,-18],[16,-23],[12,-28],[7,-27],[3,-23],[10,-18],[20,-16],[29,-20]],
+    [[-34,1],[-31,9],[-24,13],[-17,10],[-15,3],[-22,-2],[-34,1]],
+    [[35,12],[31,19],[24,23],[15,20],[18,13],[27,8],[35,12]],
+    [[6,31],[14,29],[24,29],[31,23],[27,16],[18,18],[6,31]],
+    [[21,-4],[28,-6],[32,-13],[28,-19],[21,-16],[17,-10],[21,-4]],
+    [[-9,-12],[-5,-8],[-1,-12],[1,-19],[-3,-25],[-8,-24],[-9,-12]]
+  ];
+  people.forEach((person,index)=>{
+    const route=walkingRoutes[index%walkingRoutes.length].map(([x,z])=>new Vector3(x,0,z));
+    person.route=route;person.waypointIndex=1;person.speed=1.05+(index%4)*.12;
+    person.root.position.x=route[0].x;person.root.position.z=route[0].z;
+  });
+  // Additional pedestrians make the guild lane, brook crossing and tavern approach feel inhabited.
+  const extraRoutes=[
+    [[-7,-4],[-3,2],[5,7],[9,14],[5,21],[-2,18],[-7,-4]],
+    [[-6,-27],[-2,-24],[3,-22],[9,-24],[14,-28],[17,-25],[12,-21],[4,-21],[-6,-27]],
+    [[-28,17],[-20,19],[-14,15],[-12,8],[-19,5],[-27,9],[-28,17]],
+    [[18,-28],[24,-26],[30,-22],[33,-16],[28,-12],[22,-15],[18,-28]],
+    [[-1,30],[7,28],[13,23],[17,17],[11,12],[4,16],[-1,30]]
+  ];
+  extraRoutes.forEach((points,index)=>{
+    const route=points.map(([x,z])=>new Vector3(x,0,z));
+    const actor=makeTownsperson(route[0].x,route[0].z,index===1?"merchant":"villager",36+index*1.7,0,true);
+    actor.route=route;actor.waypointIndex=1;actor.speed=1.0+(index%3)*.16;
+  });
+
+  // Small songbirds gather among the formal roses: some perch, others circle over the beds.
+  const birdBodyMat=mat(scene,"rose-garden-bird-plumage",new Color3(.22,.27,.25),.82);
+  const birdBreastMat=mat(scene,"rose-garden-bird-breast",new Color3(.72,.62,.43),.9);
+  const birdBeakMat=mat(scene,"rose-garden-bird-beak",new Color3(.72,.39,.13),.72);
+  const birds=[];
+  function addGardenBird(x,y,z,perched=false,phase=0) {
+    const root=new TransformNode("rose-garden-songbird",scene);
+    root.position.set(x,y,z);
+    const body=MeshBuilder.CreateSphere("songbird-body",{diameter:1,segments:10},scene);
+    body.parent=root;body.scaling.set(.20,.16,.34);body.material=birdBodyMat;
+    const breast=MeshBuilder.CreateSphere("songbird-breast",{diameter:1,segments:8},scene);
+    breast.parent=root;breast.position.set(0,-.025,-.055);breast.scaling.set(.145,.12,.23);breast.material=birdBreastMat;
+    const head=MeshBuilder.CreateSphere("songbird-head",{diameter:.22,segments:10},scene);
+    head.parent=root;head.position.set(0,.105,-.19);head.material=birdBodyMat;
+    const beak=MeshBuilder.CreateCylinder("songbird-beak",{diameterTop:0,diameterBottom:.075,height:.13,tessellation:5},scene);
+    beak.parent=root;beak.rotation.x=Math.PI/2;beak.position.set(0,.085,-.32);beak.material=birdBeakMat;
+    const tail=MeshBuilder.CreateBox("songbird-tail",{width:.12,height:.045,depth:.28},scene);
+    tail.parent=root;tail.position.set(0,.015,.25);tail.rotation.x=-.18;tail.material=birdBodyMat;
+    const wings=[];
+    for(const side of [-1,1]) {
+      const pivot=new TransformNode("songbird-wing-pivot",scene);pivot.parent=root;pivot.position.x=side*.09;
+      const wing=MeshBuilder.CreateBox("songbird-wing",{width:.34,height:.045,depth:.22},scene);
+      wing.parent=pivot;wing.position.x=side*.15;wing.rotation.y=side*.18;wing.material=birdBodyMat;
+      wings.push({pivot,side});
+    }
+    birds.push({root,wings,perched,phase,home:new Vector3(x,y,z),radius:perched?0:2.8});
+    return root;
+  }
+  // Perched birds sit on the garden pergolas and fountain rim.
+  addGardenBird(-29.2,5.05,-43.0,true,.4);
+  addGardenBird(25.4,4.95,-35.4,true,1.8);
+  addGardenBird(30.0,2.35,-48.5,true,2.7);
+  // A loose little flock passes above the roses at different heights.
+  addGardenBird(-31.0,5.8,-34.0,false,.2);
+  addGardenBird(-25.0,7.0,-42.0,false,1.7);
+  addGardenBird(24.0,6.2,-45.0,false,3.1);
+  addGardenBird(31.0,7.4,-31.0,false,4.4);
 
   // The animated horse is also deferred until the town is already playable.
   if(!isTouchDevice) setTimeout(() => { void (async () => {
@@ -2374,11 +2500,27 @@ export async function createRoyalCity(engine, canvas) {
       waterRing.scaling.x=1+Math.sin(time*1.2)*.025;
       basinInnerBand.scaling.x=1+Math.sin(time*.9)*.012;
       people.forEach(person=>{
-        if(!person.walking)return;
-        const t=time*.12+person.phase;
-        person.root.position.x=person.home.x+Math.sin(t)*person.radius;
-        person.root.position.z=person.home.z+Math.cos(t*.72)*person.radius*.55;
-        person.root.rotation.y=Math.atan2(Math.cos(t)*person.radius*.72,Math.cos(t)*person.radius)+Math.PI/2;
+        if(!person.route||person.route.length<2)return;
+        const target=person.route[person.waypointIndex];
+        const dx=target.x-person.root.position.x,dz=target.z-person.root.position.z;
+        const distance=Math.hypot(dx,dz);
+        if(distance<.35) person.waypointIndex=(person.waypointIndex+1)%person.route.length;
+        else {
+          const stride=Math.min(distance,person.speed*step);
+          person.root.position.x+=dx/distance*stride;
+          person.root.position.z+=dz/distance*stride;
+          person.root.rotation.y=Math.atan2(dx,dz)+Math.PI;
+          person.root.position.y=Math.sin(time*8+person.phase)*.025;
+        }
+      });
+      birds.forEach(bird=>{
+        if(bird.perched)return;
+        const t=time*.32+bird.phase;
+        bird.root.position.x=bird.home.x+Math.sin(t)*bird.radius;
+        bird.root.position.z=bird.home.z+Math.cos(t*.8)*bird.radius*.8;
+        bird.root.position.y=bird.home.y+Math.sin(t*1.7)*.7;
+        bird.root.rotation.y=Math.atan2(Math.cos(t)*bird.radius*.8,Math.cos(t)*bird.radius)+Math.PI/2;
+        bird.wings.forEach(wing=>{wing.pivot.rotation.z=wing.side*(.12+Math.sin(time*13+bird.phase)*.52);});
       });
     }
   };
