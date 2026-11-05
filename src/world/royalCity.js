@@ -1181,20 +1181,31 @@ export async function createRoyalCity(engine, canvas) {
   for(const side of [-1,1])box(scene,"town-well-canopy-post",[-5+side*1.25,2.2,-5],[.22,3.1,.22],smithWood);
   box(scene,"town-well-canopy-roof",[-5,3.85,-5],[3.2,.25,2.7],mats.roof);const axle=MeshBuilder.CreateCylinder("town-well-winch-axle",{diameter:.18,height:2.7,tessellation:12},scene);axle.position.set(-5,2.7,-5);axle.rotation.z=Math.PI/2;axle.material=smithIron;cylinder(scene,"town-well-winch-wheel",[-6.5,2.7,-5],1,.16,smithWood,16);box(scene,"town-well-rope",[-5,1.95,-5],[.05,1.35,.05],smithWood);
 
-  // Gatehouse and layered city approach.
-  addBuilding(scene,{x:0,z:-53,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE",passThrough:true},{...mats},shadow,colliders,obstacles);
-  for(let side of [-1,1]) {
-    const tower=cylinder(scene,"gatehouse-tower",[side*11,9,-53],5.4,18,mats.wall,16);
-    const cap=MeshBuilder.CreateCylinder("gatehouse-turret-roof",{diameterTop:0,diameterBottom:6.4,height:4.8,tessellation:12},scene);
-    cap.position.set(side*11,20.4,-43);cap.material=mats.roof;
-    box(scene,"gate-banner-bracket",[side*11,14,-56],[.2,.2,1],mats.gold);
-    addBanner(scene,side*11,17,-56,mats.gold,mats.banner,side);
-  }
-  for(let i=0;i<8;i++) {
-    const house=MeshBuilder.CreateBox("distant-city-house",{width:5+Math.random()*3,height:5+Math.random()*7,depth:5},scene);
-    house.position.set(-32+i*9,house.scaling.y+2,-59-(i%3)*5);house.material=mats.wall;
-    const roof=MeshBuilder.CreateCylinder("distant-roof",{diameterTop:0,diameterBottom:7,height:3,tessellation:4},scene);
-    roof.position.set(house.position.x,house.position.y+5,house.position.z);roof.material=mats.roof;
+  // A monumental carriage-width wrought-iron gate replaces the small gatehouse buildings.
+  // Both leaves stand folded back along the boulevard, leaving an unobstructed 16-metre passage.
+  const avenueGateIron=mat(scene,"avenue-gate-forged-iron",new Color3(.12,.15,.16),.34,.78);
+  const avenueGateGold=mat(scene,"avenue-gate-brass-detail",new Color3(.68,.49,.22),.30,.72);
+  for(const side of [-1,1]) {
+    const px=side*9.5;
+    cylinder(scene,"avenue-gate-pillar-foot",[px,.48,-53],2.8,.9,mats.trim,24);
+    box(scene,"avenue-gate-stone-pier",[px,4.45,-53],[2.0,8.0,2.0],castleStone);
+    box(scene,"avenue-gate-pier-cap",[px,8.65,-53],[2.7,.42,2.7],avenueGateGold);
+    const finial=MeshBuilder.CreateSphere("avenue-gate-pier-finial",{diameter:.62,segments:20},scene);
+    finial.position.set(px,9.15,-53);finial.material=avenueGateGold;
+    // Open iron leaf, folded parallel to the road so carts and coaches can pass freely.
+    for(let z=-56.6;z<=-49.4;z+=.72) {
+      const bar=box(scene,"avenue-gate-vertical-bar",[side*8.35,3.45,z],[.095,6.1,.095],avenueGateIron);
+      const spear=MeshBuilder.CreateCylinder("avenue-gate-spearhead",{diameterTop:0,diameterBottom:.22,height:.48,tessellation:4},scene);
+      spear.position.set(side*8.35,6.72,z);spear.material=avenueGateGold;
+    }
+    for(const y of [.72,2.15,4.75,6.2]) {
+      const rail=box(scene,"avenue-gate-horizontal-rail",[side*8.35,y,-53],[.16,.18,7.55],avenueGateIron);
+      rail.rotation.y=0;
+    }
+    for(const z of [-56.4,-49.6]) {
+      const hinge=box(scene,"avenue-gate-hinge",[side*9.05,3.45,z],[.22,6.25,.28],avenueGateGold);
+    }
+    box(scene,"avenue-gate-brace",[side*8.35,3.4,-53],[.13,4.4,.13],avenueGateGold);
   }
   // The royal citadel: a layered limestone fortress with a proper keep, curtain walls,
   // crenellations, arched windows, buttresses, rooflines and royal banners.
@@ -1241,13 +1252,19 @@ export async function createRoyalCity(engine, canvas) {
   const royalCrest=MeshBuilder.CreateCylinder("royal-keep-crown-crest",{diameter:2.2,height:.28,tessellation:8},scene);
   royalCrest.position.set(0,39.8,-75.55);royalCrest.rotation.x=Math.PI/2;royalCrest.material=castleGold;
   // Main curtain wall and its raised central gatehouse.
-  box(scene,"citadel-front-wall",[0,17,-77],[53,17,3.2],castleStone);
-  box(scene,"citadel-wall-base-course",[0,9.1,-75.25],[54,1.0,.75],mats.trim);
-  box(scene,"citadel-wall-cornice",[0,25.45,-75.15],[54,.62,3.7],castleGold);
+  // The curtain wall is split around a full-height central carriage gateway.
+  box(scene,"citadel-front-wall-left",[-16.5,17,-77],[20,17,3.2],castleStone);
+  box(scene,"citadel-front-wall-right",[16.5,17,-77],[20,17,3.2],castleStone);
+  box(scene,"citadel-front-wall-over-gate",[0,23.0,-77],[13,5,3.2],castleStone);
+  box(scene,"citadel-wall-base-course-left",[-16.5,9.1,-75.25],[20,1.0,.75],mats.trim);
+  box(scene,"citadel-wall-base-course-right",[16.5,9.1,-75.25],[20,1.0,.75],mats.trim);
+  box(scene,"citadel-wall-cornice-left",[-16.5,25.45,-75.15],[20,.62,3.7],castleGold);
+  box(scene,"citadel-wall-cornice-right",[16.5,25.45,-75.15],[20,.62,3.7],castleGold);
+  box(scene,"citadel-wall-cornice-over-gate",[0,25.45,-75.15],[13,.62,3.7],castleGold);
   for(let i=0;i<27;i++) {
     const x=-25.5+i*1.96;
     box(scene,"citadel-merlon",[x,26.55,-77],[1.15,1.65,3.25],castleStone);
-    if(i%2===0) box(scene,"citadel-arrow-slit",[x,18.8,-75.28],[.22,2.0,.08],castleShadow);
+    if(i%2===0 && Math.abs(x)>5.8) box(scene,"citadel-arrow-slit",[x,18.8,-75.28],[.22,2.0,.08],castleShadow);
   }
   // Central keep rises behind the gate, with layered roofs and a readable silhouette.
   // The lower keep is built as a real open-front hall instead of a sealed block.
@@ -1701,26 +1718,8 @@ export async function createRoyalCity(engine, canvas) {
   }
   // A long, walkable royal stair climbs from the city approach to the elevated gate.
   // Each visible tread is a real individual stone step; player height follows the stair profile.
-  const stairStartZ=-57, stairEndZ=-82, stairRise=8.25, stairCount=40;
-  for(let step=0;step<stairCount;step++) {
-    const rise=stairRise/stairCount, tread= (stairStartZ-stairEndZ)/stairCount;
-    const top=(step+1)*rise, z=stairStartZ-(step+.5)*tread;
-    const treadMesh=box(scene,"castle-approach-step",[0,top-rise/2,z],[15.8,rise,tread+.08],castleStone);
-    treadMesh.receiveShadows=true;
-    box(scene,"castle-step-nosing",[0,top-.045,z+tread*.43],[15.95,.09,.12],mats.trim);
-    for(let side of [-1,1]) {
-      const baluster=box(scene,"castle-stair-side-parapet",[side*8.15,top/2,z],[.48,Math.max(.5,top),tread+.08],castleStone);
-      baluster.receiveShadows=true;
-    }
-  }
-  // Broad upper landing, paired urns and a ceremonial carpet lead to the open gate.
-  box(scene,"royal-gate-landing",[0,8.34,-73.0],[18,.36,3.2],mats.trim);
-  box(scene,"royal-gate-carpet",[0,8.54,-72.95],[5.6,.035,2.8],mats.banner);
-  for(let side of [-1,1]) {
-    cylinder(scene,"royal-stair-urn-foot",[side*7.2,8.7,-72.8],1.0,.35,castleGold,16);
-    const urn=MeshBuilder.CreateCylinder("royal-stair-urn",{diameterTop:.45,diameterBottom:.85,height:1.2,tessellation:12},scene);
-    urn.position.set(side*7.2,9.45,-72.8);urn.material=mats.trim;
-  }
+  // Stair coordinates match the new, deeper palace forecourt and its raised lobby floor.
+  const stairStartZ=-86, stairEndZ=-112.2, stairRise=8.62, stairCount=36;
   for(let side of [-1,1]) {
     for(let level=0;level<4;level++) {
       const y=13+level*3.1;
@@ -1816,11 +1815,32 @@ export async function createRoyalCity(engine, canvas) {
   for(const mesh of scene.meshes.slice(royalPalaceStartIndex)) {
     if(mesh.name!=="world-tree-approach") mesh.position.z-=40;
   }
+  // Discard the former staircase/landing that was shifted with the palace.
+  // It used to leave a phantom climb in the old coordinates.
+  for(const mesh of [...scene.meshes]) {
+    if(/^(castle-approach-step|castle-step-nosing|castle-stair-side-parapet|royal-gate-landing|royal-gate-carpet|royal-stair-urn)/.test(mesh.name)) mesh.dispose(false,false);
+  }
+  // Rebuild a continuous, visible staircase from the carriage court to the raised entrance.
+  for(let step=0;step<stairCount;step++) {
+    const rise=stairRise/stairCount, tread=(stairStartZ-stairEndZ)/stairCount;
+    const top=(step+1)*rise, z=stairStartZ-(step+.5)*tread;
+    const treadMesh=box(scene,"palace-entry-step",[0,top-rise/2,z],[15.8,rise,tread+.08],castleStone);
+    treadMesh.receiveShadows=true;
+    const nosing=box(scene,"palace-entry-step-nosing",[0,top-.045,z+tread*.43],[15.95,.09,.12],palaceGold);
+    nosing.receiveShadows=true;
+    for(const side of [-1,1]) {
+      const parapet=box(scene,"palace-entry-stair-parapet",[side*8.15,top/2,z],[.48,Math.max(.5,top),tread+.08],castleStone);
+      parapet.receiveShadows=true;
+    }
+  }
+  // Level threshold between the last tread, the open gate and the lobby.
+  box(scene,"palace-entry-landing",[0,8.44,-114.3],[18,.36,4.2],castleStone);
+  box(scene,"palace-entry-landing-runner",[0,8.64,-114.3],[5.6,.035,4.0],mats.banner);
 
   // A broad carriage court with a circular turning area, clipped hedges and low topiary.
   const courtStone=mat(scene,"palace-carriage-court-stone",new Color3(.62,.59,.51),.92);
   const courtGrass=mat(scene,"palace-court-grass",new Color3(.16,.28,.16),.98);
-  const courtHedge=mat(scene,"palace-court-clipped-hedge",new Color3(.10,.25,.13),.98);
+  const courtHedge=texturedMat(scene,"palace-court-clipped-hedge",new Color3(.10,.25,.13),"#315337","#102415",.98);
   const courtRoad=MeshBuilder.CreateGround("palace-carriage-drive",{width:17,height:58,subdivisions:1},scene);
   courtRoad.position.set(0,.005,-82.5);courtRoad.material=courtStone;
   const turning=MeshBuilder.CreateCylinder("palace-carriage-turning-circle",{diameter:23,height:.16,tessellation:48},scene);
@@ -1832,7 +1852,7 @@ export async function createRoyalCity(engine, canvas) {
   cylinder(scene,"palace-turning-island-planter",[0,.72,-82],2.4,.28,mats.trim,24);
   for(let i=0;i<12;i++){
     const a=i*Math.PI/6;
-    const shrub=MeshBuilder.CreateSphere("palace-turning-island-shrub",{diameter:1.05,segments:8},scene);
+    const shrub=MeshBuilder.CreateSphere("palace-turning-island-shrub",{diameter:1.05,segments:32},scene);
     shrub.position.set(Math.cos(a)*1.55,1.18,-82+Math.sin(a)*1.55);shrub.scaling.y=.78;shrub.material=courtHedge;
   }
   for(const side of [-1,1]) {
@@ -1844,7 +1864,7 @@ export async function createRoyalCity(engine, canvas) {
         const bed=MeshBuilder.CreateBox("palace-court-shrub-island",{width:5.8,height:.34,depth:4.6},scene);
         bed.position.set(side*(16.0+row*7.2),.22,z);bed.material=courtGrass;
         for(let n=0;n<5;n++) {
-          const shrub=MeshBuilder.CreateSphere("palace-court-topiary",{diameter:.92,segments:8},scene);
+          const shrub=MeshBuilder.CreateSphere("palace-court-topiary",{diameter:.92,segments:32},scene);
           shrub.position.set(side*(14.1+row*7.2)+n*.92,.95,z+(n%2?-.55:.55));
           shrub.scaling.y=.82;shrub.material=courtHedge;
         }
@@ -2206,7 +2226,7 @@ export async function createRoyalCity(engine, canvas) {
 
   function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
     const root=new TransformNode("townsperson-root",scene);
-    const baseY=role==="guard"&&z<-70?7.63:0;
+    const baseY=role==="guard"&&z<-70?8.62:0;
     root.position.set(x,baseY,z);root.rotation.y=heading;
     const outfit=role==="guard"?npcCloth[0]:role==="merchant"?npcCloth[3]:role==="hostess"?npcCloth[Math.abs(Math.floor(phase*7))%npcCloth.length]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
@@ -2315,8 +2335,10 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(6,31,"villager",11.6,-.3,true);
   makeTownsperson(-18.8,0,"villager",12.7,0,false);
   makeTownsperson(-23,0,"merchant",13.8,0,false);
-  makeTownsperson(-5.1,-80.4,"guard",14.9,0,false);
-  makeTownsperson(5.1,-80.4,"guard",16.0,0,false);
+  makeTownsperson(-7.2,-114.1,"guard",14.9,0,false);
+  makeTownsperson(7.2,-114.1,"guard",16.0,0,false);
+  makeTownsperson(-11.4,-57.2,"guard",17.1,0,false);
+  makeTownsperson(11.4,-57.2,"guard",18.2,0,false);
   // Extra residents make the fountain square feel like a lived-in town.
   makeTownsperson(17,17,"merchant",17.1,Math.PI/2,false);
   makeTownsperson(21,-4,"villager",18.2,-.7,true);
@@ -2548,6 +2570,16 @@ export async function createRoyalCity(engine, canvas) {
     document.querySelector("#hint").textContent=message;
   }
 
+  // High-polygon clipped shrubs keep their rounded, natural silhouettes while sharing draw calls.
+  const courtShrubMeshes=scene.meshes.filter(mesh=>
+    (mesh.name==="palace-court-topiary"||mesh.name==="palace-turning-island-shrub") &&
+    !mesh.isDisposed() && mesh.material===courtHedge && !mesh.parent
+  );
+  if(courtShrubMeshes.length>1) {
+    const courtShrubBatch=Mesh.MergeMeshes(courtShrubMeshes,true,true,undefined,false,false);
+    if(courtShrubBatch) {courtShrubBatch.name="palace-court-high-detail-shrub-batch";courtShrubBatch.material=courtHedge;courtShrubBatch.isPickable=false;}
+  }
+
   // The guild contains many individually modeled but stationary props.
   // Batch them by their existing material to cut draw calls without removing
   // any geometry, texture, decoration, or changing their world-space layout.
@@ -2655,7 +2687,7 @@ export async function createRoyalCity(engine, canvas) {
       const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
-      const onLanding=Math.abs(camera.position.x)<8.6 && camera.position.z<stairEndZ && camera.position.z>-102;
+      const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-127;
       camera.position.y=1.72+(onRoyalStair?stairFloor:(onLanding?stairRise:0));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
