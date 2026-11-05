@@ -3505,8 +3505,8 @@ export async function createRoyalCity(engine, canvas) {
       // Bath guests are viewed at close range, so use a much finer mesh than
       // distant town NPCs: smooth silhouettes on faces, shoulders and limbs.
       const mesh=kind==="cylinder"
-        ?MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:32},scene)
-        :MeshBuilder.CreateSphere(name,{diameter:1,segments:36},scene);
+        ?MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:64},scene)
+        :MeshBuilder.CreateSphere(name,{diameter:1,segments:72},scene);
       mesh.parent=root;mesh.position.set(...pos);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
     };
     const workingArms=[];
@@ -3547,8 +3547,8 @@ export async function createRoyalCity(engine, canvas) {
     const hair=npcHair[Math.abs(Math.floor(phase*5))%npcHair.length];
     const part=(name,pos,size,material,kind="box")=>{
       let mesh;
-      if(kind==="sphere") mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:14},scene);
-      else if(kind==="cylinder") mesh=MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:12},scene);
+      if(kind==="sphere") mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments:40},scene);
+      else if(kind==="cylinder") mesh=MeshBuilder.CreateCylinder(name,{diameter:1,height:1,tessellation:48},scene);
       else mesh=MeshBuilder.CreateBox(name,{size:1},scene);
       mesh.position.set(pos[0],pos[1],pos[2]);mesh.scaling.set(size[0],size[1],size[2]);
       mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
