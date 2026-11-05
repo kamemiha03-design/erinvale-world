@@ -1198,20 +1198,37 @@ export async function createRoyalCity(engine, canvas) {
   ];
   const marketLeaf=mat(scene,"market-fruit-leaf",new Color3(.17,.36,.12),.92);
   const marketSignInk=mat(scene,"market-sign-ink",new Color3(.19,.12,.075),.92);
+  const marketSphereTemplates=new Map();
+  const marketGoodsMats=[
+    mat(scene,"goods-green",new Color3(.24,.48,.16),.86),mat(scene,"goods-red",new Color3(.72,.12,.10),.78),
+    mat(scene,"goods-gold",new Color3(.88,.58,.16),.82),mat(scene,"goods-cream",new Color3(.91,.78,.54),.9),
+    mat(scene,"goods-purple",new Color3(.39,.20,.48),.82),mat(scene,"goods-blue",new Color3(.12,.31,.48),.86),
+    mat(scene,"goods-honey",new Color3(.78,.39,.055),.34),mat(scene,"goods-berry",new Color3(.47,.055,.12),.76),
+    mat(scene,"goods-iron",new Color3(.17,.19,.20),.38,.62)
+  ];
+  const marketGoods=[
+    {type:"fruit",colors:[1,2,0,4]},{type:"vegetable",colors:[0,0,2,1]},{type:"bread",colors:[2,3,2]},
+    {type:"flowers",colors:[1,4,3,2]},{type:"cheese",colors:[2,3]},{type:"honey",colors:[6,2]},
+    {type:"spice",colors:[1,4,2,0]},{type:"cloth",colors:[5,4,1,2]},{type:"sweets",colors:[3,1,4,2]},
+    {type:"curios",colors:[5,6,4,8]}
+  ];
   function makeMarketStall(x,z,side,index) {
     const root=new TransformNode("market-stall-root-"+index,scene);
     root.position.set(x,0,z);
     root.rotation.y=side<0?-Math.PI/2:Math.PI/2;
+    // Shared geometry keeps repeated stall props from allocating duplicate vertex buffers.
     const localBox=(name,p,size,material)=>{
-      const m=MeshBuilder.CreateBox(name,{width:size[0],height:size[1],depth:size[2]},scene);
+      const m=sharedPrimitive(scene,"market-stall-boxes",name,"box",{width:size[0],height:size[1],depth:size[2]});
       m.parent=root;m.position.set(p[0],p[1],p[2]);m.material=material;m.isPickable=false;return m;
     };
-    const localSphere=(name,p,size,material,segments=16)=>{
-      const m=MeshBuilder.CreateSphere(name,{diameter:1,segments},scene);
+    const localSphere=(name,p,size,material,segments=10)=>{
+      const key=String(segments);let template=marketSphereTemplates.get(key);
+      if(!template){template=MeshBuilder.CreateSphere("market-shared-sphere-"+key,{diameter:1,segments},scene);template.isVisible=false;template.isPickable=false;template.setEnabled(false);marketSphereTemplates.set(key,template);}
+      const m=template.clone(name,null,true);
       m.parent=root;m.position.set(p[0],p[1],p[2]);m.scaling.set(size[0],size[1],size[2]);m.material=material;m.isPickable=false;return m;
     };
-    const localCylinder=(name,p,diameter,height,material,tess=16)=>{
-      const m=MeshBuilder.CreateCylinder(name,{diameter,height,tessellation:tess},scene);
+    const localCylinder=(name,p,diameter,height,material,tess=12)=>{
+      const m=sharedPrimitive(scene,"market-stall-cylinders",name,"cylinder",{diameter,height,tessellation:tess});
       m.parent=root;m.position.set(p[0],p[1],p[2]);m.material=material;m.isPickable=false;return m;
     };
     // Lower counter and sturdy carved legs.
@@ -1252,28 +1269,47 @@ export async function createRoyalCity(engine, canvas) {
     const signFace=MeshBuilder.CreatePlane("market-sign-face-"+index,{width:1.65,height:.29},scene);
     signFace.parent=root;signFace.position.set(0,2.22,-1.525);
     const signMat=new StandardMaterial("market-sign-material-"+index,scene);signMat.diffuseTexture=signTex;signMat.emissiveColor=new Color3(.10,.07,.035);signFace.material=signMat;signFace.isPickable=false;
-    // Baskets and a varied display of fresh produce on the lowered counter.
-    for(let basket=0;basket<2;basket++) {
-      const bx=-.78+basket*1.45,bz=-.43;
-      const bowl=localCylinder("market-counter-produce-basket",[bx,1.25,bz],.72,.28,marketWoodLight,20);
-      bowl.scaling.y=.72;
-      for(let fruit=0;fruit<5;fruit++) {
-        const a=fruit*Math.PI*2/5;
-        const color=marketFruitMats[(index+fruit)%marketFruitMats.length];
-        localSphere("market-counter-fruit",[bx+Math.cos(a)*.20,1.46+(fruit%2)*.035,bz+Math.sin(a)*.17],[.25,.27,.24],color,16);
+    // Ten merchants, ten distinct inventories. Their silhouettes differ as much as their colours.
+    const goods=marketGoods[index],xs=[-1.22,-.62,0,.62,1.22];
+    for(let item=0;item<10;item++) {
+      const col=item%5,row=Math.floor(item/5),px=xs[col],pz=row===0?-.42:.43;
+      const y=1.30+(item%3)*.025,color=marketGoodsMats[goods.colors[item%goods.colors.length]];
+      if(goods.type==="fruit") {
+        localSphere("fruit-display",[px,y+.16,pz],[.25,.28,.24],color,10);
+        localSphere("fruit-leaf",[px+.04,y+.34,pz],[.11,.035,.065],marketLeaf,8);
+      } else if(goods.type==="vegetable") {
+        const v=localSphere("vegetable-display",[px,y+.15,pz],[.15,.36,.15],color,8);v.rotation.z=col%2?-.22:.22;
+        localSphere("vegetable-leaf",[px+.10,y+.42,pz],[.12,.12,.10],marketLeaf,8);
+      } else if(goods.type==="bread") {
+        const loaf=localSphere("bread-loaf",[px,y+.13,pz],[.30,.18,.20],color,10);loaf.rotation.z=col%2?-.08:.08;
+        if(col%2===0){const baguette=localCylinder("bread-baguette",[px,y+.13,pz+.12],.16,.52,color,8);baguette.rotation.z=Math.PI/2;}
+      } else if(goods.type==="flowers") {
+        localBox("flower-stem",[px,y+.23,pz],[.035,.48,.035],marketLeaf);
+        localSphere("flower-head",[px,y+.49,pz],[.23,.13,.23],color,8);
+        localSphere("flower-center",[px,y+.51,pz],[.075,.07,.075],marketGoodsMats[2],8);
+      } else if(goods.type==="cheese") {
+        localCylinder("cheese-wheel",[px,y+.12,pz],.48,.22,color,12);
+        localSphere("cheese-wax-seal",[px+.08,y+.25,pz+.06],[.075,.035,.075],marketGoodsMats[2],8);
+      } else if(goods.type==="honey") {
+        localCylinder("honey-jar",[px,y+.19,pz],.28,.42,color,10);
+        localCylinder("honey-jar-neck",[px,y+.42,pz],.17,.10,marketWoodLight,8);
+        localSphere("honey-wax-top",[px,y+.49,pz],[.17,.07,.17],marketGoodsMats[2],8);
+      } else if(goods.type==="spice") {
+        localCylinder("spice-bowl",[px,y+.07,pz],.42,.14,marketWoodLight,10);
+        localSphere("spice-mound",[px,y+.18,pz],[.20,.12,.20],color,8);
+      } else if(goods.type==="cloth") {
+        const bolt=localCylinder("cloth-bolt",[px,y+.17,pz],.22,.48,color,8);bolt.rotation.z=Math.PI/2;
+        localBox("folded-fabric",[px,y+.10,pz+.13],[.38,.12,.25],marketGoodsMats[goods.colors[(item+1)%goods.colors.length]]);
+      } else if(goods.type==="sweets") {
+        localCylinder("pastry-base",[px,y+.10,pz],.34,.18,marketGoodsMats[3],10);
+        localSphere("icing-top",[px,y+.22,pz],[.25,.09,.25],color,8);
+        localSphere("berry-topping",[px+.04,y+.31,pz],[.075,.07,.075],marketGoodsMats[1],8);
+      } else if(col%2===0) {
+        localCylinder("potion-bottle",[px,y+.20,pz],.25,.42,color,8);
+        localSphere("potion-neck",[px,y+.44,pz],[.10,.12,.10],marketGoodsMats[2],8);
+      } else {
+        const crystal=localSphere("arcane-crystal",[px,y+.20,pz],[.16,.42,.16],color,6);crystal.rotation.z=.18;
       }
-      localSphere("market-counter-fruit-center",[bx,1.53,bz],[.25,.27,.24],marketFruitMats[(index+2)%marketFruitMats.length],16);
-    }
-    // One open timber produce crate sits beside each stall, with visible fruit and leaves.
-    localBox("market-fruit-crate-base",[1.95,.30,.12],[.98,.12,.92],marketWood);
-    for(const xx of [-.47,.47])localBox("market-fruit-crate-side",[1.95+xx,.55,.12],[.10,.43,.96],marketWoodLight);
-    for(const zz of [-.43,.43])localBox("market-fruit-crate-end",[1.95,.55,.12+zz],[.98,.43,.10],marketWoodLight);
-    for(let slat=0;slat<4;slat++)localBox("market-fruit-crate-slat",[1.95,.48,.12-.30+slat*.20],[.94,.055,.045],marketWood);
-    for(let fruit=0;fruit<6;fruit++) {
-      const fx=1.70+(fruit%3)*.24,fz=-.08+Math.floor(fruit/3)*.35;
-      localSphere("market-crate-fruit",[fx,.78,fz],[.27,.28,.26],marketFruitMats[(index+fruit+1)%marketFruitMats.length],16);
-      const leaf=localSphere("market-crate-fruit-leaf",[fx+.035,.94,fz],[.12,.035,.07],marketLeaf,10);
-      leaf.rotation.z=.35;
     }
     // A small hanging lantern adds warmth after dusk.
     localBox("market-lantern-bracket",[0,2.12,1.42],[.48,.08,.10],marketWood);
