@@ -2688,7 +2688,7 @@ export async function createRoyalCity(engine, canvas) {
       tunnelRose(new Vector3(tip.x,tip.y+.05,tip.z),.25+(stem%2)*.025,bloomMat,phase+stem*.71);
     }
   }
-  for(const side of [-1,1]) for(let i=0;i<9;i++) addRoseBush(side*6.55,-173.0+i*4.35,side*.7+i*.43);
+  for(const side of [-1,1]) for(let i=0;i<(isTouchDevice?5:9);i++) addRoseBush(side*6.55,-173.0+i*(isTouchDevice?7.8:4.35),side*.7+i*.43);
 
   // Small carved stone fountain with a shallow bird-sized basin.
   const roseFountainStone=mat(scene,"rose-garden-fountain-stone",new Color3(.68,.63,.53),.76,.06);
@@ -2917,8 +2917,8 @@ export async function createRoyalCity(engine, canvas) {
   island.position.set(treeX,11.5,treeZ);island.material=islandStone;
   const islandTop=MeshBuilder.CreateCylinder("world-tree-island-grass-cap",{diameter:46,height:.65,tessellation:32},scene);
   islandTop.position.set(treeX,18.05,treeZ);islandTop.material=islandMoss;
-  for(let i=0;i<18;i++) {
-    const a=i*Math.PI*2/18,r=16+Math.random()*5;
+  for(let i=0;i<(isTouchDevice?8:18);i++) {
+    const a=i*Math.PI*2/(isTouchDevice?8:18),r=16+Math.random()*5;
     const rock=MeshBuilder.CreateSphere("world-tree-island-rock",{diameter:5+Math.random()*5,segments:10},scene);
     rock.position.set(treeX+Math.cos(a)*r,8+Math.random()*7,treeZ+Math.sin(a)*r*.72);
     rock.scaling.set(1.2,.9,1.0);rock.material=i%3===0?islandFace:islandStone;
@@ -2930,15 +2930,15 @@ export async function createRoyalCity(engine, canvas) {
   const bark=mat(scene,"world-tree-bark",new Color3(.18,.115,.065),.96);
   const barkLight=mat(scene,"world-tree-bark-ridge",new Color3(.39,.27,.14),.9);
   cylinder(scene,"world-tree-trunk",[treeX,treeLift+24,treeZ],8.2,48,bark,32);
-  for(let i=0;i<16;i++) {
-    const a=i*Math.PI*2/16;
+  for(let i=0;i<(isTouchDevice?8:16);i++) {
+    const a=i*Math.PI*2/(isTouchDevice?8:16);
     const root=MeshBuilder.CreateCylinder("world-tree-buttress-root",{diameterTop:.35,diameterBottom:2.0,height:12,tessellation:12},scene);
     root.position.set(treeX+Math.cos(a)*4.8,treeLift+1.0,treeZ+Math.sin(a)*4.8);
     root.rotation.z=Math.cos(a)*.5;root.rotation.x=Math.sin(a)*.5;
     root.material=i%3===0?barkLight:bark;
   }
-  for(let i=0;i<22;i++) {
-    const a=i*Math.PI*2/22,level=treeLift+25+(i%7)*4.2;
+  for(let i=0;i<(isTouchDevice?10:22);i++) {
+    const a=i*Math.PI*2/(isTouchDevice?10:22),level=treeLift+25+(i%7)*4.2;
     const branch=MeshBuilder.CreateCylinder("world-tree-branch",{diameterTop:.24,diameterBottom:1.25,height:17+(i%4)*2.5,tessellation:14},scene);
     branch.position.set(treeX+Math.cos(a)*8,level,treeZ+Math.sin(a)*6);
     branch.rotation.z=-Math.cos(a)*.86;branch.rotation.x=Math.sin(a)*.74;
@@ -2958,7 +2958,7 @@ export async function createRoyalCity(engine, canvas) {
     mat(scene,"canopy-sunlit",new Color3(.52,.52,.27),.72)
   ];
   const canopy=[];
-  for(let i=0;i<190;i++) {
+  for(let i=0;i<(isTouchDevice?48:190);i++) {
     const a=Math.random()*Math.PI*2,ring=7+Math.random()*19,y=treeLift+38+Math.random()*33;
     const leaf=MeshBuilder.CreateSphere("world-tree-foliage",{diameter:3.5+Math.random()*4.2,segments:14},scene);
     leaf.position.set(treeX+Math.cos(a)*ring,y,treeZ+Math.sin(a)*ring*.62);
@@ -2968,7 +2968,7 @@ export async function createRoyalCity(engine, canvas) {
   }
   const seedGlow=mat(scene,"world-tree-seedlight",new Color3(.84,.76,.43),.24,.04);
   seedGlow.emissiveColor=new Color3(.42,.31,.10);
-  for(let i=0;i<46;i++) {
+  for(let i=0;i<(isTouchDevice?12:46);i++) {
     const a=Math.random()*Math.PI*2,ring=8+Math.random()*19;
     const seed=MeshBuilder.CreateSphere("world-tree-luminous-seed",{diameter:.18+Math.random()*.24,segments:10},scene);
     seed.position.set(treeX+Math.cos(a)*ring,treeLift+39+Math.random()*34,treeZ+Math.sin(a)*ring*.62);
@@ -2981,8 +2981,8 @@ export async function createRoyalCity(engine, canvas) {
   const rootRing=MeshBuilder.CreateTorus("world-tree-root-rune",{diameter:25,thickness:.13,tessellation:96},scene);
   rootRing.position.set(treeX,treeLift+.1,treeZ);rootRing.material=seedGlow;
   // Hanging roots and slender streams of sacred light make the island feel suspended.
-  for(let i=0;i<12;i++) {
-    const a=i*Math.PI*2/12;
+  for(let i=0;i<(isTouchDevice?6:12);i++) {
+    const a=i*Math.PI*2/(isTouchDevice?6:12);
     const root=MeshBuilder.CreateCylinder("world-tree-hanging-root",{diameterTop:.18,diameterBottom:.8,height:9,tessellation:8},scene);
     root.position.set(treeX+Math.cos(a)*8,6.0,treeZ+Math.sin(a)*7);
     root.rotation.z=Math.cos(a)*.28;root.rotation.x=Math.sin(a)*.28;root.material=bark;
