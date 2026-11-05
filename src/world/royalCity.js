@@ -2773,7 +2773,8 @@ export async function createRoyalCity(engine, canvas) {
   const royalApproachDoorDark=mat(scene,"royal-approach-door-dark-wood",new Color3(.12,.065,.035),.58,.24);
   const royalApproachDoorGlow=mat(scene,"royal-approach-door-lantern-glow",new Color3(1,.68,.34),.2,0);
   royalApproachDoorGlow.emissiveColor=new Color3(.95,.36,.10);
-  box(scene,"royal-approach-door-back-wall",[0,13.2,-112.82],[13.8,9.2,.72],royalApproachDoorStone);
+  for(const side of [-1,1])box(scene,"royal-approach-door-back-wall-wing",[side*5.35,13.2,-112.82],[3.1,9.2,.72],royalApproachDoorStone);
+  box(scene,"royal-approach-door-back-wall-header",[0,17.0,-112.82],[7.4,1.6,.72],royalApproachDoorStone);
   addAntiqueDoor(scene,"royal-approach-grand-double-door",0,8.68,-112.35,7.2,7.25,mats,.08);
   for(const d of scene.metadata.doorLeaves.filter(d=>d.name==="royal-approach-grand-double-door")) {
     const side=d.pivot.position.x<0?-1:1,lw=7.2*.49,lh=7.25*.91,lx=-side*lw*.5;
