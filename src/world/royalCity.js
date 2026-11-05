@@ -3250,6 +3250,24 @@ export async function createRoyalCity(engine, canvas) {
         box(scene,"public-library-upper-volume",[x-1.72+b*.22,y+.14,-94.93],[.15,.24,.075],libraryBookMats[(b+level)%libraryBookCount]);
     }
   }
+  // Entrance-facing west gallery joins the mezzanine to the front balcony.
+  box(scene,"public-library-west-gallery-floor",[-61.05,5.25,-87.25],[2.25,.28,5.1],libraryWood);
+  box(scene,"public-library-west-gallery-front-beam",[-59.88,5.12,-84.78],[.20,.34,5.05],libraryGold);
+  for(let z=-89.55;z<=-85.05;z+=.9) {
+    box(scene,"public-library-west-gallery-baluster",[-59.9,5.78,z],[.12,.72,.12],libraryWood);
+    box(scene,"public-library-west-gallery-post-cap",[-59.9,6.18,z],[.20,.10,.20],libraryGold);
+  }
+  box(scene,"public-library-west-gallery-handrail",[-59.9,6.18,-87.25],[.20,.15,5.15],libraryGold);
+  // Upper wall stacks face the entrance; matching ground-floor stacks remain below.
+  for(const z of [-87.7,-85.2]) {
+    box(scene,"public-library-upper-west-facing-bookcase",[-62.35,6.55,z],[.48,2.18,2.15],libraryWood);
+    for(let level=0;level<3;level++) {
+      const y=5.72+level*.66;
+      box(scene,"public-library-upper-west-facing-shelf",[-62.05,y,z],[.12,.065,2.02],libraryGold);
+      for(let b=0;b<9;b++)
+        box(scene,"public-library-upper-west-facing-volume",[-61.94,y+.12,z-.86+b*.215],[.075,.21,.135],libraryBookMats[(b+level)%libraryBookCount]);
+    }
+  }
   // A climbable-looking oak library ladder leans against the upper shelves.
   for(const x of [-58.0,-56.85]) {
     const rail=box(scene,"public-library-ladder-rail",[x,3.72,-93.45],[.12,4.35,.14],libraryWood);
@@ -4502,20 +4520,17 @@ export async function createRoyalCity(engine, canvas) {
   let libraryUpperLevel=false;
   const collides=(x,z)=>{
     if(Math.abs(x)>112)return true;
-    // Thick, continuous library perimeter collision. Preserve only the east doorway.
-    if(x>-64.35&&x<-63.05&&z>-96.4&&z<-71.6)return true;
-    if(z>-96.55&&z<-95.35&&x>-64.35&&x<-40.0)return true;
-    if(z>-72.65&&z<-71.45&&x>-64.35&&x<-40.0)return true;
-    if(x>-40.85&&x<-39.65&&z>-96.4&&z<-85.95)return true;
-    if(x>-40.85&&x<-39.65&&z>-82.05&&z<-71.6)return true;
-    // Keep the stair footprint clear of walking around its sides.
-    if(z>-93.25&&z<-91.45&&x>-49.2&&x<-42.2)return true;
-    // Library walls block movement, while the east-facing doorway and reading hall stay walkable.
-    if(x>-40.65&&x<-40.0&&z>-96.2&&z<-85.95)return true;
-    if(x>-40.65&&x<-40.0&&z>-82.05&&z<-71.8)return true;
-    if(x>-64.1&&x<-63.4&&z>-96.2&&z<-71.8)return true;
-    if(z>-96.3&&z<-95.7&&x>-64.1&&x<-40.0)return true;
-    if(z>-72.3&&z<-71.7&&x>-64.1&&x<-40.0)return true;
+    // Solid library perimeter collision; keep only the east entrance open.
+    const inLibraryZ=z>-97.0&&z<-71.0;
+    const inLibraryX=x>-65.0&&x<-39.2;
+    if(inLibraryZ&&x>-64.65&&x<-62.95)return true; // west wall
+    if(inLibraryX&&z>-96.95&&z<-95.05)return true; // north wall
+    if(inLibraryX&&z>-72.95&&z<-71.05)return true; // south wall
+    if(inLibraryZ&&x>-41.05&&x<-39.45) {
+      const inMainDoorway=z>-86.0&&z<-82.0;
+      if(!inMainDoorway)return true;
+    }
+    // Stair footprint is intentionally passable so visitors can climb to the gallery.
     // The hall is checked before the legacy z=-116 boundary and town obstacles.
     if(x>-26.2&&x<26.2&&z>-183.0&&z<-113.0) {
       if(Math.abs(x)>25.9||z<-182.5)return true;
