@@ -1830,20 +1830,26 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   // Detailed CC0 models add leaf geometry and a merchant wagon.
+  // Optional high-detail props are fetched only after the first playable frame.
+  // Load them one at a time so Safari never has to decode eleven models at once.
   const modelJobs = [
-    addCC0Model(scene,"Prop_Vine1",[-26.6,2.1,11.24],[1.35,1.35,1.35],0),
-    addCC0Model(scene,"Prop_Vine1",[-15.4,2.0,11.24],[1.15,1.25,1.15],0),
-    addCC0Model(scene,"Prop_Vine2",[-13.9,2.3,-11.1],[1.2,1.2,1.2],0),
-    addCC0Model(scene,"Prop_Vine4",[-28.2,2.0,11.2],[1.0,1.1,1.0],0),
-    addCC0Model(scene,"Prop_Vine5",[-13.9,2.0,-20.5],[1.0,1.0,1.0],0),
-    addCC0Model(scene,"Roof_Dormer_RoundTile",[-24.5,9.4,6.2],[1.15,1.15,1.15],0),
-    addCC0Model(scene,"Roof_Dormer_RoundTile",[-18.0,9.4,6.2],[1.15,1.15,1.15],0),
-    addCC0Model(scene,"Prop_Crate",[13.4,0.02,-7.4],[.85,.85,.85],.2),
-    addCC0Model(scene,"Prop_Crate",[17.6,0.02,-14.2],[.85,.85,.85],-.15),
-    addCC0Model(scene,"Prop_Crate",[26.8,0.02,-11.0],[.85,.85,.85],.3),
-    addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-18.0],[1.25,1.25,1.25],Math.PI*.5),
+    () => addCC0Model(scene,"Prop_Vine1",[-26.6,2.1,11.24],[1.35,1.35,1.35],0),
+    () => addCC0Model(scene,"Prop_Vine1",[-15.4,2.0,11.24],[1.15,1.25,1.15],0),
+    () => addCC0Model(scene,"Prop_Vine2",[-13.9,2.3,-11.1],[1.2,1.2,1.2],0),
+    () => addCC0Model(scene,"Prop_Vine4",[-28.2,2.0,11.2],[1.0,1.1,1.0],0),
+    () => addCC0Model(scene,"Prop_Vine5",[-13.9,2.0,-20.5],[1.0,1.0,1.0],0),
+    () => addCC0Model(scene,"Roof_Dormer_RoundTile",[-24.5,9.4,6.2],[1.15,1.15,1.15],0),
+    () => addCC0Model(scene,"Roof_Dormer_RoundTile",[-18.0,9.4,6.2],[1.15,1.15,1.15],0),
+    () => addCC0Model(scene,"Prop_Crate",[13.4,0.02,-7.4],[.85,.85,.85],.2),
+    () => addCC0Model(scene,"Prop_Crate",[17.6,0.02,-14.2],[.85,.85,.85],-.15),
+    () => addCC0Model(scene,"Prop_Crate",[26.8,0.02,-11.0],[.85,.85,.85],.3),
+    () => addCC0Model(scene,"Prop_Wagon",[32.2,0.02,-18.0],[1.25,1.25,1.25],Math.PI*.5),
   ];
-  await Promise.all(modelJobs);
+  setTimeout(() => {
+    void (async () => {
+      for (const loadModel of modelJobs) await loadModel();
+    })().catch(error => console.warn("Optional world props could not be loaded:", error));
+  }, 1800);
   addObstacle(32.2,-18.0,1.8);
   addObstacle(13.4,-7.4,.72);
   addObstacle(17.6,-14.2,.72);
@@ -2013,7 +2019,8 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(52,10.0,"hostess",23.6,Math.PI,false);
   makeTownsperson(72,10.0,"hostess",24.8,Math.PI,false);
 
-  // A properly rigged and animated palomino stands beside the merchant's timber cart.
+  // The animated horse is also deferred until the town is already playable.
+  setTimeout(() => { void (async () => {
   let horseRoot=null;
   try {
     const horse=await SceneLoader.ImportMeshAsync("","https://files.innerscene.com/library/standing-horse-01d8563f/0107d59ef4ff275f0158/","horse-original.glb",scene);
@@ -2063,6 +2070,7 @@ export async function createRoyalCity(engine, canvas) {
   } catch(error) {
     console.warn("Animated horse model could not be loaded:",error);
   }
+  })(); }, 9000);
   addObstacle(32.2,-24.6,1.35);
   // Paired leather traces visibly connect the horse to the wagon shafts.
   const harnessLeather=new StandardMaterial("wagon-harness-leather",scene);
