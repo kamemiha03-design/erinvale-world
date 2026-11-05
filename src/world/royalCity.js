@@ -3291,11 +3291,12 @@ export async function createRoyalCity(engine, canvas) {
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
       const onLanding=camera.position.z<stairEndZ&&camera.position.z>=-129.0&&Math.abs(camera.position.x)<14.0;
+      const insideRoyalLobby=camera.position.x>-21.0&&camera.position.x<21.0&&camera.position.z<-120.7&&camera.position.z>-173.1;
       const onGreatBridge=Math.abs(camera.position.x-bridgeX)<2.7&&camera.position.z>=bridgeZ-bridgeHalf&&camera.position.z<=bridgeZ+bridgeHalf;
       const onSmallBridge=Math.abs(camera.position.x-sx)<2.0&&camera.position.z>=sz-smallHalf&&camera.position.z<=sz+smallHalf;
       camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
-        (onRoyalStair?1.72+stairFloor:(onLanding?10.16:1.72)));
+        (onRoyalStair?1.72+stairFloor:((onLanding||insideRoyalLobby)?10.34:1.72)));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
