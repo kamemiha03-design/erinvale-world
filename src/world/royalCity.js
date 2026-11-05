@@ -3310,30 +3310,43 @@ export async function createRoyalCity(engine, canvas) {
 
   // Relocate the complete bath complex to the north side of the fountain district.
   // Move the finished meshes, door pivots, collision volumes and pool obstacles together.
-  const bathShiftX=122,bathShiftZ=98;
+  // Move the complete bath complex farther north, then rotate it so its grand
+  // entrance faces south toward the Imperial Fountain Plaza.
+  const bathShiftX=122,bathShiftZ=120,bathCenterX=30,bathCenterZ=62;
+  const rotateBathPoint=(x,z)=>({
+    x:2*bathCenterX-(x+bathShiftX),
+    z:2*bathCenterZ-(z+bathShiftZ)
+  });
   for(const mesh of scene.meshes.slice(hammamMeshStart)) {
     if(!mesh.parent&&!mesh.isDisposed()&&!mesh.name.includes("wayfinding")) {
-      mesh.position.x+=bathShiftX;
-      mesh.position.z+=bathShiftZ;
+      const p=rotateBathPoint(mesh.position.x,mesh.position.z);
+      mesh.position.x=p.x;mesh.position.z=p.z;
+      mesh.rotation.y+=Math.PI;
     }
   }
   for(const door of scene.metadata?.doorLeaves||[]) {
     if(door.name==="imperial-hammam-entry-double-door") {
-      door.pivot.position.x+=bathShiftX;door.pivot.position.z+=bathShiftZ;
-      door.position.x+=bathShiftX;door.position.z+=bathShiftZ;
+      const p=rotateBathPoint(door.pivot.position.x,door.pivot.position.z);
+      door.pivot.position.x=p.x;door.pivot.position.z=p.z;
+      door.pivot.rotation.y+=Math.PI;door.home+=Math.PI;
+      door.position.x=bathCenterX;door.position.z=45;
     }
   }
   for(const obstacle of obstacles.slice(hammamObstacleStart)) {
-    obstacle.x+=bathShiftX;obstacle.z+=bathShiftZ;
+    const p=rotateBathPoint(obstacle.x,obstacle.z);
+    obstacle.x=p.x;obstacle.z=p.z;
   }
   const bathCollider=colliders[hammamColliderIndex];
   if(bathCollider) {
-    bathCollider.minX+=bathShiftX;bathCollider.maxX+=bathShiftX;
-    bathCollider.minZ+=bathShiftZ;bathCollider.maxZ+=bathShiftZ;
-    bathCollider.doorX+=bathShiftX;bathCollider.doorZ+=bathShiftZ;
+    const minX=bathCollider.minX+bathShiftX,maxX=bathCollider.maxX+bathShiftX;
+    const minZ=bathCollider.minZ+bathShiftZ,maxZ=bathCollider.maxZ+bathShiftZ;
+    bathCollider.minX=2*bathCenterX-maxX;bathCollider.maxX=2*bathCenterX-minX;
+    bathCollider.minZ=2*bathCenterZ-maxZ;bathCollider.maxZ=2*bathCenterZ-minZ;
+    const door=rotateBathPoint(bathCollider.doorX,bathCollider.doorZ);
+    bathCollider.doorX=door.x;bathCollider.doorZ=door.z;
   }
-  makeBathWaySign(7,18,"帝国浴場　↗","THERMAE  •  HAMMAM");
-  makeBathWaySign(22,13,"帝国浴場　↗","PUBLIC BATHS");
+  makeBathWaySign(16,18,"帝国浴場　↗","THERMAE  •  HAMMAM");
+  makeBathWaySign(25,31,"帝国浴場　↗","PUBLIC BATHS");
 
   // Full-height townspeople are assembled locally so their proportions never depend
   // on third-party model downloads. Head height is kept close to one-seventh of stature.
@@ -3695,7 +3708,9 @@ export async function createRoyalCity(engine, canvas) {
         const insideRoom=c.interior&&x>c.minX+.55&&x<c.maxX-.55&&z>c.minZ+.55&&z<c.maxZ-.55;
         const gatePassage=c.passThrough&&Math.abs(x-c.doorX)<c.doorWidth/2;
         if(insideRoom||gatePassage)continue;
-        const inDoor=Math.abs(x-c.doorX)<c.doorWidth/2 && z<c.doorZ+.7 && z>c.doorZ-1.5;
+        // A doorway must be passable from either side, including the bath's
+        // newly south-facing entrance.
+        const inDoor=Math.abs(x-c.doorX)<c.doorWidth/2 && Math.abs(z-c.doorZ)<2.2;
         if(!inDoor)return true;
       }
     }
@@ -3711,7 +3726,7 @@ export async function createRoyalCity(engine, canvas) {
     if(x<-8&&z<-8&&z>-26)return "冒険者ギルド";
     if(x>10&&z<-5&&z>-29)return "王都の市場";
     if(x>34&&z>-3&&z<35)return "酒場通り — The Lantern Quarter";
-    if(x>11&&x<49&&z>21&&z<61)return "帝国浴場 — THERMAE · HAMMAM";
+    if(x>11&&x<49&&z>35&&z<86)return "帝国浴場 — THERMAE · HAMMAM";
     if(z<-72)return "王宮 — 王城の中庭";
     if(z<-45)return "王城への大通り";
     if(Math.hypot(x-13,z-5)<16)return "皇帝の噴水広場";
@@ -3719,19 +3734,25 @@ export async function createRoyalCity(engine, canvas) {
   }
   function interact() {
     const doors=scene.metadata?.doorLeaves||[];
-    let nearest=null,nearestDistance=7.5;
+    let nearest=null,nearestDistance=Infinity;
     for(const door of doors) {
-      // Use ground-plane distance: the hinge is above the player's eye line,
-      // so 3D distance made the bath doors frustratingly hard to activate.
+      // Measure on the ground plane. The bath uses its shared doorway center,
+      // not either elevated hinge, so both leaves are reliably reachable.
       const distance=Math.hypot(camera.position.x-door.position.x,camera.position.z-door.position.z);
-      if(distance<nearestDistance){nearest=door;nearestDistance=distance;}
+      const reach=door.name==="imperial-hammam-entry-double-door"?12:7.5;
+      if(distance<reach&&distance<nearestDistance){nearest=door;nearestDistance=distance;}
     }
     if(nearest) {
-      nearest.open=!nearest.open;
-      const target=nearest.home+(nearest.open?(nearest.pivot.position.x<camera.position.x?-.95:.95):0);
-      Animation.CreateAndStartAnimation("door-swing",nearest.pivot,"rotation.y",30,18,nearest.pivot.rotation.y,target,Animation.ANIMATIONLOOPMODE_CONSTANT);
-      if(this.onDoor)this.onDoor(nearest.open);
-      document.querySelector("#hint").textContent=nearest.open?"重厚な木の扉が軋みながら開いた。":"扉を閉めた。";
+      const opening=!nearest.open;
+      const pair=nearest.name==="imperial-hammam-entry-double-door"
+        ?doors.filter(door=>door.name===nearest.name):[nearest];
+      for(const leaf of pair) {
+        leaf.open=opening;
+        const target=leaf.home+(opening?(leaf.pivot.position.x<camera.position.x?-.95:.95):0);
+        Animation.CreateAndStartAnimation("door-swing",leaf.pivot,"rotation.y",30,18,leaf.pivot.rotation.y,target,Animation.ANIMATIONLOOPMODE_CONSTANT);
+      }
+      if(this.onDoor)this.onDoor(opening);
+      document.querySelector("#hint").textContent=opening?"重厚な両開き扉が軋みながら開いた。":"扉を閉めた。";
       return;
     }
     const x=camera.position.x,z=camera.position.z;
@@ -3739,7 +3760,7 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.hypot(x+21,z-6)<13)message="銅鹿亭。旅人たちが集う酒場。扉を通って中も見てみよう。";
     else if(Math.hypot(x+21,z+16)<13)message="冒険者ギルド。掲示板には依頼書が並んでいる。";
     else if(Math.hypot(x-13,z-5)<16)message="石造りの大噴水広場。水音を聞きながら、街の人々がベンチで語らう憩いの場所。";
-    else if(x>11&&x<49&&z>21&&z<61)message="帝国浴場。温泉プール、蒸気浴室、休憩回廊を備えた市民のための大浴場。";
+    else if(x>11&&x<49&&z>35&&z<86)message="帝国浴場。温泉プール、蒸気浴室、休憩回廊を備えた市民のための大浴場。";
     else if(z<-45)message="王城へ続く大門。街の喧騒が遠のき、王宮の静けさが近づいてくる。";
     else if(x>34&&z>-3&&z<35)message="酒場通り。旅人や商人、冒険者たちが夜まで集う街の一角。";
     else if(x>10&&z<-5)message="市場の屋台。果物や旅の道具が並んでいる。";
