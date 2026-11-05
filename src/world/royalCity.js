@@ -1186,7 +1186,13 @@ export async function createRoyalCity(engine, canvas) {
   // Their fronts face inward toward the shared north-south street axis (x = 0).
   const marketStallRows=[-13,-19,-25,-31,-37];
   const marketLabels=["果物","野菜","焼きたてパン","花とハーブ","チーズ","蜂蜜","香辛料","布と染物","焼き菓子","雑貨"];
-  const marketCloths=[mats.banner,mats.flowers,mats.banner,mats.flowers,mats.banner];
+  const marketCloths=[
+    mat(scene,"market-awning-berry",new Color3(.48,.12,.18),.95),
+    mat(scene,"market-awning-sage",new Color3(.29,.43,.25),.95),
+    mat(scene,"market-awning-cream",new Color3(.83,.69,.43),.95),
+    mat(scene,"market-awning-indigo",new Color3(.16,.25,.43),.95),
+    mat(scene,"market-awning-plum",new Color3(.39,.22,.40),.95)
+  ];
   const marketWood=mat(scene,"market-stall-oak",new Color3(.30,.17,.085),.92);
   const marketWoodLight=mat(scene,"market-stall-honey-wood",new Color3(.52,.34,.18),.94);
   const marketFruitMats=[
@@ -1234,7 +1240,7 @@ export async function createRoyalCity(engine, canvas) {
     localBox("market-awning-cloth",[0,2.73,0],[3.82,.12,2.68],marketCloths[index%marketCloths.length]);
     for(let stripe=0;stripe<9;stripe++) {
       const sx=-1.68+stripe*.42;
-      localBox("market-awning-stripe",[sx,2.805,0],[.19,.025,2.62],stripe%2===0?mats.banner:mats.flowers);
+      localBox("market-awning-stripe",[sx,2.805,0],[.19,.025,2.62],stripe%2===0?marketCloths[index%marketCloths.length]:marketWoodLight);
     }
     for(let scallop=0;scallop<9;scallop++) {
       const sx=-1.72+scallop*.43;
@@ -1252,28 +1258,40 @@ export async function createRoyalCity(engine, canvas) {
     const signFace=MeshBuilder.CreatePlane("market-sign-face-"+index,{width:1.65,height:.29},scene);
     signFace.parent=root;signFace.position.set(0,2.22,-1.525);
     const signMat=new StandardMaterial("market-sign-material-"+index,scene);signMat.diffuseTexture=signTex;signMat.emissiveColor=new Color3(.10,.07,.035);signFace.material=signMat;signFace.isPickable=false;
-    // Baskets and a varied display of fresh produce on the lowered counter.
-    for(let basket=0;basket<2;basket++) {
-      const bx=-.78+basket*1.45,bz=-.43;
-      const bowl=localCylinder("market-counter-produce-basket",[bx,1.25,bz],.72,.28,marketWoodLight,20);
-      bowl.scaling.y=.72;
-      for(let fruit=0;fruit<5;fruit++) {
-        const a=fruit*Math.PI*2/5;
-        const color=marketFruitMats[(index+fruit)%marketFruitMats.length];
-        localSphere("market-counter-fruit",[bx+Math.cos(a)*.20,1.46+(fruit%2)*.035,bz+Math.sin(a)*.17],[.25,.27,.24],color,16);
-      }
-      localSphere("market-counter-fruit-center",[bx,1.53,bz],[.25,.27,.24],marketFruitMats[(index+2)%marketFruitMats.length],16);
-    }
-    // One open timber produce crate sits beside each stall, with visible fruit and leaves.
-    localBox("market-fruit-crate-base",[1.95,.30,.12],[.98,.12,.92],marketWood);
-    for(const xx of [-.47,.47])localBox("market-fruit-crate-side",[1.95+xx,.55,.12],[.10,.43,.96],marketWoodLight);
-    for(const zz of [-.43,.43])localBox("market-fruit-crate-end",[1.95,.55,.12+zz],[.98,.43,.10],marketWoodLight);
-    for(let slat=0;slat<4;slat++)localBox("market-fruit-crate-slat",[1.95,.48,.12-.30+slat*.20],[.94,.055,.045],marketWood);
-    for(let fruit=0;fruit<6;fruit++) {
-      const fx=1.70+(fruit%3)*.24,fz=-.08+Math.floor(fruit/3)*.35;
-      localSphere("market-crate-fruit",[fx,.78,fz],[.27,.28,.26],marketFruitMats[(index+fruit+1)%marketFruitMats.length],16);
-      const leaf=localSphere("market-crate-fruit-leaf",[fx+.035,.94,fz],[.12,.035,.07],marketLeaf,10);
-      leaf.rotation.z=.35;
+    // Each merchant has a distinct stock display. Keep the silhouettes simple for mobile GPUs.
+    const goodsA=mat(scene,"market-goods-warm-"+index,new Color3(.78,.31,.10),.82);
+    const goodsB=mat(scene,"market-goods-pale-"+index,new Color3(.91,.75,.48),.9);
+    const goodsGreen=mat(scene,"market-goods-green-"+index,new Color3(.25,.43,.16),.9);
+    const goodsBlue=mat(scene,"market-goods-blue-"+index,new Color3(.16,.34,.48),.78);
+    const goodsPurple=mat(scene,"market-goods-purple-"+index,new Color3(.43,.20,.42),.82);
+    const goodsGold=mat(scene,"market-goods-gold-"+index,new Color3(.88,.60,.16),.55,.08);
+    if(index===0) {
+      for(let n=0;n<9;n++){const x=-1.05+(n%3)*.9,z=-.42+Math.floor(n/3)*.38;localSphere("market-apple-pear",[x,1.36+(n%2)*.08,z],[.25,.29,.24],marketFruitMats[n%4],12);if(n%3===0)localSphere("market-fruit-leaf",[x+.04,1.57,z],[.13,.035,.07],marketLeaf,8);}
+    } else if(index===1) {
+      for(let n=0;n<5;n++)localSphere("market-cabbage",[-1.1+(n%3)*.9,1.39,-.42+Math.floor(n/3)*.45],[.34,.28,.32],goodsGreen,10);
+      for(let n=0;n<4;n++){const carrot=localCylinder("market-carrot",[-.85+n*.55,1.39,-.55],.18,.62,goodsA,8);carrot.rotation.z=Math.PI/2;}
+      for(let n=0;n<3;n++)localSphere("market-radish",[.15+n*.42,1.38,.38],[.20,.22,.19],marketFruitMats[0],10);
+    } else if(index===2) {
+      for(let n=0;n<4;n++){const loaf=localSphere("market-country-loaf",[-1.0+n*.65,1.37,-.34],[.55,.22,.30],goodsB,12);loaf.rotation.y=n*.35;}
+      for(let n=0;n<3;n++){const baguette=localCylinder("market-baguette",[-.8+n*.75,1.35,.43],.19,.9,goodsA,10);baguette.rotation.z=Math.PI/2;}
+    } else if(index===3) {
+      for(let n=0;n<5;n++){const x=-1.2+n*.58;localCylinder("market-flower-pot",[x,1.32,-.12],.32,.38,marketWoodLight,10);localCylinder("market-flower-stem",[x,1.72,-.12],.045,.55,goodsGreen,6);localSphere("market-flower-head",[x,2.02,-.12],[.28,.22,.28],[goodsA,goodsBlue,goodsPurple,goodsGold,goodsB][n],10);}
+    } else if(index===4) {
+      for(let n=0;n<3;n++){const wheel=localCylinder("market-cheese-wheel",[-.95+n*.95,1.38,-.22],.72,.28,goodsGold,12);wheel.rotation.z=(n-1)*.08;}
+      localBox("market-cheese-wedge",[.65,1.48,.43],[.65,.34,.48],goodsB);
+    } else if(index===5) {
+      for(let n=0;n<5;n++){const x=-1.1+n*.55;localCylinder("market-honey-jar",[x,1.42,-.18],.34,.52,goodsGold,12);localCylinder("market-honey-lid",[x,1.72,-.18],.28,.10,marketWood,10);}
+    } else if(index===6) {
+      for(let n=0;n<6;n++){const x=-1.2+(n%3)*1.05,z=-.38+Math.floor(n/3)*.55;localSphere("market-spice-sack",[x,1.34,z],[.42,.30,.34],[goodsA,goodsGold,goodsGreen,goodsBlue,goodsPurple,goodsB][n],10);localCylinder("market-spice-bowl",[x,1.23,z],.46,.10,marketWoodLight,10);}
+    } else if(index===7) {
+      const dyes=[goodsBlue,goodsPurple,goodsA,goodsGreen,goodsGold];
+      for(let n=0;n<5;n++){localBox("market-folded-fabric-stack",[-1.05+n*.52,1.28,-.18],[.48,.22,.78],dyes[n]);localBox("market-fabric-top-fold",[-1.05+n*.52,1.42,-.18],[.48,.08,.78],n%2?goodsB:goodsGold);}
+      for(let n=0;n<2;n++){const roll=localCylinder("market-fabric-bolt",[-.65+n*1.2,1.53,.62],.28,.72,dyes[n+1],12);roll.rotation.z=Math.PI/2;}
+    } else if(index===8) {
+      for(let n=0;n<5;n++){const x=-1.05+(n%3)*.95,z=-.34+Math.floor(n/3)*.62;localCylinder("market-pastry-paper",[x,1.34,z],.42,.18,goodsB,12);localSphere("market-cake-top",[x,1.52,z],[.36,.22,.36],[goodsA,goodsPurple,goodsGold,goodsB,goodsBlue][n],12);}
+    } else {
+      for(let n=0;n<3;n++){localBox("market-antique-book",[-1.0+n*.85,1.32,-.24],[.58,.16,.72],[goodsBlue,goodsGreen,goodsPurple][n]);localBox("market-book-gilt-edge",[-1.0+n*.85,1.41,-.24],[.60,.025,.74],goodsGold);}
+      for(let n=0;n<3;n++){localCylinder("market-curio-bottle",[-.72+n*.72,1.72,.52],.22,.48,[goodsBlue,goodsGreen,goodsPurple][n],10);localCylinder("market-curio-stopper",[-.72+n*.72,1.98,.52],.12,.10,goodsGold,8);}
     }
     // A small hanging lantern adds warmth after dusk.
     localBox("market-lantern-bracket",[0,2.12,1.42],[.48,.08,.10],marketWood);
@@ -4011,7 +4029,8 @@ export async function createRoyalCity(engine, canvas) {
 
     // Camera, collision and interaction.
   const camera=new UniversalCamera("first-person-explorer",new Vector3(0,1.72,27),scene);
-  camera.minZ=.08;camera.fov=.92;camera.inputs.clear();camera.rotation.y=Math.PI;
+  camera.minZ=.12;camera.maxZ=isTouchDevice?210:420;camera.fov=.92;camera.inputs.clear();camera.rotation.y=Math.PI;
+  if(isTouchDevice)scene.skipPointerMovePicking=true;
   // A restrained cinematic pass: soft highlight bloom and edge smoothing.
   // Kept deliberately light so Safari on recent iPhones can sustain the frame rate.
 
@@ -4245,22 +4264,25 @@ export async function createRoyalCity(engine, canvas) {
       camera._lastFootX=camera.position.x;camera._lastFootZ=camera.position.z;
       if(this.onMovement)this.onMovement(moving,camera.position,getLocation(camera.position.x,camera.position.z));
       const time=performance.now()*.001;
-      bathLanterns.forEach(lamp=>{
-        const flicker=.94+Math.sin(time*5.1+lamp.phase)*.045+Math.sin(time*8.3+lamp.phase*1.7)*.018;
-        lamp.flame.scaling.y=flicker;lamp.light.intensity=.48*flicker;
-      });
-      bathSteamPuffs.forEach((puff,index)=>{
-        const cycle=(time*puff.speed+puff.phase)%3.8;
-        puff.mesh.position.x=puff.x+Math.sin(time*.55+puff.phase)*puff.drift;
-        puff.mesh.position.z=puff.z+Math.cos(time*.42+puff.phase)*puff.drift*.55;
-        puff.mesh.position.y=puff.y+cycle*.72;
-        const fade=Math.sin(Math.PI*cycle/3.8);
-        const swell=.82+fade*.48;
-        puff.mesh.scaling.x=swell*(.88+(index%3)*.08);
-        puff.mesh.scaling.y=swell*(1.35+(index%4)*.16);
-        puff.mesh.scaling.z=swell*(.9+(index%2)*.12);
-      });
-      bathActors.forEach(actor=>{
+      const nearBath=Math.hypot(camera.position.x-30,camera.position.z-60)<82;
+      if(nearBath) {
+        bathLanterns.forEach(lamp=>{
+          const flicker=.94+Math.sin(time*5.1+lamp.phase)*.045+Math.sin(time*8.3+lamp.phase*1.7)*.018;
+          lamp.flame.scaling.y=flicker;lamp.light.intensity=.48*flicker;
+        });
+        bathSteamPuffs.forEach((puff,index)=>{
+          const cycle=(time*puff.speed+puff.phase)%3.8;
+          puff.mesh.position.x=puff.x+Math.sin(time*.55+puff.phase)*puff.drift;
+          puff.mesh.position.z=puff.z+Math.cos(time*.42+puff.phase)*puff.drift*.55;
+          puff.mesh.position.y=puff.y+cycle*.72;
+          const fade=Math.sin(Math.PI*cycle/3.8);
+          const swell=.82+fade*.48;
+          puff.mesh.scaling.x=swell*(.88+(index%3)*.08);
+          puff.mesh.scaling.y=swell*(1.35+(index%4)*.16);
+          puff.mesh.scaling.z=swell*(.9+(index%2)*.12);
+        });
+      }
+      if(nearBath)bathActors.forEach(actor=>{
         actor.root.position.y=actor.baseY+Math.sin(time*.72+actor.phase)*.022;
         if(actor.pose==="attendant") {
           actor.root.rotation.z=Math.sin(time*1.15+actor.phase)*.035;
@@ -4282,6 +4304,7 @@ export async function createRoyalCity(engine, canvas) {
         movingCarriage.group.position.y=carriageRoadHeight(movingCarriage.group.position.z);
       }
       people.forEach(person=>{
+        if(Math.hypot(person.root.position.x-camera.position.x,person.root.position.z-camera.position.z)>72)return;
         if(!person.route||person.route.length<2)return;
         const target=person.route[person.waypointIndex];
         const dx=target.x-person.root.position.x,dz=target.z-person.root.position.z;
@@ -4297,6 +4320,7 @@ export async function createRoyalCity(engine, canvas) {
       });
       yellowBirds.forEach(bird=>{const dip=bird.drink?Math.max(0,Math.sin(time*1.8+bird.phase))*.20:0;bird.root.position.y=bird.baseY-dip;bird.root.rotation.x=bird.drink?Math.sin(time*1.8+bird.phase)*.16:Math.sin(time*2.4+bird.phase)*.025;bird.root.rotation.y=Math.sin(time*.55+bird.phase)*.18;});
       birds.forEach(bird=>{
+        if(Math.hypot(bird.root.position.x-camera.position.x,bird.root.position.z-camera.position.z)>95)return;
         if(bird.perched)return;
         const t=time*.32+bird.phase;
         bird.root.position.x=bird.home.x+Math.sin(t)*bird.radius;
