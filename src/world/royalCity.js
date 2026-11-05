@@ -2286,6 +2286,27 @@ export async function createRoyalCity(engine, canvas) {
     }
   }
 
+  // The Velvet Rose is richly furnished, but its many fixed ornaments do not
+  // need separate draw calls. Merge by their original material; retain every
+  // modeled detail and keep emissive bulbs separate so their glow remains crisp.
+  const velvetRoseBatches = new Map();
+  for (const mesh of [...scene.meshes]) {
+    if (!mesh.name.startsWith("velvet-rose-") || mesh.name.includes("glow") || mesh.name.includes("bulb")) continue;
+    if (mesh.parent || mesh.isDisposed() || !mesh.material || Array.isArray(mesh.material)) continue;
+    if (!velvetRoseBatches.has(mesh.material)) velvetRoseBatches.set(mesh.material, []);
+    velvetRoseBatches.get(mesh.material).push(mesh);
+  }
+  let velvetRoseBatchIndex = 0;
+  for (const [material, parts] of velvetRoseBatches) {
+    if (parts.length < 2) continue;
+    const merged = Mesh.MergeMeshes(parts, true, true, undefined, false, false);
+    if (merged) {
+      merged.name = "velvet-rose-static-batch-" + velvetRoseBatchIndex++;
+      merged.material = material;
+      merged.isPickable = false;
+    }
+  }
+
   const shadowNames = /facade-|side-wall-|rear-wall|roof-left|roof-right|ridge|corner-post|oak-barrel|old-tree-trunk|plaza-tree-trunk|world-tree-trunk|gatehouse-tower|castle-tower|street-lamp-post|market-post|emperor-statue/;
   for (const mesh of scene.meshes) {
     if (shadowNames.test(mesh.name)) shadow.addShadowCaster(mesh, false);
