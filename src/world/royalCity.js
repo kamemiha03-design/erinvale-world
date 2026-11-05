@@ -3107,6 +3107,27 @@ export async function createRoyalCity(engine, canvas) {
   // Small public notice desk immediately inside the entrance.
   box(scene,"public-library-help-desk",[-43.2,1.75,-84],[2.2,1.4,1.0],libraryWood);
   box(scene,"public-library-help-desk-top",[-43.2,2.5,-84],[2.5,.16,1.2],libraryGold);
+  // Batch the library's many static decorative parts by material. This keeps the
+  // finer book spines and carved details while limiting draw calls on mobile GPUs.
+  const libraryBatches=new Map();
+  for(const mesh of [...scene.meshes]) {
+    if(!mesh.name.startsWith("public-library-")||mesh.parent||mesh.isDisposed())continue;
+    if(/main-double-door|window-glass|reading-lamp|lamp-shade|lamp-light-pool|statue/.test(mesh.name))continue;
+    if(!mesh.material||Array.isArray(mesh.material)||mesh.getTotalVertices()===0)continue;
+    mesh.computeWorldMatrix(true);
+    if(!libraryBatches.has(mesh.material))libraryBatches.set(mesh.material,[]);
+    libraryBatches.get(mesh.material).push(mesh);
+  }
+  let libraryBatchIndex=0;
+  for(const [material,parts] of libraryBatches) {
+    if(parts.length<2)continue;
+    const merged=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+    if(merged) {
+      merged.name="public-library-static-detail-batch-"+libraryBatchIndex++;
+      merged.material=material;
+      merged.isPickable=false;
+    }
+  }
   // Collision is handled in collides() so visitors can freely walk between the shelves.
 
   // Yggdrasil now floats much higher in the open sky, with its roots fully exposed beneath the island.
