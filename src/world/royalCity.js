@@ -1180,6 +1180,8 @@ export async function createRoyalCity(engine, canvas) {
     }
   }
 
+  // Yield between major districts so mobile Safari can service the page.
+  await new Promise(resolve=>setTimeout(resolve,0));
   // A proper market street: ten low stalls flank the central approach to the great bridge.
   // Their fronts face inward toward the shared north-south street axis (x = 0).
   const marketStallRows=[-13,-19,-25,-31,-37];
@@ -1372,6 +1374,8 @@ export async function createRoyalCity(engine, canvas) {
     }
   }
 
+  // Yield between major districts so mobile Safari can service the page.
+  await new Promise(resolve=>setTimeout(resolve,0));
   // The royal citadel: a layered limestone fortress with a proper keep, curtain walls,
   // crenellations, arched windows, buttresses, rooflines and royal banners.
   const royalPalaceStartIndex=scene.meshes.length;
@@ -1922,6 +1926,8 @@ export async function createRoyalCity(engine, canvas) {
 
 
 
+  // Yield between major districts so mobile Safari can service the page.
+  await new Promise(resolve=>setTimeout(resolve,0));
   // A state ballroom extends beyond the suite and gallery as a fully enclosed, walkable palace wing.
   const ballroomFloor=mat(scene,"state-ballroom-marble",new Color3(.78,.75,.68),.24,.12);
   const ballroomGold=mat(scene,"state-ballroom-gilt",new Color3(.82,.62,.28),.28,.75);
@@ -2586,6 +2592,8 @@ export async function createRoyalCity(engine, canvas) {
   addCarriage(0,-73.5,horseCoats[1],.4,true);
 
   const royalGardenStartIndex=scene.meshes.length;
+  // Yield between major districts so mobile Safari can service the page.
+  await new Promise(resolve=>setTimeout(resolve,0));
   // The rose garden is now inside the palace complex, in the long inner court behind the lobby.
   const carriageMat=texturedMat(scene,"inner-rose-court-path",new Color3(.62,.58,.49),"#a99d86","#554d41",.92);
   const gardenFloor=mat(scene,"inner-rose-court-marble",new Color3(.68,.64,.55),.86);
@@ -2961,6 +2969,8 @@ export async function createRoyalCity(engine, canvas) {
   }
   for(const leaf of canopy) leaf.baseY+=worldTreeLift;
 
+  // Yield between major districts so mobile Safari can service the page.
+  await new Promise(resolve=>setTimeout(resolve,0));
   // Detailed CC0 models add leaf geometry and a merchant wagon.
   // Optional high-detail props are fetched only after the first playable frame.
   // Load them one at a time so Safari never has to decode eleven models at once.
@@ -3147,6 +3157,8 @@ export async function createRoyalCity(engine, canvas) {
   for(const [x,z] of [[-11,-38],[-7,-35.8],[15,-34.9],[28,-34.9],[43,-36],[56,-43.9],[74,-43.9],[87,-30],[102,-22],[107,-3]]){const p=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1,height:.18,tessellation:8},scene);p.position.set(x,.16,z);p.scaling.z=.72;p.material=brookEdge;}
 
 
+  // Yield between major districts so mobile Safari can service the page.
+  await new Promise(resolve=>setTimeout(resolve,0));
   // Imperial public baths: a Roman thermae and a warm, intimate hammam.
   // Set behind the initial arrival point, on the western side of the royal approach.
   const hammamMeshStart=scene.meshes.length;
@@ -3538,6 +3550,8 @@ export async function createRoyalCity(engine, canvas) {
   makeBathWaySign(16,18,"帝国浴場　↗","THERMAE  •  HAMMAM");
   makeBathWaySign(25,31,"帝国浴場　↗","PUBLIC BATHS");
 
+  // Yield between major districts so mobile Safari can service the page.
+  await new Promise(resolve=>setTimeout(resolve,0));
   // Full-height townspeople are assembled locally so their proportions never depend
   // on third-party model downloads. Head height is kept close to one-seventh of stature.
   const people=[];
@@ -3684,35 +3698,41 @@ export async function createRoyalCity(engine, canvas) {
     }
     if(phase%3===0) part("npc-beard",[0,1.66,-.12],[.20,.17,.12],npcBeard,"sphere");
 
-    // Combine each resident's body parts by material. The original geometry,
-    // proportions and materials remain unchanged; only draw calls are reduced.
-    // Temporarily move the actor root to the origin so merged vertices stay local.
-    const savedPosition=root.position.clone();
-    const savedRotation=root.rotation.clone();
-    root.position.set(0,0,0);
-    root.rotation.set(0,0,0);
-    root.computeWorldMatrix(true);
-    const bodyGroups=new Map();
-    for(const child of root.getChildMeshes(false)) {
-      if(!child.geometry || !child.material) continue;
-      const group=bodyGroups.get(child.material)||[];
-      group.push(child);
-      bodyGroups.set(child.material,group);
-    }
-    for(const [material,parts] of bodyGroups) {
-      if(parts.length<2) continue;
-      const combined=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
-      if(combined) {
-        combined.name="npc-body-batched";
-        combined.material=material;
-        combined.parent=root;
-        combined.isPickable=false;
-        combined.receiveShadows=true;
+    // Desktop merges each actor for fewer draw calls. On iPhone, keep cloned
+    // parts on shared high-detail source buffers; merging allocates a fresh large
+    // vertex buffer for every resident and spikes startup memory.
+    if(!isTouchDevice) {
+      // Combine each resident's body parts by material. The original geometry,
+      // proportions and materials remain unchanged; only draw calls are reduced.
+      // Temporarily move the actor root to the origin so merged vertices stay local.
+      const savedPosition=root.position.clone();
+      const savedRotation=root.rotation.clone();
+      root.position.set(0,0,0);
+      root.rotation.set(0,0,0);
+      root.computeWorldMatrix(true);
+      const bodyGroups=new Map();
+      for(const child of root.getChildMeshes(false)) {
+        if(!child.geometry || !child.material) continue;
+        const group=bodyGroups.get(child.material)||[];
+        group.push(child);
+        bodyGroups.set(child.material,group);
       }
+      for(const [material,parts] of bodyGroups) {
+        if(parts.length<2) continue;
+        const combined=Mesh.MergeMeshes(parts,true,true,undefined,false,false);
+        if(combined) {
+          combined.name="npc-body-batched";
+          combined.material=material;
+          combined.parent=root;
+          combined.isPickable=false;
+          combined.receiveShadows=true;
+        }
+      }
+      root.position.copyFrom(savedPosition);
+      root.rotation.copyFrom(savedRotation);
+      root.computeWorldMatrix(true);
+  
     }
-    root.position.copyFrom(savedPosition);
-    root.rotation.copyFrom(savedRotation);
-    root.computeWorldMatrix(true);
 
     if(walking) {
       const actor={root,walking:true,phase,home:new Vector3(x,0,z),radius:1.25+(phase%3)*.35};
@@ -3721,7 +3741,9 @@ export async function createRoyalCity(engine, canvas) {
     return root;
   }
 
-  // Bathers remain around the pools; four treatment alcoves sit just inside the entrance.
+  // Populate detailed residents after the first playable frame on touch devices.
+  // This spreads GPU buffer uploads across frames instead of exhausting Safari at boot.
+  const populateResidents=()=>{
   makeBathGuest(27.0,.88,61.0,"soaking",-.25,0);
   makeBathGuest(32.8,.88,64.5,"soaking",Math.PI+.25,1);
   makeBathGuest(29.8,.88,66.0,"soaking",Math.PI/2,2);
@@ -3878,6 +3900,8 @@ export async function createRoyalCity(engine, canvas) {
     const actor=makeTownsperson(route[0].x,route[0].z,index===2?"merchant":(index===3?"merchant":"villager"),45+index*1.4,0,true);
     actor.route=route;actor.waypointIndex=1;actor.speed=.92+(index%4)*.11;
   });
+  };
+  if(isTouchDevice) setTimeout(populateResidents,1400); else populateResidents();
 
   // Small songbirds gather among the formal roses: some perch, others circle over the beds.
   const birdBodyMat=mat(scene,"rose-garden-bird-plumage",new Color3(.22,.27,.25),.82);
