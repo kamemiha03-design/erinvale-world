@@ -3115,8 +3115,8 @@ export async function createRoyalCity(engine, canvas) {
     tassel.position.set(-41.05,5.15,z);tassel.material=libraryGold;
   }
   const statueBase=box(scene,"public-library-marble-statue-plinth",[-59.8,1.55,-84],[1.25,1.1,1.25],libraryTrim);
-  const statue=MeshBuilder.CreateSphere("public-library-marble-scholar-statue",{diameter:1.15,segments:16},scene);
-  statue.position.set(-59.8,2.65,-84);statue.scaling.y=1.65;statue.material=libraryWall;
+  const libraryScholarStatue=MeshBuilder.CreateSphere("public-library-marble-scholar-statue",{diameter:1.15,segments:16},scene);
+  libraryScholarStatue.position.set(-59.8,2.65,-84);libraryScholarStatue.scaling.y=1.65;libraryScholarStatue.material=libraryWall;
   const statueHead=MeshBuilder.CreateSphere("public-library-statue-head",{diameter:.48,segments:16},scene);
   statueHead.position.set(-59.8,3.65,-84);statueHead.material=libraryWall;
   // Study tables now have real aprons and four legs; chairs sit on the marble floor
