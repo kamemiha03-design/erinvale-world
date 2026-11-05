@@ -2079,6 +2079,93 @@ export async function createRoyalCity(engine, canvas) {
   const lobbyCrest=MeshBuilder.CreateCylinder("palace-lobby-national-crest",{diameter:2.1,height:.18,tessellation:8},scene);
   lobbyCrest.position.set(0,17.6,-124.88);lobbyCrest.rotation.x=Math.PI/2;lobbyCrest.material=palaceGold;
 
+  // Rebuild the palace interior as a clean, continuous shell. The earlier
+  // overlapping lobby/gallery geometry is discarded; exterior palace meshes stay.
+  for(const mesh of [...scene.meshes]) {
+    if(/^(palace-lobby-|palace-upper-corridor-|palace-royal-portrait-)/.test(mesh.name)) mesh.dispose(false,false);
+  }
+  const rebuiltMarble=mat(scene,"palace-rebuilt-marble",new Color3(.79,.76,.69),.24,.10);
+  const rebuiltWall=mat(scene,"palace-rebuilt-limestone",new Color3(.78,.72,.61),.82);
+  const rebuiltGold=mat(scene,"palace-rebuilt-gold",new Color3(.78,.57,.26),.26,.72);
+  const rebuiltWood=mat(scene,"palace-rebuilt-walnut",new Color3(.22,.115,.065),.58,.12);
+  const rebuiltVelvet=mat(scene,"palace-rebuilt-velvet",new Color3(.34,.055,.12),.82);
+  // First floor: one broad, unobstructed reception hall, open to the upper gallery.
+  box(scene,"palace-rebuild-ground-floor",[0,8.62,-122.4],[22,.28,19.4],rebuiltMarble);
+  box(scene,"palace-rebuild-ground-runner",[0,8.80,-122.4],[5.0,.055,17.8],rebuiltVelvet);
+  for(const side of [-1,1]) {
+    box(scene,"palace-rebuild-ground-side-wall",[side*10.85,19.1,-122.4],[.55,21,19.4],rebuiltWall);
+    for(const z of [-116.5,-122.5,-128.5]) {
+      cylinder(scene,"palace-rebuild-column-base",[side*9.75,9.0,z],1.05,.42,rebuiltGold,32);
+      cylinder(scene,"palace-rebuild-column",[side*9.75,19.0,z],.48,19.6,rebuiltWall,40);
+      cylinder(scene,"palace-rebuild-column-capital",[side*9.75,29.0,z],1.12,.62,rebuiltGold,32);
+      box(scene,"palace-rebuild-sconce",[side*10.42,21.0,z],[.18,.9,.62],rebuiltGold);
+      const glow=MeshBuilder.CreateSphere("palace-rebuild-sconce-glow",{diameter:.30,segments:16},scene);
+      glow.position.set(side*10.27,21.05,z-.08);glow.material=mats.lantern;
+    }
+    box(scene,"palace-rebuild-reception-desk",[side*7.35,9.65,-121.0],[2.6,1.75,1.25],rebuiltWood);
+    box(scene,"palace-rebuild-reception-top",[side*7.35,10.58,-121.0],[2.85,.18,1.42],rebuiltGold);
+    box(scene,"palace-rebuild-desk-front",[side*7.35,9.65,-121.66],[1.9,.88,.08],rebuiltVelvet);
+  }
+  // A single generous central staircase: no split flights and no central gap.
+  const rebuiltStairStart=-117.25,rebuiltStairEnd=-128.55,rebuiltStairRise=6.08,rebuiltStairCount=18;
+  const rebuiltTread=(rebuiltStairStart-rebuiltStairEnd)/rebuiltStairCount;
+  for(let i=0;i<rebuiltStairCount;i++) {
+    const top=8.82+(i+1)*rebuiltStairRise/rebuiltStairCount;
+    const z=rebuiltStairStart-(i+.5)*rebuiltTread;
+    const step=box(scene,"palace-rebuild-grand-stair-step",[0,top-.18,z],[8.8,.36,rebuiltTread+.08],rebuiltMarble);
+    step.receiveShadows=true;
+    box(scene,"palace-rebuild-stair-nosing",[0,top-.035,z+rebuiltTread*.43],[8.9,.07,.11],rebuiltGold);
+  }
+  for(const side of [-1,1]) {
+    const railX=side*4.72;
+    const rail=MeshBuilder.CreateTube("palace-rebuild-stair-handrail",{path:[
+      new Vector3(railX,9.65,rebuiltStairStart),
+      new Vector3(railX,15.15,rebuiltStairEnd)
+    ],radius:.11,tessellation:12},scene);
+    rail.material=rebuiltGold;
+    for(let i=0;i<=18;i+=2) {
+      const p=i/18;
+      const post=cylinder(scene,"palace-rebuild-stair-baluster",[railX,9.55+rebuiltStairRise*p,rebuiltStairStart-(rebuiltStairStart-rebuiltStairEnd)*p],.105,.9,rebuiltGold,12);
+      post.position.y=9.55+rebuiltStairRise*p-.40;
+    }
+  }
+  // Upper landing and corridor connect directly to the existing great ballroom.
+  box(scene,"palace-rebuild-upper-landing",[0,14.9,-130.0],[13.0,.32,4.2],rebuiltMarble);
+  box(scene,"palace-rebuild-upper-runner",[0,15.08,-130.0],[4.8,.05,4.0],rebuiltVelvet);
+  box(scene,"palace-rebuild-upper-corridor-floor",[0,14.9,-136.2],[13.0,.32,12.6],rebuiltMarble);
+  box(scene,"palace-rebuild-upper-corridor-runner",[0,15.08,-136.2],[4.6,.05,12.1],rebuiltVelvet);
+  for(const side of [-1,1]) {
+    box(scene,"palace-rebuild-upper-side-wall",[side*6.48,19.1,-136.2],[.36,8.2,12.6],rebuiltWall);
+    for(let z=-132;z>=-140;z-=4) {
+      cylinder(scene,"palace-rebuild-upper-pier-base",[side*5.95,15.2,z],.66,.4,rebuiltGold,24);
+      cylinder(scene,"palace-rebuild-upper-pier",[side*5.95,19.0,z],.27,7.2,rebuiltWall,32);
+      cylinder(scene,"palace-rebuild-upper-pier-capital",[side*5.95,22.7,z],.72,.4,rebuiltGold,24);
+    }
+  }
+  // A clear ten-metre opening leads from the corridor into the great hall.
+  box(scene,"palace-rebuild-ballroom-door-left",[-10.8,22.0,-142.35],[.42,14.0,.55],rebuiltGold);
+  box(scene,"palace-rebuild-ballroom-door-right",[10.8,22.0,-142.35],[.42,14.0,.55],rebuiltGold);
+  box(scene,"palace-rebuild-ballroom-door-crown",[0,29.2,-142.35],[22.0,.55,.7],rebuiltGold);
+  // Grand chandelier and framed royal paintings return only after the walkable shell.
+  const rebuiltChandelier=MeshBuilder.CreateTorus("palace-rebuild-chandelier-ring",{diameter:6.4,thickness:.2,tessellation:48},scene);
+  rebuiltChandelier.position.set(0,26.0,-122.4);rebuiltChandelier.material=rebuiltGold;
+  cylinder(scene,"palace-rebuild-chandelier-chain",[0,28.0,-122.4],.11,4.0,rebuiltGold,12);
+  for(let i=0;i<12;i++) {
+    const a=i*Math.PI/6,x=Math.cos(a)*2.55,z=-122.4+Math.sin(a)*2.55;
+    const arm=MeshBuilder.CreateTube("palace-rebuild-chandelier-arm",{path:[new Vector3(0,26,-122.4),new Vector3(x,26,z)],radius:.075,tessellation:8},scene);
+    arm.material=rebuiltGold;
+    cylinder(scene,"palace-rebuild-chandelier-candle",[x,26.38,z],.14,.62,rebuiltMarble,12);
+    const flame=MeshBuilder.CreateSphere("palace-rebuild-chandelier-flame",{diameter:.24,segments:12},scene);
+    flame.position.set(x,26.82,z);flame.material=mats.lantern;
+  }
+  for(const side of [-1,1]) for(let i=0;i<3;i++) {
+    const z=-117.0-i*5.3,y=21.0;
+    box(scene,"palace-rebuild-painting-frame",[side*10.48,y,z],[.24,3.7,2.65],rebuiltGold);
+    box(scene,"palace-rebuild-painting-canvas",[side*10.32,y,z],[.08,3.25,2.2],i%2?palaceBlue:rebuiltVelvet);
+    const crest=MeshBuilder.CreateCylinder("palace-rebuild-painting-crest",{diameter:1.0,height:.08,tessellation:8},scene);
+    crest.position.set(side*10.24,y,z);crest.rotation.z=Math.PI/2;crest.material=rebuiltGold;
+  }
+
   // Two detailed horse-drawn carriages wait in the forecourt, clear of the central stair.
   const horseCoats=[
     mat(scene,"carriage-horse-chestnut",new Color3(.28,.105,.045),.78),
@@ -2883,9 +2970,9 @@ export async function createRoyalCity(engine, canvas) {
     // Keep the central stair corridor open; the cliff shoulders remain solid.
     if(z<-78 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
     // The lower lobby ends at its rear wall; the upper corridor is reached from the stairs.
-    if(camera.position.y<14 && z<-125.7 && z>-127.5 && Math.abs(x)<8.5)return true;
+    if(camera.position.y<14 && z<-128.0 && z>-129.1 && Math.abs(x)<10.5)return true;
     // Second-floor corridor and ballroom boundaries, with a wide central doorway.
-    if(z<-126 && z>-142 && Math.abs(x)>6.35)return true;
+    if(z<-128.25 && z>-142.2 && Math.abs(x)>6.5)return true;
     if(z<=-142 && z>-176 && Math.abs(x)>21.35)return true;
     if(z<-141.5 && z>-143.0 && Math.abs(x)>10.0)return true;
     if(z<=-176 && z>-178.5)return true;
@@ -3045,15 +3132,13 @@ export async function createRoyalCity(engine, canvas) {
       const onRoyalStair=Math.abs(camera.position.x)<7.1 && camera.position.z<=stairStartZ && camera.position.z>=stairEndZ;
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
-      const onLobbyStair=camera.position.z<=-116.25&&camera.position.z>=-124.55&&Math.abs(Math.abs(camera.position.x)-3.35)<1.65;
-      const lobbyStairProgress=onLobbyStair?(-116.25-camera.position.z)/(-116.25+124.55):0;
-      // Match the actual tread tops (8.82m to 14.82m) and keep the camera
-      // 1.72m above them, rather than adding the outside stair rise twice.
-      const lobbyStairFloor=onLobbyStair?8.82+Math.max(0,Math.min(1,lobbyStairProgress))*6.0:0;
+      const onLobbyStair=camera.position.z<=-117.25&&camera.position.z>=-128.55&&Math.abs(camera.position.x)<4.35;
+      const lobbyStairProgress=onLobbyStair?(-117.25-camera.position.z)/(-117.25+128.55):0;
+      const lobbyStairFloor=onLobbyStair?8.82+Math.max(0,Math.min(1,lobbyStairProgress))*6.08:0;
       const wasOnUpperLevel=camera.position.y>14.0;
-      const onUpperFloor=wasOnUpperLevel&&camera.position.z<-124.45&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.5;
-      const onLobbyGround=camera.position.z<=-112.2&&camera.position.z>=-126.0&&Math.abs(camera.position.x)<8.5;
-      const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-127;
+      const onUpperFloor=wasOnUpperLevel&&camera.position.z<-128.25&&camera.position.z>=-177.5&&Math.abs(camera.position.x)<21.5;
+      const onLobbyGround=camera.position.z<=-112.2&&camera.position.z>=-128.0&&Math.abs(camera.position.x)<10.5;
+      const onLanding=Math.abs(camera.position.x)<9.0 && camera.position.z<stairEndZ && camera.position.z>-129.0;
       camera.position.y=onRoyalStair?1.72+stairFloor:(onLobbyStair?1.72+lobbyStairFloor:(onUpperFloor?16.62:((onLobbyGround||onLanding)?10.34:1.72)));
       // The monumental front doors swing open automatically as the visitor approaches.
       const mainEntryDoors=(scene.metadata?.doorLeaves||[]).filter(door=>door.name==="palace-grand-entry-double-door");
