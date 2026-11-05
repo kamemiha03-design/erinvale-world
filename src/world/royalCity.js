@@ -1315,7 +1315,7 @@ export async function createRoyalCity(engine, canvas) {
   // crenellations, arched windows, buttresses, rooflines and royal banners.
   const royalPalaceStartIndex=scene.meshes.length;
   const cliffMat=texturedMat(scene,"castle-cliff-rock",new Color3(.34,.36,.35),"#555750","#292b28",.98);
-  const castleStone=texturedMat(scene,"castle-cut-limestone",new Color3(.73,.68,.57),"#b5a88e","#5b5142",.9);
+  const castleStone=texturedMat(scene,"castle-cut-limestone",new Color3(.91,.90,.86),"#e5e2d9","#aaa69d",.9);
   const castleShadow=mat(scene,"castle-window-depth",new Color3(.12,.13,.13),.98);
   const castleRoof=texturedMat(scene,"castle-blue-slate",new Color3(.17,.21,.23),"#454d50","#171d20",.82);
   const castleGold=mat(scene,"castle-aged-gold",new Color3(.72,.52,.23),.34,.68);
@@ -1986,7 +1986,7 @@ export async function createRoyalCity(engine, canvas) {
   // Level threshold between the last tread, the open gate and the lobby.
   box(scene,"palace-entry-landing",[0,8.44,-148.5],[54,.36,70],castleStone);
   // A broad, open first-floor royal lobby: deliberately no exterior facade yet.
-  const openHallLobbyWall=mat(scene,"royal-lobby-limestone",new Color3(.72,.68,.58),.92);
+  const openHallLobbyWall=mat(scene,"royal-lobby-limestone",new Color3(.91,.90,.86),.92);
   const openHallLobbyTrim=mat(scene,"royal-lobby-gilt",new Color3(.78,.57,.25),.32,.72);
   const openHallLobbyCeiling=mat(scene,"royal-lobby-ceiling",new Color3(.82,.78,.68),.9);
   const openHallLobbyFloorMat=mat(scene,"royal-lobby-marble",new Color3(.78,.75,.68),.25,.08);
@@ -2093,25 +2093,28 @@ export async function createRoyalCity(engine, canvas) {
       cylinder(scene,"royal-lobby-stair-newel-finial",[side*px,py+1.18,pz],.34,.42,openHallStairGold,16);
     }
   }
-  // Side garden balconies connect the outer stair landing to both sides of the palace.
-  const openHallBalconyStone=mat(scene,"royal-entry-side-balcony-stone",new Color3(.72,.68,.58),.38,.12);
-  const openHallBalconyGreen=mat(scene,"royal-entry-side-balcony-green",new Color3(.12,.29,.14),.9);
-  const openHallBalconyRose=mat(scene,"royal-entry-side-balcony-rose",new Color3(.78,.18,.28),.82);
-  const openHallBalconyCream=mat(scene,"royal-entry-side-balcony-cream",new Color3(.92,.82,.64),.86);
+  // White-stone side balconies sit crosswise to the main axis, between the
+  // exterior stair landing and the beginning of the central red-carpet route.
+  // Keep the middle passage completely open so the stair flows straight to the carpet.
+  const openHallBalconyStone=mat(scene,"royal-entry-cross-balcony-white-stone",new Color3(.91,.90,.86),.34,.12);
+  const openHallBalconyGreen=mat(scene,"royal-entry-cross-balcony-green",new Color3(.12,.29,.14),.9);
+  const openHallBalconyRose=mat(scene,"royal-entry-cross-balcony-rose",new Color3(.78,.18,.28),.82);
+  const openHallBalconyCream=mat(scene,"royal-entry-cross-balcony-cream",new Color3(.94,.86,.70),.86);
   for(const side of [-1,1]) {
-    const bx=side*14.4;
-    box(scene,"royal-entry-side-balcony-floor",[bx,8.60,-125.2],[8.8,.30,25.0],openHallBalconyStone);
-    box(scene,"royal-entry-side-balcony-outer-rail",[side*19.05,9.42,-125.2],[.22,.22,24.8],openHallStairGold);
-    for(let z=-136.5;z<=-114.0;z+=1.05)cylinder(scene,"royal-entry-side-balcony-baluster",[side*19.05,9.02,z],.15,.78,openHallRailStone,12);
-    box(scene,"royal-entry-side-balcony-rear-rail",[bx,9.42,-137.55],[8.8,.22,.22],openHallStairGold);
-    for(let x=bx-4.0;x<=bx+4.01;x+=.9)cylinder(scene,"royal-entry-side-balcony-rear-baluster",[x,9.02,-137.55],.15,.78,openHallRailStone,12);
-    // Stone troughs and climbing roses dress the outer edge without narrowing the path.
-    box(scene,"royal-entry-side-balcony-planter",[side*15.6,8.95,-124.8],[2.0,.58,17.0],openHallBalconyStone);
-    for(let j=0;j<9;j++) {
-      const z=-132.0+j*1.8,x=side*(15.6+(j%2)*.18);
-      const stem=MeshBuilder.CreateTube("royal-entry-side-balcony-rose-cane",{path:[new Vector3(x,9.2,z),new Vector3(x+side*.18,9.8,z),new Vector3(x,10.25,z)],radius:.025,tessellation:6},scene);
+    const bx=side*15.6, bz=-117.0;
+    box(scene,"royal-entry-side-balcony-floor",[bx,8.66,bz],[18.4,.20,6.4],openHallBalconyStone);
+    // Outer balustrade and rear return protect the edge; the inner edge stays open to the carpet.
+    box(scene,"royal-entry-side-balcony-outer-rail",[side*24.75,9.46,bz],[.24,.22,6.3],openHallStairGold);
+    for(let z=-119.8;z<=-114.1;z+=.82)cylinder(scene,"royal-entry-side-balcony-baluster",[side*24.75,9.05,z],.14,.76,openHallRailStone,12);
+    box(scene,"royal-entry-side-balcony-rear-rail",[bx,9.46,-120.18],[18.2,.22,.22],openHallStairGold);
+    for(let x=side>0?7.0:-25.0;x<=(side>0?24.0:-7.0);x+=.95)
+      cylinder(scene,"royal-entry-side-balcony-rear-baluster",[x,9.05,-120.18],.14,.76,openHallRailStone,12);
+    box(scene,"royal-entry-side-balcony-planter",[side*20.8,8.98,bz],[2.0,.58,5.5],openHallBalconyStone);
+    for(let j=0;j<7;j++) {
+      const x=side*(8.5+j*2.45), z=bz+(j%2?-.42:.42);
+      const stem=MeshBuilder.CreateTube("royal-entry-side-balcony-rose-cane",{path:[new Vector3(x,9.22,z),new Vector3(x,9.82,z),new Vector3(x-side*.10,10.25,z)],radius:.025,tessellation:6},scene);
       stem.material=openHallBalconyGreen;
-      addPetalBloom(scene,"royal-entry-side-balcony-rose",new Vector3(x,10.28,z),.30,j%2?openHallBalconyRose:openHallBalconyCream,7);
+      addPetalBloom(scene,"royal-entry-side-balcony-rose",new Vector3(x-side*.10,10.28,z),.30,j%2?openHallBalconyRose:openHallBalconyCream,7);
     }
   }
   // Flowered side promenades flank the main doors without narrowing the central approach.
