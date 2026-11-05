@@ -121,5 +121,25 @@ export function createWorldAudio() {
     }
   }
 
-  return { unlock, setMovement };
+  function playDoor() {
+    try {
+      if(!audioContext) startWind();
+      if(!audioContext)return;
+      audioContext.resume?.();
+      const now=audioContext.currentTime;
+      const noiseBuffer=audioContext.createBuffer(1,audioContext.sampleRate*.42,audioContext.sampleRate);
+      const data=noiseBuffer.getChannelData(0);
+      for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,2);
+      const noise=audioContext.createBufferSource();noise.buffer=noiseBuffer;
+      const filter=audioContext.createBiquadFilter();filter.type="lowpass";filter.frequency.setValueAtTime(850,now);filter.frequency.exponentialRampToValueAtTime(180,now+.38);
+      const gain=audioContext.createGain();gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.16,now+.035);gain.gain.exponentialRampToValueAtTime(.0001,now+.42);
+      noise.connect(filter);filter.connect(gain);gain.connect(audioContext.destination);noise.start(now);noise.stop(now+.44);
+      const creak=audioContext.createOscillator(),creakGain=audioContext.createGain();
+      creak.type="sawtooth";creak.frequency.setValueAtTime(118,now);creak.frequency.linearRampToValueAtTime(74,now+.34);
+      creakGain.gain.setValueAtTime(.0001,now);creakGain.gain.exponentialRampToValueAtTime(.045,now+.05);creakGain.gain.exponentialRampToValueAtTime(.0001,now+.36);
+      creak.connect(creakGain);creakGain.connect(audioContext.destination);creak.start(now);creak.stop(now+.38);
+    } catch(error) { console.warn("Door sound unavailable",error); }
+  }
+
+  return { unlock, setMovement, playDoor };
 }
