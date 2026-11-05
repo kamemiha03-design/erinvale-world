@@ -114,31 +114,34 @@ function addLantern(scene, x, y, z, metal, glow) {
 }
 
 
-function addAntiqueDoor(scene,name,x,y,z,width,height,mats,angle=0.98) {
+function addAntiqueDoor(scene,name,x,y,z,width,height,mats,angle=0.98,axis="z") {
   const leafW=width*.48, leafH=height*.91, cy=y+height*.455;
   for(const side of [-1,1]) {
-    const px=x+side*width*.25, rot=side*angle;
-    const leaf=box(scene,name+"-leaf",[px,cy,z],[leafW,leafH,.20],mats.woodLight); leaf.rotation.y=rot;
+    const px=axis==="x"?x:x+side*width*.25;
+    const pz=axis==="x"?z+side*width*.25:z;
+    const rot=(axis==="x"?Math.PI/2:0)+side*angle;
+    const leaf=box(scene,name+"-leaf",[px,cy,pz],[leafW,leafH,.20],mats.woodLight); leaf.rotation.y=rot;
     for(const level of [-1,1]) {
-      const panel=box(scene,name+"-panel",[px,cy+level*leafH*.23,z-.13],[leafW*.68,leafH*.28,.05],mats.wood); panel.rotation.y=rot;
-      const inset=box(scene,name+"-panel-inset",[px,cy+level*leafH*.23,z-.16],[leafW*.52,leafH*.20,.04],mats.woodLight); inset.rotation.y=rot;
+      const panel=box(scene,name+"-panel",[px,cy+level*leafH*.23,pz-.13],[leafW*.68,leafH*.28,.05],mats.wood); panel.rotation.y=rot;
+      const inset=box(scene,name+"-panel-inset",[px,cy+level*leafH*.23,pz-.16],[leafW*.52,leafH*.20,.04],mats.woodLight); inset.rotation.y=rot;
     }
     for(const yy of [cy-leafH*.32,cy,cy+leafH*.32]) {
-      const strap=box(scene,name+"-iron-strap",[px,yy,z-.18],[leafW*.95,.10,.07],mats.gold); strap.rotation.y=rot;
+      const strap=box(scene,name+"-iron-strap",[px,yy,pz-.18],[leafW*.95,.10,.07],mats.gold); strap.rotation.y=rot;
     }
     const handle=MeshBuilder.CreateTorus(name+"-ring-handle",{diameter:.22,thickness:.045,tessellation:12},scene);
-    handle.position.set(px-side*.1,cy,z-.23); handle.rotation.y=rot; handle.material=mats.gold;
+    handle.position.set(px-side*.1,cy,pz-.23); handle.rotation.y=rot; handle.material=mats.gold;
     for(const yy of [cy-leafH*.35,cy+leafH*.35]) {
       const stud=MeshBuilder.CreateSphere(name+"-stud",{diameter:.10,segments:8},scene);
-      stud.position.set(px,yy,z-.19); stud.material=mats.gold;
+      stud.position.set(px,yy,pz-.19); stud.material=mats.gold;
     }
   }
-  for(const side of [-1,1]) box(scene,name+"-stone-jamb",[x+side*(width*.53),y+height*.46,z+.06],[.28,height+.35,.62],mats.trim);
-  box(scene,name+"-stone-lintel",[x,y+height+.20,z+.04],[width+1,.36,.66],mats.trim);
+  for(const side of [-1,1]) {
+    const jamb=box(scene,name+"-stone-jamb",axis==="x"?[x,y+height*.46,z+side*width*.53]:[x+side*width*.53,y+height*.46,z],axis==="x"?[.62,height+.35,.28]:[.28,height+.35,.62],mats.trim);
+  }
+  box(scene,name+"-stone-lintel",[x,y+height+.20,z],axis==="x"?[.66,.36,width+1]:[width+1,.36,.66],mats.trim);
   const crest=MeshBuilder.CreateCylinder(name+"-crest",{diameter:Math.min(.72,width*.34),height:.12,tessellation:8},scene);
-  crest.position.set(x,y+height+.62,z-.25); crest.rotation.x=Math.PI/2; crest.material=mats.gold;
+  crest.position.set(axis==="x"?x-.25:x,y+height+.62,axis==="x"?z:z-.25); crest.rotation.x=Math.PI/2; crest.material=mats.gold;
 }
-
 function addBarrel(scene, x, z, wood, hoop) {
   const b = cylinder(scene, "oak-barrel", [x,0.65,z], 0.9, 1.3, wood, 16);
   b.scaling.x = 0.82;
@@ -1155,7 +1158,7 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"palace-gallery-chamber-rear-wall",[side*22.5,19,-144],[15,20,.8],castleStone);
     box(scene,"palace-gallery-chamber-floor",[side*22.5,8.58,galleryZ],[15,.22,18],galleryFloor);
     box(scene,"palace-gallery-chamber-ceiling",[side*22.5,29, galleryZ],[15,.3,18],castleStone);
-    addAntiqueDoor(scene,"palace-gallery-room-door-"+side,side*15,8.8,galleryZ,3.8,5.6,mats,1.08);
+    addAntiqueDoor(scene,"palace-gallery-room-door-"+side,side*15,8.8,galleryZ,3.8,5.6,mats,1.08,"x");
     for(const z of [-142,-135,-128]) {
       box(scene,"palace-gallery-window-recess",[side*14.52,18,z],[.12,5.2,2.7],castleShadow);
       box(scene,"palace-gallery-window-glass",[side*14.43,18,z],[.08,4.6,2.0],mats.glass);
