@@ -3062,7 +3062,7 @@ export async function createRoyalCity(engine, canvas) {
     // Fountain basin, market counters, and the remaining cliff shoulders are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
-    if(z<-78 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
+    if(z<-68 && z>-86 && Math.abs(x)>7.5 && Math.abs(x)<32)return true;
     return false;
   };
   const location=document.querySelector("#location-name");
