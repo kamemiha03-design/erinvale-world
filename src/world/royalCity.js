@@ -3341,17 +3341,17 @@ export async function createRoyalCity(engine, canvas) {
   // A concealed, doorless passage is cut into the rocky garden approach.
   // Its low vaulted ceiling, repeated stone ribs and warm wall lamps make the
   // transition from the public plaza feel like entering a private grotto.
-  const tunnelX=30,tunnelStartZ=34.0,tunnelEndZ=45.35,tunnelMidZ=(tunnelStartZ+tunnelEndZ)/2;
+  const tunnelX=30,tunnelStartZ=33.7,tunnelEndZ=46.15,tunnelMidZ=(tunnelStartZ+tunnelEndZ)/2;
   const tunnelStone=texturedMat(scene,"imperial-bath-grotto-stone",new Color3(.38,.37,.32),"#777365","#282a25",.98);
   const tunnelDark=mat(scene,"imperial-bath-grotto-shadow",new Color3(.075,.085,.078),.98);
   const tunnelMoss=mat(scene,"imperial-bath-grotto-moss",new Color3(.13,.22,.12),1);
   const tunnelBronze=mat(scene,"imperial-bath-grotto-bronze",new Color3(.39,.28,.16),.62,.48);
   // A narrow, low rock passage, intentionally more cave than corridor.
-  box(scene,"imperial-bath-grotto-floor",[tunnelX,.10,tunnelMidZ],[5.0,.22,11.8],hammamStone);
-  box(scene,"imperial-bath-grotto-floor-inlay",[tunnelX,.225,tunnelMidZ],[3.55,.025,11.2],hammamTile);
+  box(scene,"imperial-bath-grotto-floor",[tunnelX,.10,tunnelMidZ],[5.0,.22,12.75],hammamStone);
+  box(scene,"imperial-bath-grotto-floor-inlay",[tunnelX,.225,tunnelMidZ],[3.55,.025,12.2],hammamTile);
   for(const side of [-1,1]) {
-    box(scene,"imperial-bath-grotto-sidewall",[tunnelX+side*2.52,1.95,tunnelMidZ],[.72,3.95,11.7],tunnelStone);
-    box(scene,"imperial-bath-grotto-wall-foot",[tunnelX+side*2.18,.38,tunnelMidZ],[.22,.35,11.7],hammamGold);
+    box(scene,"imperial-bath-grotto-sidewall",[tunnelX+side*2.52,1.95,tunnelMidZ],[.72,3.95,12.9],tunnelStone);
+    box(scene,"imperial-bath-grotto-wall-foot",[tunnelX+side*2.18,.38,tunnelMidZ],[.22,.35,12.9],hammamGold);
     for(let lampIndex=0;lampIndex<3;lampIndex++) {
       const z=tunnelStartZ+1.7+lampIndex*3.7;
       box(scene,"imperial-bath-grotto-lamp-bracket",[tunnelX+side*2.20,2.45,z],[.34,.10,.12],tunnelBronze);
@@ -3362,8 +3362,21 @@ export async function createRoyalCity(engine, canvas) {
     }
     for(let n=0;n<7;n++) obstacles.push({x:tunnelX+side*2.48,z:tunnelStartZ+.8+n*1.65,r:.42});
   }
-  for(let rib=0;rib<4;rib++) {
-    const z=tunnelStartZ+.25+rib*3.65,points=[];
+  // A continuous curved rock vault seals the entire passage; the transverse ribs
+  // remain visible beneath it as structural stone bands, so the sky cannot show through.
+  const vaultPaths=[];
+  for(let k=0;k<=32;k++) {
+    const a=Math.PI-k*Math.PI/32,path=[];
+    for(let step=0;step<=32;step++) {
+      const z=tunnelStartZ-.35+(tunnelEndZ-tunnelStartZ+.7)*step/32;
+      path.push(new Vector3(tunnelX+Math.cos(a)*2.42,1.95+Math.sin(a)*1.78,z));
+    }
+    vaultPaths.push(path);
+  }
+  const grottoVault=MeshBuilder.CreateRibbon("imperial-bath-grotto-continuous-rock-vault",{pathArray:vaultPaths,sideOrientation:Mesh.DOUBLESIDE},scene);
+  grottoVault.material=tunnelStone;grottoVault.isPickable=false;
+  for(let rib=0;rib<5;rib++) {
+    const z=tunnelStartZ+.15+rib*2.85,points=[];
     for(let k=0;k<=24;k++) {
       const a=Math.PI-k*Math.PI/24;
       points.push(new Vector3(tunnelX+Math.cos(a)*2.42,1.95+Math.sin(a)*1.78,z));
@@ -3372,6 +3385,10 @@ export async function createRoyalCity(engine, canvas) {
     arch.material=tunnelStone;
     const keystone=MeshBuilder.CreateSphere("imperial-bath-grotto-keystone",{diameter:.32,segments:12},scene);
     keystone.position.set(tunnelX,3.83,z);keystone.scaling.y=.72;keystone.material=tunnelBronze;
+  }
+  // Stone shoulders overlap the bath entrance wall to hide the seam from outside.
+  for(const side of [-1,1]) {
+    box(scene,"imperial-bath-grotto-exit-jamb",[tunnelX+side*2.62,2.05,tunnelEndZ-.28],[.88,4.1,1.25],tunnelStone);
   }
   // Rough rock shoulders and trailing ivy partially conceal the passage from outside.
   for(const side of [-1,1]) {
@@ -3641,7 +3658,8 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"imperial-bath-treatment-headrest",[x,.91,z-.78],[.72,.16,.46],hammamTile);
     cylinder(scene,"imperial-bath-treatment-oil-bowl",[x-1.12,.72,z+.48],.38,.20,hammamGold,16);
     makeBathGuest(x-.05,.38,z,"scrubbed",Math.PI/2,12+station*2);
-    makeBathGuest(x+1.28,.10,z+.08,"attendant",-Math.PI/2,13+station*2);
+    // The attendant faces inward toward the guest on the treatment bed.
+    makeBathGuest(x+1.28,.10,z+.08,"attendant",Math.PI/2,13+station*2);
   }
 
   // Palace attendants welcome visitors and keep the reception hall lived-in.
