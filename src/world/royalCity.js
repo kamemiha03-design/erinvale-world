@@ -1,6 +1,6 @@
 import {
   UniversalCamera, Color3, Color4, DirectionalLight, HemisphericLight,
-  MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial, TransformNode,
+  Mesh, MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial, TransformNode,
   DynamicTexture, Texture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
 } from "@babylonjs/core";
 import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js";
@@ -240,6 +240,9 @@ function addTree(scene,x,z,scale,trunk,leaves) {
 
 
 function addPetalBloom(scene,name,center,radius,material,count=7) {
+  // Keep every sculpted petal as real geometry, but batch the petals into one draw call.
+  // This preserves the flower silhouette while greatly reducing Safari's scene overhead.
+  const petalMeshes=[];
   for(let p=0;p<count;p++) {
     const a=p*Math.PI*2/count;
     const left=[],right=[];
@@ -250,7 +253,11 @@ function addPetalBloom(scene,name,center,radius,material,count=7) {
       right.push(new Vector3(x+Math.sin(a)*spread,y,z-Math.cos(a)*spread));
     }
     const petal=MeshBuilder.CreateRibbon(name+"-separate-petal",{pathArray:[left,right],sideOrientation:2},scene);
-    petal.material=material;petal.isPickable=false;
+    petal.material=material;petal.isPickable=false;petalMeshes.push(petal);
+  }
+  if(petalMeshes.length>1) {
+    const flowerMesh=Mesh.MergeMeshes(petalMeshes,true,true);
+    if(flowerMesh){flowerMesh.name=name+"-individual-petals-batched";flowerMesh.material=material;flowerMesh.isPickable=false;}
   }
   const heart=MeshBuilder.CreateDisc(name+"-flower-heart",{radius:radius*.18,tessellation:12},scene);
   heart.position.copyFrom(center);heart.position.y+=radius*.12;heart.material=material;
