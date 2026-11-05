@@ -2931,7 +2931,20 @@ export async function createRoyalCity(engine, canvas) {
   const libraryRoof=mat(scene,"public-library-slate-roof",new Color3(.13,.19,.23),.42,.28);
   const libraryWood=mat(scene,"public-library-dark-oak",new Color3(.20,.105,.055),.72);
   const libraryGold=mat(scene,"public-library-brass",new Color3(.72,.53,.25),.28,.72);
-  const libraryGlass=mat(scene,"public-library-window-glass",new Color3(.20,.34,.39),.20,.24);
+  const libraryGlass=mat(scene,"public-library-window-glass",new Color3(.62,.78,.82),.16,.08);
+  libraryGlass.alpha=.48;
+  libraryGlass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;
+  libraryGlass.backFaceCulling=false;
+  const libraryStainedGlass=[
+    new Color3(.62,.18,.22),new Color3(.18,.42,.66),new Color3(.22,.52,.34),new Color3(.82,.62,.25)
+  ].map((color,index)=>{
+    const glass=mat(scene,"public-library-stained-glass-"+index,color,.18,.12);
+    glass.alpha=.72;
+    glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;
+    glass.emissiveColor=color.scale(.12);
+    glass.backFaceCulling=false;
+    return glass;
+  });
   const libraryFloor=mat(scene,"public-library-marble-floor",new Color3(.69,.65,.57),.36,.08);
   const libraryWall=mat(scene,"public-library-interior-wall",new Color3(.72,.67,.57),.9);
   const libraryBookMats=[
@@ -2981,19 +2994,32 @@ export async function createRoyalCity(engine, canvas) {
   box(scene,"public-library-east-wall-north",[-40.25,5.1,-90.8],[.55,8.3,10.4],libraryStone);
   box(scene,"public-library-east-wall-south",[-40.25,5.1,-77.2],[.55,8.3,10.4],libraryStone);
   box(scene,"public-library-east-wall-over-door",[-40.25,8.0,-84],[.55,2.5,3.2],libraryStone);
-  box(scene,"public-library-west-wall",[-63.75,5.1,libZ],[.55,8.3,libD],libraryStone);
-  box(scene,"public-library-north-wall",[libX,5.1,-96],[libW,8.3,.55],libraryStone);
-  box(scene,"public-library-south-wall",[libX,5.1,-72],[libW,8.3,.55],libraryStone);
+  // Real window openings are cut into the masonry rather than placing glass
+  // on top of solid walls. Lower and upper wall bands keep the structure intact.
+  box(scene,"public-library-west-wall-lower",[-63.75,3.895,libZ],[.55,5.89,libD],libraryStone);
+  box(scene,"public-library-west-wall-upper",[-63.75,8.755,libZ],[.55,.99,libD],libraryStone);
+  for(const [center,length] of [[-94.0125,3.975],[-87.5,4.95],[-80.5,4.95],[-73.9875,3.975]])
+    box(scene,"public-library-west-wall-window-pier",[-63.75,7.55,center],[.55,1.42,length],libraryStone);
+  for(const sideZ of [-96,-72]) {
+    const north=sideZ===-96;
+    const prefix=north?"north":"south";
+    box(scene,"public-library-"+prefix+"-wall-lower",[libX,3.825,sideZ],[libW,5.75,.55],libraryStone);
+    box(scene,"public-library-"+prefix+"-wall-upper",[libX,8.6,sideZ],[libW,1.3,.55],libraryStone);
+    for(const [center,length] of [[-62.045,3.91],[-55.5,4.82],[-48.5,4.82],[-41.955,3.91]])
+      box(scene,"public-library-"+prefix+"-wall-window-pier",[center,7.65,sideZ],[length,1.38,.55],libraryStone);
+  }
   // Tall slate roof with a raised central ridge and gold-edged eaves.
   box(scene,"public-library-roof-left",[-47.0,10.0,libZ],[13.8,.42,26],libraryRoof,{rotation:-.22});
   box(scene,"public-library-roof-right",[-57.0,10.0,libZ],[13.8,.42,26],libraryRoof,{rotation:.22});
   box(scene,"public-library-roof-ridge",[libX,10.9,libZ],[.55,.45,26.5],libraryGold);
-  for(const z of [-94,-84,-74]) {
+  for(const z of [-94,-74]) {
     box(scene,"public-library-east-window-recess",[-40.53,5.7,z],[.08,4.5,2.4],libraryWood);
     box(scene,"public-library-east-window-glass",[-40.59,5.7,z],[.06,3.75,1.75],libraryGlass);
     box(scene,"public-library-east-window-mullion",[-40.64,5.7,z],[.06,3.8,.12],libraryGold);
     box(scene,"public-library-east-window-crossbar",[-40.64,5.7,z],[.06,.12,1.85],libraryGold);
     box(scene,"public-library-window-sill",[-40.8,3.35,z],[.5,.18,2.7],libraryTrim);
+    for(let pane=0;pane<4;pane++)
+      box(scene,"public-library-east-stained-pane",[-40.67,5.7,z-.66+pane*.44],[.035,3.25,.40],libraryStainedGlass[pane]);
   }
   for(const z of [-95,-73]) {
     box(scene,"public-library-side-window-recess",[-52,5.8,z],[3.0,4.4,.08],libraryWood);
@@ -3003,101 +3029,56 @@ export async function createRoyalCity(engine, canvas) {
   // Additional high clerestory windows on the west wall bring daylight over the
   // bookcases without sacrificing the continuous wall of books below.
   for(const z of [-91.0,-84.0,-77.0]) {
-    box(scene,"public-library-west-window-recess",[-64.08,7.55,z],[.10,1.75,2.45],libraryWood);
-    box(scene,"public-library-west-window-glass",[-64.15,7.55,z],[.055,1.42,2.05],libraryGlass);
-    box(scene,"public-library-west-window-vertical-mullion",[-64.19,7.55,z],[.07,1.48,.10],libraryGold);
-    box(scene,"public-library-west-window-crossbar",[-64.19,7.55,z],[.07,.10,2.12],libraryGold);
+    box(scene,"public-library-west-window-recess",[-64.02,7.55,z],[.10,1.75,2.45],libraryWood);
+    box(scene,"public-library-west-window-glass",[-63.75,7.55,z],[.055,1.42,2.05],libraryGlass);
+    box(scene,"public-library-west-window-vertical-mullion",[-63.70,7.55,z],[.07,1.48,.10],libraryGold);
+    box(scene,"public-library-west-window-crossbar",[-63.70,7.55,z],[.07,.10,2.12],libraryGold);
     for(const dz of [-1.18,1.18])
-      box(scene,"public-library-west-window-stone-jamb",[-64.12,7.55,z+dz],[.24,1.95,.16],libraryTrim);
-    box(scene,"public-library-west-window-sill",[-64.18,6.62,z],[.38,.16,2.65],libraryTrim);
-    box(scene,"public-library-west-window-hood",[-64.18,8.48,z],[.38,.18,2.65],libraryGold);
+      box(scene,"public-library-west-window-stone-jamb",[-63.90,7.55,z+dz],[.24,1.95,.16],libraryTrim);
+    box(scene,"public-library-west-window-sill",[-63.82,6.62,z],[.38,.16,2.65],libraryTrim);
+    box(scene,"public-library-west-window-hood",[-63.82,8.48,z],[.38,.18,2.65],libraryGold);
+    for(let pane=0;pane<4;pane++)
+      box(scene,"public-library-west-stained-pane",[-63.69,7.55,z-.78+pane*.52],[.035,1.24,.48],libraryStainedGlass[(pane+1)%4]);
   }
   // North-facing clerestory windows add daylight above the stacks.
   for(const x of [-59.0,-52.0,-45.0]) {
-    box(scene,"public-library-north-clerestory-recess",[x,7.65,-96.12],[2.55,1.72,.12],libraryWood);
-    box(scene,"public-library-north-clerestory-glass",[x,7.65,-96.22],[2.18,1.38,.055],libraryGlass);
-    box(scene,"public-library-north-clerestory-mullion",[x,7.65,-96.27],[.09,1.46,.07],libraryGold);
-    box(scene,"public-library-north-clerestory-crossbar",[x,7.65,-96.27],[2.22,.09,.07],libraryGold);
+    box(scene,"public-library-north-clerestory-recess",[x,7.65,-96.22],[2.55,1.72,.12],libraryWood);
+    box(scene,"public-library-north-clerestory-glass",[x,7.65,-96.0],[2.18,1.38,.055],libraryGlass);
+    box(scene,"public-library-north-clerestory-mullion",[x,7.65,-95.95],[.09,1.46,.07],libraryGold);
+    box(scene,"public-library-north-clerestory-crossbar",[x,7.65,-95.95],[2.22,.09,.07],libraryGold);
     for(const dx of [-1.24,1.24])
-      box(scene,"public-library-north-window-jamb",[x+dx,7.65,-96.18],[.16,1.9,.22],libraryTrim);
-    box(scene,"public-library-north-window-sill",[x,6.72,-96.22],[2.78,.18,.3],libraryTrim);
-    box(scene,"public-library-north-window-hood",[x,8.62,-96.2],[2.82,.18,.32],libraryGold);
+      box(scene,"public-library-north-window-jamb",[x+dx,7.65,-96.10],[.16,1.9,.22],libraryTrim);
+    box(scene,"public-library-north-window-sill",[x,6.72,-96.10],[2.78,.18,.3],libraryTrim);
+    box(scene,"public-library-north-window-hood",[x,8.62,-96.10],[2.82,.18,.32],libraryGold);
+    for(let pane=0;pane<4;pane++)
+      box(scene,"public-library-north-stained-pane",[x- .78+pane*.52,7.65,-95.92],[.48,1.22,.035],libraryStainedGlass[pane]);
   }
   // Three high south clerestory windows sit above the lower shelves.
   for(const x of [-59.0,-52.0,-45.0]) {
-    box(scene,"public-library-south-clerestory-recess",[x,7.75,-72.08],[2.45,1.55,.10],libraryWood);
-    box(scene,"public-library-south-clerestory-glass",[x,7.75,-72.15],[2.08,1.22,.055],libraryGlass);
-    box(scene,"public-library-south-clerestory-mullion",[x,7.75,-72.19],[.08,1.28,.07],libraryGold);
-    box(scene,"public-library-south-clerestory-crossbar",[x,7.75,-72.19],[2.15,.08,.07],libraryGold);
+    box(scene,"public-library-south-clerestory-recess",[x,7.75,-71.78],[2.45,1.55,.10],libraryWood);
+    box(scene,"public-library-south-clerestory-glass",[x,7.75,-72.0],[2.08,1.22,.055],libraryGlass);
+    box(scene,"public-library-south-clerestory-mullion",[x,7.75,-72.05],[.08,1.28,.07],libraryGold);
+    box(scene,"public-library-south-clerestory-crossbar",[x,7.75,-72.05],[2.15,.08,.07],libraryGold);
     for(const dx of [-1.18,1.18])
-      box(scene,"public-library-south-window-jamb",[x+dx,7.75,-72.12],[.16,1.75,.22],libraryTrim);
-    box(scene,"public-library-south-window-hood",[x,8.62,-72.16],[2.62,.16,.28],libraryGold);
+      box(scene,"public-library-south-window-jamb",[x+dx,7.75,-71.90],[.16,1.75,.22],libraryTrim);
+    box(scene,"public-library-south-window-hood",[x,8.62,-71.90],[2.62,.16,.28],libraryGold);
+    for(let pane=0;pane<4;pane++)
+      box(scene,"public-library-south-stained-pane",[x-.78+pane*.52,7.75,-72.04],[.48,1.08,.035],libraryStainedGlass[(pane+2)%4]);
   }
-  // Classical entrance portal and public-library sign.
-  box(scene,"public-library-door-pier-left",[-40.55,3.8,-86.15],[.75,6.0,.55],libraryTrim);
-  box(scene,"public-library-door-pier-right",[-40.55,3.8,-81.85],[.75,6.0,.55],libraryTrim);
-  box(scene,"public-library-door-lintel",[-40.55,6.95,-84],[.85,.55,5.0],libraryGold);
+  // A single clear double-door entrance, using the door's own carved stone frame.
   addAntiqueDoor(scene,"public-library-main-double-door",-40.1,1.05,-84,4.1,5.2,
     {wood:libraryWood,woodLight:libraryWood,gold:libraryGold,trim:libraryTrim},.88,"x");
-  // Extra royal ornamentation layered onto the working double doors: deep carved
-  // panels, gilt borders, floral bosses and a large heraldic crest above the arch.
-  for(const z of [-85.0,-83.0]) {
-    for(const y of [2.35,4.05]) {
-      box(scene,"public-library-door-gilt-panel-border",[-40.43,y,z],[.10,1.32,.72],libraryGold);
-      box(scene,"public-library-door-dark-panel",[-40.49,y,z],[.055,1.16,.56],libraryWood);
-      box(scene,"public-library-door-ivory-inlay",[-40.53,y,z],[.035,.92,.035],libraryTrim);
-      for(const yy of [y-.54,y+.54])
-        box(scene,"public-library-door-panel-cross-inlay",[-40.53,yy,z],[.035,.035,.48],libraryTrim);
-      const boss=MeshBuilder.CreateSphere("public-library-door-floral-boss",{diameter:.22,segments:12},scene);
-      boss.position.set(-40.56,y,z);boss.scaling.set(.35,1,1);boss.material=libraryGold;
-    }
-  }
-  for(const z of [-86.2,-81.8]) {
-    box(scene,"public-library-door-outer-gilt-pilaster",[-40.88,3.8,z],[.18,5.9,.22],libraryGold);
-    for(let y=1.35;y<6.4;y+=.62) {
-      const stud=MeshBuilder.CreateSphere("public-library-door-pilaster-stud",{diameter:.10,segments:8},scene);
-      stud.position.set(-40.99,y,z);stud.material=libraryGold;
-    }
-  }
-  // Hand-forged brass ring handles, hinge straps and rivets add weight and craft.
-  for(const z of [-84.34,-83.66]) {
-    const handle=MeshBuilder.CreateTorus("public-library-door-ring-handle",{diameter:.34,thickness:.055,tessellation:16},scene);
-    handle.position.set(-40.62,3.15,z);handle.rotation.y=Math.PI/2;handle.material=libraryGold;
-    const plate=MeshBuilder.CreateCylinder("public-library-door-handle-plate",{diameter:.22,height:.045,tessellation:12},scene);
-    plate.position.set(-40.61,3.15,z);plate.rotation.z=Math.PI/2;plate.material=libraryTrim;
-    for(const y of [1.55,3.0,4.55]) {
-      box(scene,"public-library-door-forged-hinge-strap",[-40.59,y,z+(z<-84?.23:-.23)],[.07,.52,.10],libraryGold);
-      const pin=MeshBuilder.CreateSphere("public-library-door-hinge-stud",{diameter:.12,segments:8},scene);
-      pin.position.set(-40.65,y,z+(z<-84?.23:-.23));pin.material=libraryTrim;
-    }
-  }
-  // Alternating limestone and gilt voussoirs form a richer arched doorway crown.
-  for(let i=0;i<=10;i++) {
-    const a=Math.PI-i*Math.PI/10;
-    const voussoir=MeshBuilder.CreateBox("public-library-door-arch-voussoir",{width:.28,height:.46,depth:.42},scene);
-    voussoir.position.set(-40.98,5.65+Math.sin(a)*1.35,-84+Math.cos(a)*2.05);
-    voussoir.rotation.z=a-Math.PI/2;
-    voussoir.material=i%2?libraryTrim:libraryGold;
-    voussoir.isPickable=false;
-  }
-  const doorCrest=MeshBuilder.CreateCylinder("public-library-great-heraldic-crest",{diameter:1.05,height:.16,tessellation:12},scene);
-  doorCrest.position.set(-41.08,7.62,-84);doorCrest.rotation.x=Math.PI/2;doorCrest.material=libraryGold;
-  const crestBook=box(scene,"public-library-door-crest-book",[-41.19,7.62,-84],[.035,.46,.62],libraryTrim);
-  crestBook.rotation.x=.18;
-  for(const z of [-85.7,-82.3]) {
-    const rosette=MeshBuilder.CreateTorus("public-library-door-arch-rosette",{diameter:.42,thickness:.075,tessellation:16},scene);
-    rosette.position.set(-41.02,7.02,z);rosette.rotation.y=Math.PI/2;rosette.material=libraryGold;
-  }
-  box(scene,"public-library-sign-board",[-40.82,8.1,-84],[.22,1.1,5.6],libraryWood);
-  box(scene,"public-library-sign-inlay",[-40.96,8.1,-84],[.08,.82,5.15],libraryGold);
-  // A luminous heraldic book emblem above the sign gives the building its civic identity.
-  const libraryEmblem=MeshBuilder.CreateCylinder("public-library-open-book-emblem",{diameter:1.25,height:.18,tessellation:8},scene);
-  libraryEmblem.position.set(-41.12,9.1,-84);libraryEmblem.rotation.x=Math.PI/2;libraryEmblem.material=libraryGold;
+  // One restrained sign sits above the arch; no extra doorway layers overlap the doors.
+  box(scene,"public-library-sign-board",[-40.82,8.0,-84],[.22,.72,4.8],libraryWood);
+  box(scene,"public-library-sign-inlay",[-40.96,8.0,-84],[.08,.48,4.4],libraryGold);
   // Interior: two-storey reading hall, gallery-like upper shelving, and warm reading tables.
-  box(scene,"public-library-interior-back-wall",[-63.35,5.0,libZ],[.18,7.8,22.8],libraryWall);
-  box(scene,"public-library-interior-north-wall",[libX,5.0,-95.55],[22.8,7.8,.18],libraryWall);
-  box(scene,"public-library-interior-south-wall",[libX,5.0,-72.45],[22.8,7.8,.18],libraryWall);
+  // The exterior masonry is the actual interior wall. Avoid a second solid
+  // backdrop behind it so daylight can pass through the newly opened windows.
   box(scene,"public-library-ceiling",[libX,9.3,libZ],[23.5,.28,23.5],libraryTrim);
+  const libraryDaylight=new PointLight("public-library-daylight-fill",new Vector3(-53,7.7,-84),scene);
+  libraryDaylight.diffuse=new Color3(.78,.88,1);
+  libraryDaylight.intensity=.42;
+  libraryDaylight.range=23;
   // Human-scale Salamanca-inspired bookcases: individual volumes are about 28–34 cm tall,
   // with narrow spines, thin pages and realistic shelf spacing (not oversized blocks).
   const libraryBookCount=libraryBookMats.length;
@@ -3135,7 +3116,7 @@ export async function createRoyalCity(engine, canvas) {
     }
   }
   // Tall stone piers, carved capitals and shallow arches give the hall a university-library rhythm.
-  for(const z of [-94.2,-89.2,-84.2,-79.2,-74.2]) {
+  for(const z of [-94.2,-89.2,-79.2,-74.2]) {
     box(scene,"public-library-east-pier",[-40.72,4.85,z],[.34,7.55,.34],libraryTrim);
     box(scene,"public-library-east-pier-base",[-40.72,1.35,z],[.58,.34,.58],libraryGold);
     box(scene,"public-library-east-pier-cap",[-40.72,8.45,z],[.62,.38,.62],libraryGold);
@@ -3318,9 +3299,9 @@ export async function createRoyalCity(engine, canvas) {
     const sigil=MeshBuilder.CreateCylinder("public-library-banner-book-sigil",{diameter:.28,height:.035,tessellation:8},scene);
     sigil.position.set(-41.24,6.55,z);sigil.rotation.x=Math.PI/2;sigil.material=libraryGold;
   }
-  // Small public notice desk immediately inside the entrance.
-  box(scene,"public-library-help-desk",[-43.2,1.75,-84],[2.2,1.4,1.0],libraryWood);
-  box(scene,"public-library-help-desk-top",[-43.2,2.5,-84],[2.5,.16,1.2],libraryGold);
+  // Keep the reception desk deeper inside so the doorway and first steps remain clear.
+  box(scene,"public-library-help-desk",[-48.0,1.75,-84],[2.2,1.4,1.0],libraryWood);
+  box(scene,"public-library-help-desk-top",[-48.0,2.5,-84],[2.5,.16,1.2],libraryGold);
   // Batch the library's many static decorative parts by material. This keeps the
   // finer book spines and carved details while limiting draw calls on mobile GPUs.
   const libraryBatches=new Map();
@@ -4112,7 +4093,7 @@ export async function createRoyalCity(engine, canvas) {
     return root;
   }
 
-  function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
+  function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false,pose="standing") {
     const root=new TransformNode("townsperson-root",scene);
     const inPublicLibrary=x>-65&&x<-39&&z>-97&&z<-71;
     const baseY=inPublicLibrary?(z<-92?6.97:.96):(z<-70?8.62:0);
@@ -4125,33 +4106,45 @@ export async function createRoyalCity(engine, canvas) {
       mesh.position.set(pos[0],pos[1],pos[2]);mesh.scaling.set(size[0],size[1],size[2]);
       mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
     };
-    // Boots, legs and hips: long lower body, not a compressed toy silhouette.
+    // Seated readers have folded thighs, hanging lower legs and arms reaching
+    // naturally toward the desk; other residents keep the original standing pose.
+    const seatedPose=pose==="seated";
     for(const side of [-1,1]) {
-      part("npc-boot",[side*.115,.105,.035],[.22,.20,.37],npcLeather);
-      part("npc-trouser",[side*.115,.49,0],[.205,.69,.23],npcLeather,"sphere");
-      part("npc-knee",[side*.115,.69,0],[.205,.22,.23],outfit,"sphere");
-      part("npc-sleeve",[side*.34,1.23,0],[.19,.52,.20],outfit,"sphere");
-      part("npc-hand",[side*.35,.91,.015],[.13,.16,.13],skin,"sphere");
+      if(seatedPose) {
+        part("npc-boot",[side*.115,.105,-.52],[.22,.18,.32],npcLeather);
+        part("npc-trouser",[side*.115,.49,-.20],[.205,.28,.30],npcLeather,"sphere");
+        part("npc-knee",[side*.115,.37,-.42],[.19,.20,.22],outfit,"sphere");
+        const sleeve=part("npc-sleeve",[side*.34,1.10,-.10],[.19,.43,.20],outfit,"sphere");
+        sleeve.rotation.x=-.62;
+        part("npc-hand",[side*.30,.83,-.39],[.13,.16,.13],skin,"sphere");
+      } else {
+        part("npc-boot",[side*.115,.105,.035],[.22,.20,.37],npcLeather);
+        part("npc-trouser",[side*.115,.49,0],[.205,.69,.23],npcLeather,"sphere");
+        part("npc-knee",[side*.115,.69,0],[.205,.22,.23],outfit,"sphere");
+        part("npc-sleeve",[side*.34,1.23,0],[.19,.52,.20],outfit,"sphere");
+        part("npc-hand",[side*.35,.91,.015],[.13,.16,.13],skin,"sphere");
+      }
       if(role==="guard") {
-        part("npc-shoulder-plate",[side*.34,1.48,0],[.29,.18,.28],npcMetal,"sphere");
-        part("npc-bracer",[side*.35,1.03,0],[.22,.22,.22],npcMetal);
+        part("npc-shoulder-plate",[side*.34,seatedPose?1.34:1.48,0],[.29,.18,.28],npcMetal,"sphere");
+        part("npc-bracer",[side*.35,seatedPose?.92:1.03,-.12],[.22,.22,.22],npcMetal);
       }
     }
-    part("npc-hips",[0,.86,0],[.43,.25,.28],npcLeather,"sphere");
-    part("npc-tunic",[0,1.23,0],[.58,.70,.34],outfit,"sphere");
-    part("npc-tunic-hem",[0,.91,0],[.59,.12,.35],outfit);
+    part("npc-hips",[0,seatedPose?.48:.86,0],[.43,.25,.28],npcLeather,"sphere");
+    part("npc-tunic",[0,seatedPose?.98:1.23,0],[.58,.70,.34],outfit,"sphere");
+    part("npc-tunic-hem",[0,seatedPose?.63:.91,0],[.59,.12,.35],outfit);
     if(role==="hostess"){part("hostess-skirt",[0,.91,0],[.62,.62,.42],outfit,"sphere");part("hostess-bodice",[0,1.32,-.015],[.43,.44,.36],npcCloth[4],"sphere");part("hostess-apron",[0,1.05,-.205],[.40,.48,.035],npcCloth[5]);}
     if(role==="maid"){part("palace-maid-long-apron",[0,1.05,-.205],[.43,.56,.045],npcWhite);part("palace-maid-collar",[0,1.55,-.17],[.34,.12,.10],npcWhite);part("palace-maid-cap",[0,2.06,-.01],[.38,.09,.32],npcWhite);part("palace-maid-hair-bun",[0,1.91,.18],[.22,.22,.22],hair,"sphere");}
     if(role==="butler"){part("palace-butler-waistcoat",[0,1.25,-.19],[.39,.48,.08],npcDark);part("palace-butler-shirt-front",[0,1.27,-.245],[.16,.42,.035],npcWhite);part("palace-butler-bowtie",[0,1.56,-.22],[.22,.10,.08],npcGold);for(let b=0;b<3;b++)part("palace-butler-button-"+b,[0,1.36-b*.12,-.29],[.045,.045,.025],npcGold,"sphere");}
-    part("npc-belt",[0,1.00,-.012],[.56,.085,.37],npcLeather);
-    part("npc-belt-buckle",[0,1.01,-.205],[.09,.10,.035],npcGold);
-    part("npc-neck",[0,1.61,0],[.14,.16,.14],skin,"cylinder");
+    const upperShift=seatedPose?-.24:0;
+    part("npc-belt",[0,seatedPose?.72:1.00,-.012],[.56,.085,.37],npcLeather);
+    part("npc-belt-buckle",[0,seatedPose?.73:1.01,-.205],[.09,.10,.035],npcGold);
+    part("npc-neck",[0,1.61+upperShift,0],[.14,.16,.14],skin,"cylinder");
     // Compact head with distinct hairline, ears, eyes and nose.
-    part("npc-head",[0,1.78,0],[.34,.39,.31],skin,"sphere");
-    part("npc-ear-left",[-.175,1.78,0],[.075,.12,.09],skin,"sphere");
-    part("npc-ear-right",[.175,1.78,0],[.075,.12,.09],skin,"sphere");
-    part("npc-hair-cap",[0,1.94,.005],[.365,.19,.34],hair,"sphere");
-    part("npc-hair-back",[0,1.80,.105],[.32,.28,.18],hair,"sphere");
+    part("npc-head",[0,1.78+upperShift,0],[.34,.39,.31],skin,"sphere");
+    part("npc-ear-left",[-.175,1.78+upperShift,0],[.075,.12,.09],skin,"sphere");
+    part("npc-ear-right",[.175,1.78+upperShift,0],[.075,.12,.09],skin,"sphere");
+    part("npc-hair-cap",[0,1.94+upperShift,.005],[.365,.19,.34],hair,"sphere");
+    part("npc-hair-back",[0,1.80+upperShift,.105],[.32,.28,.18],hair,"sphere");
     if(role==="hostess"){part("hostess-long-hair",[0,1.68,.20],[.29,.72,.17],hair,"sphere");part("hostess-hair-lock-left",[-.17,1.70,-.04],[.11,.48,.12],hair,"sphere");part("hostess-hair-lock-right",[.17,1.70,-.04],[.11,.48,.12],hair,"sphere");}
     for(const side of [-1,1]) {
       part("npc-eye",[side*.075,1.80,-.148],[.045,.035,.025],npcWhite,"sphere");
@@ -4175,7 +4168,7 @@ export async function createRoyalCity(engine, canvas) {
     } else {
       part("npc-cloak",[0,1.25,.19],[.49,.65,.06],npcCloth[(Math.floor(phase*7)+2)%npcCloth.length]);
     }
-    if(phase%3===0) part("npc-beard",[0,1.66,-.12],[.20,.17,.12],npcBeard,"sphere");
+    if(phase%3===0) part("npc-beard",[0,(seatedPose?1.66-.24:1.66),-.12],[.20,.17,.12],npcBeard,"sphere");
 
     // Static residents are merged by material on every device: the detailed
     // silhouette stays intact while the renderer submits far fewer draw calls.
@@ -4255,9 +4248,10 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(-15.0,-18.5,"villager",27.6,-Math.PI/2,false);
   makeTownsperson(-27.5,-23.0,"villager",28.8,.2,false);
 
-  // Readers and a librarian occupy both levels of the public library.
-  makeTownsperson(-49.2,-87.45,"villager",29.1,Math.PI,false);
-  makeTownsperson(-45.2,-90.55,"merchant",30.2,0,false);
+  // Two readers sit at the ground-floor study tables; the third resident
+  // remains on the upper gallery among the books.
+  makeTownsperson(-49.2,-90.55,"villager",29.1,Math.PI,false,"seated");
+  makeTownsperson(-45.2,-87.45,"villager",30.2,0,false,"seated");
   makeTownsperson(-55.0,-93.0,"villager",31.3,Math.PI/2,false);
 
 
@@ -4411,9 +4405,9 @@ export async function createRoyalCity(engine, canvas) {
     makeTownsperson(-23.0,-26.0,"merchant",25.2,Math.PI,false);
     makeTownsperson(-31.0,-18.0,"guard",26.4,Math.PI/2,false);
 
-    // Library: readers on both levels and a librarian.
-    makeTownsperson(-49.2,-87.45,"villager",29.1,Math.PI,false);
-    makeTownsperson(-45.2,-90.55,"merchant",30.2,0,false);
+    // Two ground-floor readers sit at the study tables; one reader browses upstairs.
+    makeTownsperson(-49.2,-90.55,"villager",29.1,Math.PI,false,"seated");
+    makeTownsperson(-45.2,-87.45,"villager",30.2,0,false,"seated");
     makeTownsperson(-55.0,-93.0,"villager",31.3,Math.PI/2,false);
     makeTownsperson(-47.0,-82.0,"maid",35.7,Math.PI/2,false);
 
@@ -4840,8 +4834,11 @@ export async function createRoyalCity(engine, canvas) {
         if(stairT>.94)libraryUpperLevel=true;
         else if(stairT<.06)libraryUpperLevel=false;
       }
-      const onLibraryGallery=libraryUpperLevel&&camera.position.x>-62.0&&camera.position.x<-43.5&&camera.position.z>-95.8&&camera.position.z<-83.9;
-      const libraryFloorY=onLibraryStair?1.72+Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1)*3.53:(onLibraryGallery?6.97:1.72);
+      const onLibraryGallery=libraryUpperLevel&&(
+        (camera.position.x>-62.2&&camera.position.x<-43.7&&camera.position.z>-95.8&&camera.position.z<-89.55)||
+        (camera.position.x>-62.2&&camera.position.x<-59.75&&camera.position.z>-90.7&&camera.position.z<-73.2)
+      );
+      const libraryFloorY=onLibraryStair?3.44+Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1)*3.53:(onLibraryGallery?6.97:1.72);
       camera.position.y=seatedAt?2.02:(camera.position.x>-64.5&&camera.position.x<-39.4&&camera.position.z>-97&&camera.position.z<-71?libraryFloorY:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
         (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))))));
