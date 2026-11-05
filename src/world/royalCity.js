@@ -2616,7 +2616,7 @@ export async function createRoyalCity(engine, canvas) {
   const keepPalaceExterior = name =>
     /^(palace-entry-step|palace-entry-step-nosing|palace-entry-stair-parapet|palace-entry-landing|palace-stair-lantern-|palace-carriage-|palace-court-|palace-turning-|palace-inner-rose-|rose-tunnel|inner-rose)/.test(name) ||
     name === "palace-carriage-drive";
-  const palaceBuildingNames = /^(citadel-|royal-keep-|palace-|royal-hall-|royal-throne-|royal-suite-|royal-conservatory-|royal-chapel-|royal-wall-relief|castle-tower|castle-spire|castle-roof-finial|gate-|gatehouse-|royal-gate-|royal-crest-|state-ballroom-|erinvale-gate-standard|erinvale-national-standard)/;
+  const palaceBuildingNames = /^(citadel-|royal-keep-|palace-|royal-hall-|royal-throne-|royal-suite-|royal-conservatory-|royal-chapel-|royal-wall-relief|castle-tower|castle-spire|castle-roof-finial|keep-window-|keep-stone-|gate-|gatehouse-|royal-gate-|royal-crest-|state-ballroom-|erinvale-gate-standard|erinvale-national-standard)/;
   for(const mesh of [...scene.meshes.slice(royalPalaceStartIndex)]) {
     if(palaceBuildingNames.test(mesh.name) && !keepPalaceExterior(mesh.name)) mesh.dispose(false,false);
   }
@@ -3221,6 +3221,7 @@ export async function createRoyalCity(engine, canvas) {
       if(Math.abs(x)>25.9||z<-182.5)return true;
       for(const columnX of [-23.2,23.2])for(const columnZ of [-166,-148.5,-131])
         if(Math.hypot(x-columnX,z-columnZ)<1.32)return true;
+      for(const deskX of [-9.2,9.2])if(Math.abs(x-deskX)<3.65&&z>-173.25&&z<-171.15)return true;
       return false;
     }
     if(Math.abs(z)>116)return true;
