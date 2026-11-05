@@ -2951,24 +2951,25 @@ export async function createRoyalCity(engine, canvas) {
     sideOrientation:2
   },scene);
   libraryWalk.material=libraryFloor;libraryWalk.isPickable=false;
-  // Public garden gateway: a carved limestone arch marks the point where the
-  // left-hand library promenade leaves the palace garden.
-  const libraryGateX=-14.0,libraryGateZ=-62.2;
+  // The library gateway now stands on the straight approach, beside the royal
+  // carriage stop. Its opening is aligned with the east-west path to the library door.
+  const libraryGateX=-22.5,libraryGateZ=-82.0;
   for(const side of [-1,1]) {
+    const z=libraryGateZ+side*3.25;
     box(scene,"public-library-garden-arch-pier",
-      [libraryGateX+side*3.25,2.45,libraryGateZ],[.72,4.9,.82],libraryTrim);
+      [libraryGateX,2.45,z],[.82,4.9,.72],libraryTrim);
     box(scene,"public-library-garden-arch-base",
-      [libraryGateX+side*3.25,.38,libraryGateZ],[1.12,.48,1.18],libraryGold);
+      [libraryGateX,.38,z],[1.18,.48,1.12],libraryGold);
     box(scene,"public-library-garden-arch-cap",
-      [libraryGateX+side*3.25,4.78,libraryGateZ],[1.05,.34,1.08],libraryGold);
+      [libraryGateX,4.78,z],[1.08,.34,1.02],libraryGold);
   }
-  // Segmented curved crown leaves a generous pedestrian opening.
+  // Voussoirs follow the curved crown in the vertical Y-Z plane.
   for(let i=0;i<=12;i++) {
     const a=Math.PI-i*Math.PI/12;
     const crown=MeshBuilder.CreateBox("public-library-garden-arch-voussoir",
-      {width:.72,height:.62,depth:.88},scene);
-    crown.position.set(libraryGateX+Math.cos(a)*3.25,4.65+Math.sin(a)*2.05,libraryGateZ);
-    crown.rotation.z=a-Math.PI/2;
+      {width:.88,height:.62,depth:.72},scene);
+    crown.position.set(libraryGateX,4.65+Math.sin(a)*2.05,libraryGateZ+Math.cos(a)*3.25);
+    crown.rotation.x=a-Math.PI/2;
     crown.material=i%2?libraryTrim:libraryGold;
     crown.isPickable=false;
   }
@@ -4082,13 +4083,14 @@ export async function createRoyalCity(engine, canvas) {
     mesh.isPickable=false;
     return mesh;
   }
+  const bathActorSegments=isTouchDevice?48:72;
   function makeBathGuest(x,y,z,pose="soaking",heading=0,phase=0) {
     const root=new TransformNode("imperial-bath-guest",scene);
     root.position.set(x,y,z);root.rotation.y=heading;
     const part=(name,pos,scale,material,kind="sphere")=>{
       // Bath guests are viewed at close range, so use a much finer mesh than
       // distant town NPCs: smooth silhouettes on faces, shoulders and limbs.
-      const mesh=sharedActorPrimitive(name,kind==="cylinder"?"cylinder":"sphere",kind==="cylinder"?64:72);
+      const mesh=sharedActorPrimitive(name,kind==="cylinder"?"cylinder":"sphere",kind==="cylinder"?48:bathActorSegments);
       mesh.parent=root;mesh.position.set(...pos);mesh.scaling.set(...scale);mesh.material=material;mesh.isPickable=false;return mesh;
     };
     const workingArms=[];
@@ -4122,7 +4124,8 @@ export async function createRoyalCity(engine, canvas) {
 
   function makeTownsperson(x,z,role="villager",phase=0,heading=0,walking=false) {
     const root=new TransformNode("townsperson-root",scene);
-    const baseY=z<-70?8.62:0;
+    const inPublicLibrary=x>-65&&x<-39&&z>-97&&z<-71;
+    const baseY=inPublicLibrary?(z<-90?6.97:.96):(z<-70?8.62:0);
     root.position.set(x,baseY,z);root.rotation.y=heading;
     const outfit=role==="guard"?npcCloth[0]:role==="merchant"||role==="butler"?npcCloth[3]:role==="maid"?npcCloth[5]:role==="hostess"?npcCloth[Math.abs(Math.floor(phase*7))%npcCloth.length]:npcCloth[Math.abs(Math.floor(phase*3))%npcCloth.length];
     const skin=phase%2?npcSkin:npcSkinLight;
@@ -4184,10 +4187,9 @@ export async function createRoyalCity(engine, canvas) {
     }
     if(phase%3===0) part("npc-beard",[0,1.66,-.12],[.20,.17,.12],npcBeard,"sphere");
 
-    // Desktop merges each actor for fewer draw calls. On iPhone, keep cloned
-    // parts on shared high-detail source buffers; merging allocates a fresh large
-    // vertex buffer for every resident and spikes startup memory.
-    if(!isTouchDevice) {
+    // Static residents are merged by material on every device: the detailed
+    // silhouette stays intact while the renderer submits far fewer draw calls.
+    {
       // Combine each resident's body parts by material. The original geometry,
       // proportions and materials remain unchanged; only draw calls are reduced.
       // Temporarily move the actor root to the origin so merged vertices stay local.
@@ -4256,6 +4258,18 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(9.0,-126.0,"butler",22.4,Math.PI/2,false);
   makeTownsperson(-9.0,-139.0,"butler",23.7,-Math.PI/2,false);
   makeTownsperson(9.0,-139.0,"maid",24.8,Math.PI/2,false);
+
+  // Guild staff and adventurers: visible inside the great hall, around the counter and tables.
+  makeTownsperson(-23.0,-26.0,"merchant",25.2,Math.PI,false);
+  makeTownsperson(-31.0,-18.0,"guard",26.4,Math.PI/2,false);
+  makeTownsperson(-15.0,-18.5,"villager",27.6,-Math.PI/2,false);
+  makeTownsperson(-27.5,-23.0,"villager",28.8,.2,false);
+
+  // Readers and a librarian occupy both levels of the public library.
+  makeTownsperson(-49.2,-87.45,"villager",29.1,Math.PI,false);
+  makeTownsperson(-45.2,-90.55,"merchant",30.2,0,false);
+  makeTownsperson(-55.0,-93.0,"villager",31.3,Math.PI/2,false);
+
 
   // A varied crowd around the square, market, guild and tavern.
   makeTownsperson(-5,24,"villager",1.2,.4,true);
@@ -4387,22 +4401,39 @@ export async function createRoyalCity(engine, canvas) {
     actor.route=route;actor.waypointIndex=1;actor.speed=.92+(index%4)*.11;
   });
   };
-  // Desktop keeps the fully articulated townspeople. On phones, bring residents
-  // back as compact low-poly figures with only three meshes each to protect Safari.
+  // Desktop receives the full moving population. Phones receive carefully placed,
+  // fully modeled residents in each landmark rather than primitive placeholder people.
   if(!isTouchDevice) populateResidents();
   else {
-    const mobileCrowd=[[-5,24],[3,25],[31,4],[29,22],[4,-17],[29,-20],[-34,1],[-2,-29],[35,12],[6,31],[-18.8,0],[-23,0],[17,17],[21,-4],[-9,-12],[2,8],[-20,-15.4],[-21,4.6]];
-    mobileCrowd.forEach(([x,z],i)=>{
-      const root=new TransformNode("mobile-townsperson-root",scene);
-      root.position.set(x,0,z);
-      const body=MeshBuilder.CreateCapsule("mobile-townsperson-body",{height:1.18,radius:.25,tessellation:6,subdivisions:1},scene);
-      body.parent=root;body.position.y=.78;body.material=npcCloth[i%npcCloth.length];
-      const head=MeshBuilder.CreateSphere("mobile-townsperson-head",{diameter:.34,segments:8},scene);
-      head.parent=root;head.position.y=1.58;head.material=i%2?npcSkin:npcSkinLight;
-      const hair=MeshBuilder.CreateSphere("mobile-townsperson-hair",{diameter:.36,segments:8},scene);
-      hair.parent=root;hair.position.set(0,1.72,.015);hair.scaling.y=.52;hair.material=npcHair[i%npcHair.length];
-      root.rotation.y=(i%6)*Math.PI/3;
-    });
+    // Imperial baths: guests relaxing in the water and one treatment attendant.
+    makeBathGuest(27.0,.88,61.0,"soaking",-.25,0);
+    makeBathGuest(32.8,.88,64.5,"soaking",Math.PI+.25,1);
+    makeBathGuest(25.8,.88,64.4,"soaking",-Math.PI/2,3);
+    makeBathGuest(42.0,.79,60.8,"soaking",Math.PI/2,8);
+    makeBathGuest(34.0,.38,52.8,"scrubbed",Math.PI/2,18);
+    makeBathGuest(35.28,.10,52.88,"attendant",Math.PI/2,19);
+
+    // Guild: receptionist, guards and visitors inside the hall.
+    makeTownsperson(-23.0,-26.0,"merchant",25.2,Math.PI,false);
+    makeTownsperson(-31.0,-18.0,"guard",26.4,Math.PI/2,false);
+    makeTownsperson(-15.0,-18.5,"villager",27.6,-Math.PI/2,false);
+
+    // Public library: readers downstairs and a librarian on the upper gallery.
+    makeTownsperson(-49.2,-87.45,"villager",29.1,Math.PI,false);
+    makeTownsperson(-45.2,-90.55,"merchant",30.2,0,false);
+    makeTownsperson(-55.0,-93.0,"villager",31.3,Math.PI/2,false);
+
+    // Palace reception and throne-hall attendants.
+    makeTownsperson(-9.0,-126.0,"maid",21.1,-Math.PI/2,false);
+    makeTownsperson(9.0,-126.0,"butler",22.4,Math.PI/2,false);
+    makeTownsperson(-9.0,-139.0,"butler",23.7,-Math.PI/2,false);
+    makeTownsperson(9.0,-139.0,"maid",24.8,Math.PI/2,false);
+
+    // A handful of pedestrians keep the market square from feeling deserted.
+    makeTownsperson(-5,24,"villager",1.2,.4,false);
+    makeTownsperson(3,25,"villager",2.1,-.6,false);
+    makeTownsperson(31,4,"guard",3.3,1.2,false);
+    makeTownsperson(29,22,"merchant",4.4,Math.PI,false);
   }
 
   // Small songbirds gather among the formal roses: some perch, others circle over the beds.
