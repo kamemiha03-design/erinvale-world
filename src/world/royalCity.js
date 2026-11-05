@@ -3523,11 +3523,15 @@ export async function createRoyalCity(engine, canvas) {
   const tunnelThreshold=MeshBuilder.CreateTorus("imperial-bath-grotto-threshold-carving",{diameter:4.9,thickness:.10,tessellation:48},scene);
   tunnelThreshold.position.set(tunnelX,.22,tunnelStartZ+.12);tunnelThreshold.scaling.z=.18;tunnelThreshold.material=tunnelBronze;
 
+  // Optional bath effects are skipped before allocation on touch devices.
+  // Disposing them after construction still creates a dangerous startup spike.
+  const bathLanterns=[];
+  const bathSteamPuffs=[];
+  if(!isTouchDevice) {
   // Cool daylight spills through the oculus while warm lanterns create small
   // amber islands around the darker bath hall.
   const skylight=new PointLight("imperial-bath-oculus-daylight",new Vector3(30,18.5,62),scene);
   skylight.diffuse=new Color3(.68,.78,.86);skylight.specular=new Color3(.42,.52,.62);skylight.intensity=.30;skylight.range=23;
-  const bathLanterns=[];
   for(const [x,z] of [[15.2,51],[44.8,51],[15.2,74],[44.8,74],[19,62],[41,62]]) {
     const fixture=MeshBuilder.CreateBox("imperial-bath-wall-lantern-bracket",{width:.52,height:.12,depth:.18},scene);
     fixture.position.set(x,4.1,z);fixture.material=hammamGold;
@@ -3544,7 +3548,6 @@ export async function createRoyalCity(engine, canvas) {
   skylightShaft.material.alpha=.055;skylightShaft.material.disableLighting=true;skylightShaft.isPickable=false;
 
   // Layered steam rises from every pool and gathers beneath the warm vaulted ceiling.
-  const bathSteamPuffs=[];
   const bathSteamMaterial=mat(scene,"imperial-bath-living-steam",new Color3(.91,.94,.92),.98);
   bathSteamMaterial.alpha=.25;
   bathSteamMaterial.transparencyMode=2;
@@ -3591,6 +3594,7 @@ export async function createRoyalCity(engine, canvas) {
     puff.position.set(x,1.0+(i%4)*.25,z);puff.scaling.set(.24,.95,.24);
     puff.material=bathSteamMaterial;puff.isPickable=false;
     bathSteamPuffs.push({mesh:puff,x,y:puff.position.y,z,phase:i*.87,speed:.24,drift:.22});
+  }
   }
   makeBathWaySign(16,18,"帝国浴場　↗","THERMAE  •  HAMMAM");
   makeBathWaySign(25,31,"帝国浴場　↗","PUBLIC BATHS");
@@ -3946,7 +3950,9 @@ export async function createRoyalCity(engine, canvas) {
     actor.route=route;actor.waypointIndex=1;actor.speed=.92+(index%4)*.11;
   });
   };
-  if(isTouchDevice) setTimeout(populateResidents,1400); else populateResidents();
+  // Detailed multipart residents are omitted on touch devices to avoid a large
+  // delayed mesh-allocation burst after the first frame.
+  if(!isTouchDevice) populateResidents();
 
   // Small songbirds gather among the formal roses: some perch, others circle over the beds.
   const birdBodyMat=mat(scene,"rose-garden-bird-plumage",new Color3(.22,.27,.25),.82);
