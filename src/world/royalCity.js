@@ -297,11 +297,22 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
   const roofR=box(scene,name+"-roof-right",[x+w*.24,h+.72,z],[w*.58,0.42,d+1.0],mats.roof,{rotation:.42});
   roofR.rotation.z=-.42;
   box(scene,name+"-ridge",[x,h+1.42,z],[.35,.35,d+1.1],mats.trim);
-  // Repeated roof seams catch the sun.
-  for(let i=-3;i<=3;i++) {
-    const seam=box(scene,name+"-roof-seam",[x+i*w*.105,h+.91,z-d*.42],[.055,.055,d*.45],mats.trim);
-    seam.rotation.z=.42;
+  // Overlapping slate shingles and deep eaves finish the medieval street roofs.
+  const roofTileMeshes=[],roofSpan=w*.58,roofCols=Math.max(4,Math.min(7,Math.round(roofSpan/1.45))),roofRows=Math.max(5,Math.min(9,Math.round((d+1)/1.65)));
+  for(const side of [-1,1]) {
+    const roofCenterX=x+side*w*.24,roofAngle=side<0?.42:-.42;
+    for(let row=0;row<roofRows;row++)for(let col=0;col<roofCols;col++){
+      const tx=roofCenterX+(col-(roofCols-1)/2+(row%2)*.18)*(roofSpan/roofCols),tz=z-(d+1)*.43+row*((d+1)*.86/Math.max(1,roofRows-1));
+      const slopeY=side<0?Math.sin(.42)*(tx-(x-w*.24)):-Math.sin(.42)*(tx-(x+w*.24));
+      const tile=MeshBuilder.CreateBox(name+"-individual-roof-shingle",{width:roofSpan/roofCols*1.08,height:.095,depth:(d+1)/roofRows*1.12},scene);
+      tile.position.set(tx,h+.82+slopeY,tz);tile.rotation.z=roofAngle;tile.material=mats.roof;tile.isPickable=false;roofTileMeshes.push(tile);
+    }
+    box(scene,name+"-roof-eave",[x+side*w*.53,h+.72-Math.sin(.42)*w*.29-.08,z],[.28,.34,d+1.3],mats.wood);
+    for(const zEnd of [-1,1])box(scene,name+"-gable-roof-fascia",[x+side*w*.26,h+.74,z+zEnd*(d/2+.48)],[w*.62,.18,.22],mats.wood);
   }
+  const tiledRoof=Mesh.MergeMeshes(roofTileMeshes,true,true,undefined,false,false);
+  if(tiledRoof){tiledRoof.name=name+"-medieval-shingle-roof";tiledRoof.material=mats.roof;tiledRoof.isPickable=false;}
+  for(let i=-3;i<=3;i++){const seam=box(scene,name+"-roof-seam",[x+i*w*.105,h+.91,z-d*.42],[.055,.055,d*.45],mats.trim);seam.rotation.z=.42;}
   // Main arched entrance: stone piers, lintel, deep shadow and timber door.
   box(scene,name+"-door-shadow",[x,1.35,front-.20],[1.75,2.7,.12],mats.dark);
   box(scene,name+"-door-left",[x-.93,1.35,front-.28],[.16,2.9,.45],mats.trim);
@@ -2332,11 +2343,10 @@ export async function createRoyalCity(engine, canvas) {
       spoke.rotation.x=-angle;
     }
   }
-  function addCarriage(x,z,coat,turn=0) {
-    // The horse faces down the drive; the carriage stands behind it.
-    addHorse(x,z-4.25,coat,turn);
-    const pad=MeshBuilder.CreateGround("royal-carriage-parking-pad",{width:5.8,height:8.8,subdivisions:1},scene);
-    pad.position.set(x,.025,z+.3);pad.material=courtStone;
+  let movingCarriage=null;
+  function addCarriage(x,z,coat,turn=0,moving=false) {
+    const meshStart=scene.meshes.length,horse=addHorse(x,z-4.25,coat,turn);
+    if(!moving){const pad=MeshBuilder.CreateGround("royal-carriage-parking-pad",{width:5.8,height:8.8,subdivisions:1},scene);pad.position.set(x,.025,z+.3);pad.material=courtStone;}
     box(scene,"royal-carriage-underframe",[x,.92,z+.72],[2.8,.28,3.55],carriageWood);
     box(scene,"royal-carriage-body",[x,1.65,z+1.05],[3.35,1.42,2.65],carriageWood);
     box(scene,"royal-carriage-side-panel-left",[x-1.72,1.75,z+1.05],[.18,1.45,2.7],carriageGold);
@@ -2364,12 +2374,18 @@ export async function createRoyalCity(engine, canvas) {
       const shaft=box(scene,"royal-carriage-draft-shaft",[x+side*.48,1.0,z-1.85],[.13,.14,3.1],carriageWood);
       shaft.rotation.x=.02;
     }
-    for(const side of [-1,1]) {
-      cylinder(scene,"royal-carriage-lamp-bracket",[x+side*1.88,2.48,z-.1],.08,.48,carriageGold,10);
+    for(const side of [-1,1])cylinder(scene,"royal-carriage-lamp-bracket",[x+side*1.88,2.48,z-.1],.08,.48,carriageGold,10);
+    if(moving) {
+      const group=new TransformNode("royal-carriage-moving-group",scene);group.position.set(x,0,z);group.rotation.y=Math.PI;
+      for(const mesh of scene.meshes.slice(meshStart)){if(mesh.parent===horse)continue;mesh.position.x-=x;mesh.position.z-=z;mesh.parent=group;}
+      horse.position.x-=x;horse.position.z-=z;horse.parent=group;
+      movingCarriage={group,horse,waypointIndex:1,speed:2.35,route:[[0,-73.5],[0,-55],[0,-47],[0,-39],[0,-25],[0,-10],[0,6],[0,21],[-12,29],[-28,27],[-37,14],[-34,-4],[-20,-18],[0,-25],[0,-39],[0,-47],[0,-55],[0,-73.5]].map(([rx,rz])=>new Vector3(rx,0,rz))};
+      return group;
     }
+    return null;
   }
   addCarriage(-15.2,-73.5,horseCoats[0],.1);
-  addCarriage(15.2,-73.5,horseCoats[1],.4);
+  addCarriage(0,-73.5,horseCoats[1],.4,true);
 
   const royalGardenStartIndex=scene.meshes.length;
   // The rose garden is now inside the palace complex, in the long inner court behind the lobby.
@@ -2762,7 +2778,7 @@ export async function createRoyalCity(engine, canvas) {
   const brookWater=mat(scene,"guildside-brook-water",new Color3(.12,.39,.47),.16,.22);brookWater.alpha=.88;
   const brookStone=mat(scene,"guildside-brook-stone",new Color3(.48,.45,.37),.92);
   const brookEdge=mat(scene,"guildside-brook-edge",new Color3(.68,.62,.49),.78);
-  const brookAnchors=[[-18,-45],[-14,-41],[-10,-37],[-5,-36],[7,-36],[20,-36],[34,-36],[46,-36],[53,-43],[68,-43],[79,-43],[84,-32],[96,-27],[106,-22],[108,-8],[105,10],[96,27]].map(([x,z])=>new Vector3(x,.055,z));
+  const brookAnchors=[[-24,-58],[-18,-54],[-12,-50],[-6,-47],[6,-47],[20,-47],[34,-47],[46,-47],[53,-49],[68,-49],[79,-46],[84,-32],[96,-27],[106,-22],[108,-8],[105,10],[96,27]].map(([x,z])=>new Vector3(x,.055,z));
   // Catmull-Rom sampling makes a continuous natural meander, without sharp polyline corners.
   const brookPoints=[];
   for(let i=0;i<brookAnchors.length-1;i++) {
@@ -2829,7 +2845,7 @@ export async function createRoyalCity(engine, canvas) {
 
   // The great stone bridge is a true segmental arch: its roadway rises smoothly
   // toward the crown and descends to both abutments, rather than sitting flat.
-  const bridgeX=7,bridgeZ=-36,bridgeHalf=5.0,bridgeSegments=24,bridgeRise=1.35;
+  const bridgeX=0,bridgeZ=-47,bridgeHalf=5.0,bridgeSegments=28,bridgeRise=1.55;
   const bridgeSurface=(z)=>.72+bridgeRise*(1-Math.pow((z-bridgeZ)/bridgeHalf,2));
   for(let i=0;i<bridgeSegments;i++) {
     const z0=bridgeZ-bridgeHalf+i*(2*bridgeHalf/bridgeSegments);
@@ -3004,10 +3020,10 @@ export async function createRoyalCity(engine, canvas) {
   }
 
   // Palace attendants welcome visitors and keep the reception hall lived-in.
-  makeTownsperson(-6.35,-117.6,"maid",21.1,Math.PI/2,false);
-  makeTownsperson(6.35,-117.6,"butler",22.4,-Math.PI/2,false);
-  makeTownsperson(-6.35,-122.1,"butler",23.7,Math.PI/2,false);
-  makeTownsperson(6.35,-122.1,"maid",24.8,-Math.PI/2,false);
+  makeTownsperson(-9.0,-126.0,"maid",21.1,-Math.PI/2,false);
+  makeTownsperson(9.0,-126.0,"butler",22.4,Math.PI/2,false);
+  makeTownsperson(-9.0,-139.0,"butler",23.7,-Math.PI/2,false);
+  makeTownsperson(9.0,-139.0,"maid",24.8,Math.PI/2,false);
 
   // A varied crowd around the square, market, guild and tavern.
   makeTownsperson(-5,24,"villager",1.2,.4,true);
@@ -3203,18 +3219,15 @@ export async function createRoyalCity(engine, canvas) {
   let yaw=0,pitch=0,moveSource=()=>Vector3.Zero();
   const velocity=new Vector3();
   const collides=(x,z)=>{
-    if(Math.abs(x)>112||Math.abs(z)>116)return true;
-    // Inside the palace lobby, ignore legacy town/building obstacle volumes.
-    // Keep the lobby's own perimeter walls and columns solid with direct bounds.
-    if(x>-21.0&&x<21.0&&z>-174.0&&z<-112.0) {
-      if(Math.abs(x)>20.2)return true;
-      if(z<-173.0)return true;
-      if(Math.abs(z+120.0)<1.05&&Math.abs(x)>7.0)return true;
-      for(const columnX of [-18.8,18.8]) for(const columnZ of [-165,-151,-137]) {
-        if(Math.hypot(x-columnX,z-columnZ)<1.25)return true;
-      }
+    if(Math.abs(x)>112)return true;
+    // The hall is checked before the legacy z=-116 boundary and town obstacles.
+    if(x>-26.2&&x<26.2&&z>-183.0&&z<-113.0) {
+      if(Math.abs(x)>25.9||z<-182.5)return true;
+      for(const columnX of [-23.2,23.2])for(const columnZ of [-166,-148.5,-131])
+        if(Math.hypot(x-columnX,z-columnZ)<1.32)return true;
       return false;
     }
+    if(Math.abs(z)>116)return true;
     for(const c of colliders) {
       if(x>c.minX-.5&&x<c.maxX+.5&&z>c.minZ-.5&&z<c.maxZ+.5) {
         const insideRoom=c.interior&&x>c.minX+.55&&x<c.maxX-.55&&z>c.minZ+.55&&z<c.maxZ-.55;
@@ -3385,8 +3398,8 @@ export async function createRoyalCity(engine, canvas) {
       const stairProgress=onRoyalStair?(stairStartZ-camera.position.z)/(stairStartZ-stairEndZ):0;
       const stairFloor=onRoyalStair?Math.min(stairRise,Math.floor(stairProgress*stairCount)*stairRise/stairCount):0;
       const onLanding=camera.position.z<stairEndZ&&camera.position.z>=-129.0&&Math.abs(camera.position.x)<14.0;
-      const insideRoyalLobby=camera.position.x>-21.0&&camera.position.x<21.0&&camera.position.z<-112.0&&camera.position.z>-173.1;
-      const onGreatBridge=Math.abs(camera.position.x-bridgeX)<2.7&&camera.position.z>=bridgeZ-bridgeHalf&&camera.position.z<=bridgeZ+bridgeHalf;
+      const insideRoyalLobby=camera.position.x>-26.0&&camera.position.x<26.0&&camera.position.z<-113.0&&camera.position.z>-183.0;
+      const onGreatBridge=Math.abs(camera.position.x-bridgeX)<2.85&&camera.position.z>=bridgeZ-bridgeHalf&&camera.position.z<=bridgeZ+bridgeHalf;
       const onSmallBridge=Math.abs(camera.position.x-sx)<2.0&&camera.position.z>=sz-smallHalf&&camera.position.z<=sz+smallHalf;
       camera.position.y=onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
@@ -3401,6 +3414,11 @@ export async function createRoyalCity(engine, canvas) {
       // Subtle fountain ripples and falling droplets keep the water from feeling static.
       waterRing.scaling.x=1+Math.sin(time*1.2)*.025;
       basinInnerBand.scaling.x=1+Math.sin(time*.9)*.012;
+      if(movingCarriage) {
+        const target=movingCarriage.route[movingCarriage.waypointIndex],dx=target.x-movingCarriage.group.position.x,dz=target.z-movingCarriage.group.position.z,distance=Math.hypot(dx,dz);
+        if(distance<.55)movingCarriage.waypointIndex=(movingCarriage.waypointIndex+1)%movingCarriage.route.length;
+        else {const stride=Math.min(distance,movingCarriage.speed*step);movingCarriage.group.position.x+=dx/distance*stride;movingCarriage.group.position.z+=dz/distance*stride;movingCarriage.group.rotation.y=Math.atan2(-dx,-dz);movingCarriage.horse.position.y=.015+Math.abs(Math.sin(time*8.5))*.045;movingCarriage.horse.rotation.x=Math.sin(time*8.5)*.012;movingCarriage.horse.getChildMeshes().forEach((limb,index)=>{if(limb.name==="horse-leg-muscle"||limb.name==="horse-cannon-bone")limb.rotation.x=Math.sin(time*8.5+(index%2)*Math.PI)*.16;});}
+      }
       people.forEach(person=>{
         if(!person.route||person.route.length<2)return;
         const target=person.route[person.waypointIndex];
