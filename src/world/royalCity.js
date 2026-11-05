@@ -1083,6 +1083,38 @@ export async function createRoyalCity(engine, canvas) {
     addBarrel(scene,x-1.3,z+1.5,mats.wood,mats.gold);
   }
 
+  // Each market stall has a readable hanging sign and a distinct display.
+  const marketLabels=["野菜・果物","焼きたてパン","宝飾品","薬草・香辛料"];
+  for(let i=0;i<4;i++){
+    const x=14+i*4.5,z=-10-(i%2)*3,tex=new DynamicTexture("market-sign-texture-"+i,{width:384,height:144},scene,false),ctx=tex.getContext();
+    ctx.fillStyle="#34271c";ctx.fillRect(0,0,384,144);ctx.strokeStyle="#d8b66f";ctx.lineWidth=9;ctx.strokeRect(7,7,370,130);ctx.fillStyle="#fff0cc";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 37px sans-serif";ctx.fillText(marketLabels[i],192,72);tex.update();
+    box(scene,"market-hanging-sign-board",[x,3.12,z-1.55],[2.75,.95,.14],mats.wood);
+    const face=MeshBuilder.CreatePlane("market-hanging-sign-face",{width:2.58,height:.78},scene);face.position.set(x,3.12,z-1.64);const sm=new StandardMaterial("market-sign-mat-"+i,scene);sm.diffuseTexture=tex;sm.emissiveColor=new Color3(.12,.085,.04);face.material=sm;
+    if(i===0)for(let j=0;j<5;j++){const v=MeshBuilder.CreateSphere("market-vegetable",{diameter:.38,segments:10},scene);v.position.set(x-1+j*.48,1.92,z-.78);v.scaling.set(.75,1,.75);v.material=j%2?mats.green:mats.flowers;}
+    if(i===1)for(let j=0;j<4;j++){const v=MeshBuilder.CreateSphere("market-bread-loaf",{diameter:.52,segments:12},scene);v.position.set(x-.85+j*.55,1.92,z-.68);v.scaling.set(1,.58,.72);v.material=mats.trim;}
+    if(i===2)for(let j=0;j<4;j++){const v=MeshBuilder.CreateCylinder("market-jewel-display",{diameterTop:.12,diameterBottom:.38,height:.42,tessellation:6},scene);v.position.set(x-.75+j*.5,1.95,z-.72);v.material=j%2?mats.gold:mats.glass;}
+    if(i===3)for(let j=0;j<4;j++){const v=MeshBuilder.CreateCylinder("market-herb-bundle",{diameterTop:.24,diameterBottom:.42,height:.65,tessellation:8},scene);v.position.set(x-.75+j*.5,1.95,z-.72);v.material=mats.green;}
+  }
+  // Blacksmith workshop with open forge, anvil, tools and a large wall sign.
+  const smithStone=mat(scene,"blacksmith-stone",new Color3(.30,.29,.27),.96),smithWood=mat(scene,"blacksmith-oak",new Color3(.24,.13,.07),.9),smithIron=mat(scene,"blacksmith-iron",new Color3(.16,.18,.19),.42,.72),smithEmber=mat(scene,"blacksmith-embers",new Color3(.95,.28,.045),.35,.1);
+  smithEmber.emissiveColor=new Color3(.8,.13,.015);
+  box(scene,"blacksmith-back-wall",[57,3.4,-29],[14,6.8,.55],smithStone);box(scene,"blacksmith-side-wall-left",[50.2,3.4,-24],[.55,6.8,10],smithStone);box(scene,"blacksmith-side-wall-right",[63.8,3.4,-24],[.55,6.8,10],smithStone);box(scene,"blacksmith-roof",[57,7.1,-24],[14.6,.55,11],mats.roof);
+  for(const x of [50.6,63.4])box(scene,"blacksmith-timber-post",[x,3.4,-18.9],[.42,6.8,.42],smithWood);
+  box(scene,"blacksmith-sign-board",[57,5.6,-18.72],[4.4,1.35,.22],smithWood);
+  const st=new DynamicTexture("blacksmith-wall-sign",{width:512,height:192},scene,false),sc=st.getContext();sc.fillStyle="#251c18";sc.fillRect(0,0,512,192);sc.strokeStyle="#d5ad63";sc.lineWidth=12;sc.strokeRect(8,8,496,176);sc.fillStyle="#f5dfb4";sc.textAlign="center";sc.textBaseline="middle";sc.font="bold 52px Georgia";sc.fillText("鍛冶屋  ⚒",256,96);st.update();
+  const ssm=new StandardMaterial("blacksmith-sign-material",scene);ssm.diffuseTexture=st;ssm.emissiveColor=new Color3(.16,.10,.045);const sf=MeshBuilder.CreatePlane("blacksmith-sign-face",{width:4.15,height:1.12},scene);sf.position.set(57,5.6,-18.86);sf.material=ssm;
+  box(scene,"blacksmith-forge-base",[54,1,-27.2],[4.4,1.2,2.5],smithStone);box(scene,"blacksmith-forge-opening",[54,1.35,-25.9],[3.2,.72,.12],smithIron);box(scene,"blacksmith-forge-embers",[54,1.45,-25.82],[2.35,.34,.08],smithEmber);box(scene,"blacksmith-chimney-hood",[54,3.2,-27.4],[4.8,2.8,2.8],smithStone);
+  const chimney=MeshBuilder.CreateCylinder("blacksmith-chimney-stack",{diameter:1.5,height:5,tessellation:8},scene);chimney.position.set(54,8,-28.1);chimney.material=smithStone;
+  box(scene,"blacksmith-anvil-foot",[59,1,-25.5],[1,.55,.85],smithIron);box(scene,"blacksmith-anvil-body",[59,1.55,-25.5],[1.5,.55,.65],smithIron);
+  const horn=MeshBuilder.CreateCylinder("blacksmith-anvil-horn",{diameterTop:.08,diameterBottom:.45,height:.95,tessellation:8},scene);horn.position.set(59.95,1.65,-25.5);horn.rotation.z=-Math.PI/2;horn.material=smithIron;
+  box(scene,"blacksmith-workbench",[61.5,1.15,-21.5],[3.2,.22,1.2],smithWood);for(const x of [60.2,62.8])box(scene,"blacksmith-workbench-leg",[x,.58,-21.5],[.16,1.15,.16],smithWood);
+  for(let i=0;i<3;i++){const tool=MeshBuilder.CreateCylinder("blacksmith-hanging-tool",{diameter:.10,height:1.5,tessellation:8},scene);tool.position.set(61+i*.8,3.1,-28.55);tool.material=smithIron;}
+  // Public stone well with a timber canopy and hand-cranked winch.
+  const wellStone=mat(scene,"town-well-stone",new Color3(.58,.54,.46),.94),wellWater=mat(scene,"town-well-water",new Color3(.12,.36,.43),.18,.18);
+  cylinder(scene,"town-well-footing",[-5,.18,-5],3.3,.36,wellStone,16);cylinder(scene,"town-well-rim",[-5,.72,-5],2.65,.82,wellStone,16);cylinder(scene,"town-well-opening",[-5,1.15,-5],1.95,.08,mats.dark,16);cylinder(scene,"town-well-water-surface",[-5,1.20,-5],1.62,.06,wellWater,24);
+  for(const side of [-1,1])box(scene,"town-well-canopy-post",[-5+side*1.25,2.2,-5],[.22,3.1,.22],smithWood);
+  box(scene,"town-well-canopy-roof",[-5,3.85,-5],[3.2,.25,2.7],mats.roof);const axle=MeshBuilder.CreateCylinder("town-well-winch-axle",{diameter:.18,height:2.7,tessellation:12},scene);axle.position.set(-5,2.7,-5);axle.rotation.z=Math.PI/2;axle.material=smithIron;cylinder(scene,"town-well-winch-wheel",[-6.5,2.7,-5],1,.16,smithWood,16);box(scene,"town-well-rope",[-5,1.95,-5],[.05,1.35,.05],smithWood);
+
   // Gatehouse and layered city approach.
   addBuilding(scene,{x:0,z:-53,w:22,d:10,h:14,name:"Royal Gatehouse",sign:"THE CROWN GATE",passThrough:true},{...mats},shadow,colliders,obstacles);
   for(let side of [-1,1]) {
@@ -1982,62 +2014,29 @@ export async function createRoyalCity(engine, canvas) {
     glow.position.set(x,3.8,z);glow.material=mats.lantern;
   }
 
-  // A narrow garden stream runs along the open lane to the east of the tavern and guild.
-  // Its shallow banks and arched footbridge are decorative; the existing ground remains walkable.
-  const brookWater=mat(scene,"guildside-brook-water",new Color3(.12,.39,.47),.16,.22);
-  brookWater.alpha=.88;
+  // Continuous brook: it winds from the western garden edge behind the guild lane
+  // and onward into the eastern artisan quarter.
+  const brookWater=mat(scene,"guildside-brook-water",new Color3(.12,.39,.47),.16,.22);brookWater.alpha=.88;
   const brookStone=mat(scene,"guildside-brook-stone",new Color3(.48,.45,.37),.92);
   const brookEdge=mat(scene,"guildside-brook-edge",new Color3(.68,.62,.49),.78);
-  const brookPoints=[
-    new Vector3(-8,.055,-31.8),new Vector3(-3,.055,-31.2),
-    new Vector3(2,.055,-32.0),new Vector3(7,.055,-31.1),
-    new Vector3(12,.055,-31.7),new Vector3(17,.055,-30.8)
-  ];
+  const brookPoints=[[-18,-45],[-14,-41],[-10,-37],[-7,-33],[-2,-30.5],[4,-30],[10,-27.5],[15,-23],[20,-18.5],[25,-13],[29,-7],[32,0],[35,7],[39,13]].map(([x,z])=>new Vector3(x,.055,z));
   const brookLeft=[],brookRight=[];
-  for(let i=0;i<brookPoints.length;i++) {
-    const before=brookPoints[Math.max(0,i-1)],after=brookPoints[Math.min(brookPoints.length-1,i+1)];
-    const tangent=after.subtract(before).normalize();
-    const normal=new Vector3(-tangent.z,0,tangent.x).scale(.72);
-    brookLeft.push(brookPoints[i].add(normal));
-    brookRight.push(brookPoints[i].subtract(normal));
-  }
-  const brook=MeshBuilder.CreateRibbon("guildside-meandering-brook",{pathArray:[brookLeft,brookRight],sideOrientation:2},scene);
-  brook.material=brookWater;brook.isPickable=false;
-  for(const side of [-1,1]) {
-    const bank=[];
-    for(let i=0;i<brookPoints.length;i++) {
-      const before=brookPoints[Math.max(0,i-1)],after=brookPoints[Math.min(brookPoints.length-1,i+1)];
-      const tangent=after.subtract(before).normalize();
-      const normal=new Vector3(-tangent.z,0,tangent.x).scale(side*1.02);
-      bank.push(brookPoints[i].add(normal));
-    }
-    for(let i=0;i<bank.length-1;i++) {
-      const mid=Vector3.Lerp(bank[i],bank[i+1],.5);
-      const stone=box(scene,"brook-rounded-bank-stone",[mid.x,.16,mid.z],[bank[i].subtract(bank[i+1]).length()+.35,.28,.48],i%2?brookStone:brookEdge);
-      stone.rotation.y=Math.atan2(bank[i+1].z-bank[i].z,bank[i+1].x-bank[i].x);
-    }
-  }
-  // A gently arched stone footbridge crosses the brook at its middle.
-  const bridgeX=3.1,bridgeZ=-31.55;
-  const bridgeDeck=box(scene,"brook-footbridge-deck",[bridgeX,.48,bridgeZ],[3.5,.32,3.1],brookEdge);
-  bridgeDeck.rotation.y=.08;
-  for(let side of [-1,1]) {
-    const rail=box(scene,"brook-footbridge-parapet",[bridgeX+side*1.58,.91,bridgeZ],[3.55,.22,.24],brookStone);
-    rail.rotation.y=.08;
-    for(let i=0;i<5;i++) {
-      const post=box(scene,"brook-footbridge-baluster",[bridgeX-1.35+i*.68,.72,bridgeZ+side*1.48],[.16,.52,.18],brookEdge);
-      post.rotation.y=.08;
-    }
-  }
-  for(let i=0;i<7;i++) {
-    const plank=box(scene,"brook-footbridge-paving",[bridgeX-1.35+i*.45,.655,bridgeZ],[.38,.035,2.65],i%2?mats.woodLight:brookEdge);
-    plank.rotation.y=.08;
-  }
-  // Flat stepping stones invite people to linger beside the water.
-  for(const [x,z] of [[-5,-29.5],[-1,-33.5],[8,-29.7],[13,-33.4]]) {
-    const stone=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1.0,height:.18,tessellation:8},scene);
-    stone.position.set(x,.16,z);stone.scaling.z=.72;stone.material=brookEdge;
-  }
+  for(let i=0;i<brookPoints.length;i++){const t=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize(),n=new Vector3(-t.z,0,t.x).scale(1.05);brookLeft.push(brookPoints[i].add(n));brookRight.push(brookPoints[i].subtract(n));}
+  const brook=MeshBuilder.CreateRibbon("connected-town-brook",{pathArray:[brookLeft,brookRight],sideOrientation:2},scene);brook.material=brookWater;brook.isPickable=false;
+  for(const side of [-1,1]){const bank=[];for(let i=0;i<brookPoints.length;i++){const t=brookPoints[Math.min(i+1,brookPoints.length-1)].subtract(brookPoints[Math.max(0,i-1)]).normalize();bank.push(brookPoints[i].add(new Vector3(-t.z,0,t.x).scale(side*1.38)));}for(let i=0;i<bank.length-1;i++){const m=Vector3.Lerp(bank[i],bank[i+1],.5),len=bank[i].subtract(bank[i+1]).length(),stone=box(scene,"brook-rounded-bank-stone",[m.x,.16,m.z],[len+.42,.30,.48],i%2?brookStone:brookEdge);stone.rotation.y=Math.atan2(bank[i+1].z-bank[i].z,bank[i+1].x-bank[i].x);}}
+  // Large Romanesque arch bridge: broad deck, curved stone arch and balustrades.
+  const bridgeX=1,bridgeZ=-30.1;
+  box(scene,"great-stone-bridge-deck",[bridgeX,.78,bridgeZ],[5.8,.48,5],brookEdge);
+  box(scene,"great-stone-bridge-roadway",[bridgeX,1.035,bridgeZ],[5.25,.08,4.55],brookStone);
+  const archPath=[];for(let i=0;i<=18;i++){const t=-Math.PI/2+i*Math.PI/18;archPath.push(new Vector3(bridgeX,.32+Math.cos(t)*.92,bridgeZ+Math.sin(t)*2.15));}
+  const arch=MeshBuilder.CreateTube("great-stone-bridge-arch",{path:archPath,radius:.34,tessellation:10},scene);arch.material=brookStone;
+  for(const side of [-1,1]){box(scene,"great-stone-bridge-parapet",[bridgeX+side*2.72,1.4,bridgeZ],[.34,.72,4.85],brookStone);box(scene,"great-stone-bridge-capstone",[bridgeX+side*2.72,1.84,bridgeZ],[.48,.16,5.05],brookEdge);for(let i=0;i<7;i++)box(scene,"great-stone-bridge-baluster",[bridgeX+side*2.72,1.48,bridgeZ-1.95+i*.65],[.4,.82,.42],brookEdge);}
+  // Smaller timber footbridge at the eastern bend.
+  const sx=23.5,sz=-15;
+  box(scene,"east-footbridge-deck",[sx,.48,sz],[4.2,.28,3],mats.woodLight);
+  for(const side of [-1,1]){box(scene,"east-footbridge-abutment",[sx+side*1.95,.28,sz],[.42,.55,3.35],brookStone);box(scene,"east-footbridge-handrail",[sx+side*1.72,.91,sz],[.16,.16,2.9],brookEdge);for(let i=0;i<4;i++)box(scene,"east-footbridge-post",[sx+side*1.72,.69,sz-1.15+i*.76],[.18,.62,.18],brookStone);}
+  for(let i=0;i<8;i++)box(scene,"east-footbridge-paving",[sx-1.82+i*.52,.635,sz],[.46,.045,2.55],i%2?brookEdge:mats.wood);
+  for(const [x,z] of [[-11,-34],[-8,-30.8],[8,-29],[13,-24.8],[29,-10.2],[34,4]]){const p=MeshBuilder.CreateCylinder("brookside-stepping-stone",{diameter:1,height:.18,tessellation:8},scene);p.position.set(x,.16,z);p.scaling.z=.72;p.material=brookEdge;}
 
   // Full-height townspeople are assembled locally so their proportions never depend
   // on third-party model downloads. Head height is kept close to one-seventh of stature.
@@ -2247,6 +2246,10 @@ export async function createRoyalCity(engine, canvas) {
     birds.push({root,wings,perched,phase,home:new Vector3(x,y,z),radius:perched?0:2.8});
     return root;
   }
+  // Golden-yellow finches perch on the imperial fountain rim and dip their beaks to drink.
+  const yellowBirdMat=mat(scene,"golden-finch-plumage",new Color3(.96,.72,.08),.72),yellowWingMat=mat(scene,"golden-finch-wing",new Color3(.78,.48,.035),.82),yellowBreastMat=mat(scene,"golden-finch-breast",new Color3(1,.88,.28),.8),yellowBirds=[];
+  function addYellowFinch(x,y,z,drink=false,phase=0){const root=new TransformNode("golden-finch",scene);root.position.set(x,y,z);const body=MeshBuilder.CreateSphere("golden-finch-body",{diameter:1,segments:12},scene);body.parent=root;body.scaling.set(.22,.18,.34);body.material=yellowBirdMat;const breast=MeshBuilder.CreateSphere("golden-finch-breast",{diameter:1,segments:10},scene);breast.parent=root;breast.position.set(0,-.035,-.055);breast.scaling.set(.16,.13,.24);breast.material=yellowBreastMat;const head=MeshBuilder.CreateSphere("golden-finch-head",{diameter:.24,segments:12},scene);head.parent=root;head.position.set(0,.12,-.20);head.material=yellowBirdMat;const beak=MeshBuilder.CreateCylinder("golden-finch-beak",{diameterTop:0,diameterBottom:.075,height:.14,tessellation:5},scene);beak.parent=root;beak.rotation.x=Math.PI/2;beak.position.set(0,.085,-.34);beak.material=birdBeakMat;const tail=MeshBuilder.CreateBox("golden-finch-tail",{width:.12,height:.045,depth:.30},scene);tail.parent=root;tail.position.set(0,.015,.26);tail.material=yellowWingMat;for(const side of [-1,1]){const wing=MeshBuilder.CreateBox("golden-finch-wing",{width:.25,height:.055,depth:.24},scene);wing.parent=root;wing.position.set(side*.14,.025,.015);wing.material=yellowWingMat;}yellowBirds.push({root,drink,phase,baseY:y});}
+  addYellowFinch(6.15,2.20,5.1,false,.2);addYellowFinch(19.8,2.20,5,false,1.1);addYellowFinch(13.1,2.20,-2.15,true,2.4);addYellowFinch(13,2.20,12.15,true,3.6);addYellowFinch(10.4,2.20,10.3,false,4.7);
   // Perched birds sit on the garden pergolas and fountain rim.
   addGardenBird(-29.2,5.05,-43.0,true,.4);
   addGardenBird(25.4,4.95,-35.4,true,1.8);
@@ -2513,6 +2516,7 @@ export async function createRoyalCity(engine, canvas) {
           person.root.position.y=Math.sin(time*8+person.phase)*.025;
         }
       });
+      yellowBirds.forEach(bird=>{const dip=bird.drink?Math.max(0,Math.sin(time*1.8+bird.phase))*.20:0;bird.root.position.y=bird.baseY-dip;bird.root.rotation.x=bird.drink?Math.sin(time*1.8+bird.phase)*.16:Math.sin(time*2.4+bird.phase)*.025;bird.root.rotation.y=Math.sin(time*.55+bird.phase)*.18;});
       birds.forEach(bird=>{
         if(bird.perched)return;
         const t=time*.32+bird.phase;
