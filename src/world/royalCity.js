@@ -4455,8 +4455,8 @@ export async function createRoyalCity(engine, canvas) {
     // Four stallkeepers and two shoppers.
     for(let row=0;row<Math.min(2,marketStallRows.length);row++) {
       // Place each merchant behind the counter, on the stall's outer/service side.
-      makeTownsperson(-8.85,marketStallRows[row],"merchant",40+row,Math.PI/2,false);
-      makeTownsperson(8.85,marketStallRows[row],"merchant",41+row,-Math.PI/2,false);
+      makeTownsperson(-8.85,marketStallRows[row],"merchant",40+row,-Math.PI/2,false);
+      makeTownsperson(8.85,marketStallRows[row],"merchant",41+row,Math.PI/2,false);
     }
     makeTownsperson(-3.2,-13.0,"villager",47.1,.2,false);
     makeTownsperson(3.0,-29.0,"villager",48.2,Math.PI-.2,false);
