@@ -25,6 +25,8 @@ body { overscroll-behavior: none; }
 .hidden { display: none !important; }
 .hud { position: absolute; inset: env(safe-area-inset-top) 0 auto; padding: 16px; pointer-events: none; display: flex; justify-content: space-between; align-items: center; }
 .location { display: flex; gap: 9px; align-items: center; padding: 9px 13px; background: #101a1caa; border: 1px solid #d7c39a55; border-radius: 3px; font-size: 11px; letter-spacing: .08em; backdrop-filter: blur(8px); }
+.bgm-toggle { pointer-events: auto; flex: 0 0 auto; border: 1px solid #d7c39a88; border-radius: 3px; padding: 9px 11px; color: #f4e4c5; background: #101a1cdd; font: 600 10px "Noto Sans JP", sans-serif; letter-spacing: .06em; backdrop-filter: blur(8px); }
+.bgm-toggle:active { transform: scale(.96); }
 .location-dot { width: 6px; height: 6px; border-radius: 50%; background: #d5b477; box-shadow: 0 0 10px #d5b477; }
 .hint { max-width: min(56vw, 560px); color: #fff2d5; font-size: 11px; line-height: 1.6; text-shadow: 0 1px 5px #000; padding: 8px 12px; border-radius: 4px; background: #101a1c88; backdrop-filter: blur(6px); }
 .mobile-controls { position: absolute; inset: auto 0 env(safe-area-inset-bottom); height: 174px; pointer-events: none; }
