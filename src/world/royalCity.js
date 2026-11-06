@@ -362,18 +362,23 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       shutter.rotation.x=shutterSide*.06;
     }
   }
-  // Hanging sign with a legible, illuminated title.
-  box(scene,name+"-sign-arm",[x+w*.28,h*.9,front-.85],[2.1,.14,.14],mats.wood);
-  box(scene,name+"-sign-board",[x+w*.28,h*.9-.65,front-.88],[2.15,1.15,.16],mats.wood);
-  const signTex=new DynamicTexture(name+"-sign-text",{width:512,height:256},scene,false);
-  const ctx=signTex.getContext();
-  ctx.fillStyle="#332318";ctx.fillRect(0,0,512,256);
-  ctx.strokeStyle="#c9a45e";ctx.lineWidth=12;ctx.strokeRect(10,10,492,236);
-  ctx.fillStyle="#f1dfb8";ctx.font="bold 48px Georgia";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(sign||name,256,130);
-  signTex.update();
-  const signMat=new StandardMaterial(name+"-sign-material",scene);signMat.diffuseTexture=signTex;signMat.emissiveColor=new Color3(.18,.12,.06);
-  const signFace=MeshBuilder.CreatePlane(name+"-sign-face",{width:2.0,height:1.0},scene);
-  signFace.position.set(x+w*.28,h*.9-.65,front-.98);signFace.rotation.y=0;signFace.material=signMat;
+  // The Velvet Rose deliberately has no exterior sign; its discreet lantern-lit entrance
+  // is meant to be discovered from the warm windows and red canopy instead.
+  if(name!=="The Velvet Rose") {
+    // Hanging sign with a legible, illuminated title.
+    box(scene,name+"-sign-arm",[x+w*.28,h*.9,front-.85],[2.1,.14,.14],mats.wood);
+    box(scene,name+"-sign-board",[x+w*.28,h*.9-.65,front-.88],[2.15,1.15,.16],mats.wood);
+    const signTex=new DynamicTexture(name+"-sign-text",{width:512,height:256},scene,false);
+    const ctx=signTex.getContext();
+    ctx.fillStyle="#332318";ctx.fillRect(0,0,512,256);
+    ctx.strokeStyle="#c9a45e";ctx.lineWidth=12;ctx.strokeRect(10,10,492,236);
+    ctx.fillStyle="#f1dfb8";ctx.font="bold 48px Georgia";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(sign||name,256,130);
+    signTex.update();
+    const signMat=new StandardMaterial(name+"-sign-material",scene);signMat.diffuseTexture=signTex;signMat.emissiveColor=new Color3(.18,.12,.06);
+    const signFace=MeshBuilder.CreatePlane(name+"-sign-face",{width:2.0,height:1.0},scene);
+    signFace.position.set(x+w*.28,h*.9-.65,front-.98);signFace.rotation.y=0;signFace.material=signMat;
+  
+  }
   addLantern(scene,x-w*.34,3.9,front-.7,mats.gold,mats.lantern);
   addLantern(scene,x+w*.34,3.9,front-.7,mats.gold,mats.lantern);
   // Small upper-storey dormers and chimney silhouettes.
@@ -488,6 +493,104 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         const a=j*Math.PI/4;
         const bulb=MeshBuilder.CreateSphere("velvet-rose-pendant-bulb",{diameter:.24,segments:10},scene);
         bulb.position.set(x+Math.cos(a)*1.65,h-1.0,z+Math.sin(a)*1.65);bulb.material=candleGlow;
+      }
+      // A modest lower-town character: patched plaster, practical storage and a small
+      // service corner keep the house from feeling like a palace.
+      const plaster=mat(scene,"velvet-rose-aged-plaster",new Color3(.43,.34,.27),.98);
+      const linen=mat(scene,"velvet-rose-worn-linen",new Color3(.72,.59,.48),.96);
+      const rosewood=mat(scene,"velvet-rose-dark-rosewood",new Color3(.17,.075,.055),.86);
+      const mutedGold=mat(scene,"velvet-rose-aged-brass",new Color3(.43,.29,.15),.48,.55);
+      const dustyRose=mat(scene,"velvet-rose-dusty-rose",new Color3(.39,.13,.16),.9);
+      // A small hearth and piano make the ground-floor salon feel occupied after dusk.
+      box(scene,"velvet-rose-hearth-surround",[x-5.8,.95,z+1.0],[2.55,1.9,.58],mats.trim);
+      box(scene,"velvet-rose-hearth-opening",[x-5.8,1.0,z+.67],[1.55,1.05,.07],black);
+      box(scene,"velvet-rose-hearth-mantel",[x-5.8,2.0,z+.58],[2.95,.18,.68],rosewood);
+      const hearthEmber=mat(scene,"velvet-rose-hearth-ember",new Color3(1,.19,.035),.35);
+      hearthEmber.emissiveColor=new Color3(.9,.12,.02);
+      const hearthFire=MeshBuilder.CreateSphere("velvet-rose-hearth-fire",{diameter:.72,segments:10},scene);
+      hearthFire.position.set(x-5.8,1.02,z+.61);hearthFire.scaling.set(1,.72,.16);hearthFire.material=hearthEmber;
+      box(scene,"velvet-rose-piano-body",[x+5.7,.82,z+2.0],[2.65,.72,1.15],black);
+      box(scene,"velvet-rose-piano-lid",[x+5.7,1.22,z+1.95],[2.72,.12,1.22],rosewood);
+      for(let key=0;key<14;key++)
+        box(scene,"velvet-rose-piano-key",[x+4.58+key*.17,1.30,z+1.34],[.145,.055,.34],key%7===0?linen:mats.trim);
+      for(const legX of [x+4.65,x+6.75])
+        box(scene,"velvet-rose-piano-leg",[legX,.42,z+2.0],[.12,.82,.12],black);
+      box(scene,"velvet-rose-piano-stool",[x+5.7,.52,z+3.0],[1.05,.22,.55],wine);
+      // A little everyday clutter: stacked wine crates, a handcart and a laundry basket.
+      for(let row=0;row<2;row++) for(let col=0;col<2;col++) {
+        const cx=x-7.0+col*.72,cz=z+4.6+row*.68;
+        box(scene,"velvet-rose-wine-crate",[cx,.48+row*.72,cz],[.66,.72,.62],rosewood);
+        for(let slat=0;slat<3;slat++)
+          box(scene,"velvet-rose-crate-slat",[cx-.22+slat*.22,.48+row*.72,cz-.33],[.055,.62,.035],mutedGold);
+      }
+      box(scene,"velvet-rose-laundry-basket",[x+7.0,.43,z+4.7],[1.05,.72,.88],rosewood);
+      for(let fold=0;fold<3;fold++)
+        box(scene,"velvet-rose-folded-linen",[x+6.8+fold*.18,.84,z+4.68],[.48,.12,.56],linen);
+      // Service nook behind the public lounge: washbasin, shelves, pantry jars and a staff bench.
+      box(scene,"velvet-rose-service-partition",[x,2.35,z-d*.43],[w-1,.16,.24],rosewood);
+      box(scene,"velvet-rose-service-side-partition",[x+6.5,2.1,z-d*.24],[.18,4.0,3.1],plaster);
+      box(scene,"velvet-rose-service-worktable",[x-4.0,1.05,z-d*.35],[4.3,.18,1.25],rosewood);
+      for(let j=0;j<3;j++) {
+        box(scene,"velvet-rose-service-shelf",[x-5.0+j*.2,2.8,z-d*.47],[.14,1.7,.48],rosewood);
+        cylinder(scene,"velvet-rose-pantry-jar",[x-5.0+j*.2,3.15,z-d*.43],.22,.48,j%2?plum:linen,12);
+      }
+      cylinder(scene,"velvet-rose-washbasin-bowl",[x+4.9,.92,z-d*.32],.82,.22,mats.trim,20);
+      cylinder(scene,"velvet-rose-washbasin-pedestal",[x+4.9,.47,z-d*.32],.34,.72,rosewood,12);
+      box(scene,"velvet-rose-staff-bench",[x+2.0,.56,z-d*.38],[2.7,.24,.68],rosewood);
+      // Upper floor: a compact timber gallery with three private chambers, deliberately
+      // more modest than the public salon. The staircase and railing make the second
+      // storey legible from below, while the rooms carry distinct fabrics and furnishings.
+      const upperY=4.45;
+      box(scene,"velvet-rose-upper-floor",[x,upperY,z-2.45],[w-1.15,.24,5.8],rosewood);
+      box(scene,"velvet-rose-upper-rug",[x,upperY+.16,z-2.45],[w-2.0,.035,4.9],dustyRose);
+      box(scene,"velvet-rose-upper-back-wall",[x,upperY+1.7,z-d*.46],[w-1.3,3.3,.22],plaster);
+      box(scene,"velvet-rose-upper-left-wall",[x-w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
+      box(scene,"velvet-rose-upper-right-wall",[x+w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
+      // Narrow stairs rise along the east wall to a small landing.
+      for(let step=0;step<9;step++) {
+        const stair=box(scene,"velvet-rose-upper-stair-step",[x+6.2,0.28+step*.48,z+4.0-step*.62],[1.35,.34,.72],step%2?rosewood:mats.woodLight);
+      }
+      box(scene,"velvet-rose-upper-landing",[x+6.2,upperY-.04,z-1.25],[1.65,.18,1.5],rosewood);
+      for(let rail=0;rail<7;rail++) {
+        box(scene,"velvet-rose-upper-railing-post",[x+5.35+rail*.29,upperY+.55,z-.65],[.09,1.0,.09],mutedGold);
+      }
+      box(scene,"velvet-rose-upper-railing-top",[x+6.22,upperY+1.08,z-.65],[2.0,.12,.14],mutedGold);
+      // Three individually dressed chambers: canopy beds, vanity mirrors, perfume and chairs.
+      for(let room=0;room<3;room++) {
+        const rx=x-4.8+room*4.8,rz=z-2.75;
+        const bedFabric=room===0?wine:room===1?dustyRose:plum;
+        box(scene,"velvet-rose-upper-bed-base",[rx,upperY+.48,rz],[2.65,.42,2.0],rosewood);
+        box(scene,"velvet-rose-upper-mattress",[rx,upperY+.78,rz+.08],[2.48,.30,1.86],linen);
+        box(scene,"velvet-rose-upper-coverlet",[rx,upperY+.96,rz+.35],[2.42,.12,1.1],bedFabric);
+        box(scene,"velvet-rose-upper-headboard",[rx,upperY+1.35,rz-0.88],[2.55,1.2,.20],bedFabric);
+        for(const dx of [-1.05,1.05]) {
+          box(scene,"velvet-rose-upper-canopy-post",[rx+dx,upperY+1.9,rz],[.13,3.0,.13],mutedGold);
+          box(scene,"velvet-rose-upper-canopy-crossbar",[rx,upperY+3.35,rz],[2.3,.12,.12],mutedGold);
+          box(scene,"velvet-rose-upper-canopy-curtain",[rx+dx*.92,upperY+2.15,rz+.18],[.12,2.25,1.65],bedFabric);
+        }
+        box(scene,"velvet-rose-upper-vanity",[rx-1.0,upperY+.92,rz+2.0],[1.55,.18,.62],rosewood);
+        box(scene,"velvet-rose-upper-vanity-mirror-frame",[rx-1.0,upperY+2.0,rz+1.72],[1.0,1.55,.16],mutedGold);
+        box(scene,"velvet-rose-upper-vanity-mirror",[rx-1.0,upperY+2.0,rz+1.62],[.78,1.3,.055],mirror);
+        for(let bottle=0;bottle<3;bottle++) {
+          cylinder(scene,"velvet-rose-upper-perfume-bottle",[rx-.5+bottle*.28,upperY+1.12,rz+2.0],.11,.32,bottle%2?wineLight:plum,10);
+        }
+        box(scene,"velvet-rose-upper-chair",[rx+1.05,upperY+.52,rz+2.05],[.72,.18,.72],bedFabric);
+        box(scene,"velvet-rose-upper-chair-back",[rx+1.05,upperY+1.12,rz+2.35],[.72,1.1,.16],bedFabric);
+        box(scene,"velvet-rose-upper-chamber-divider",[rx+2.25,upperY+1.55,rz+1.15],[.12,2.9,3.0],rosewood);
+      }
+      // Thick curtains soften the small upper windows; their warm glow is visible from the alley.
+      for(const wx of [x-5.2,x,x+5.2]) {
+        box(scene,"velvet-rose-upper-window-curtain-left",[wx-.55,upperY+2.25,z+d*.47],[.38,2.5,.16],wine);
+        box(scene,"velvet-rose-upper-window-curtain-right",[wx+.55,upperY+2.25,z+d*.47],[.38,2.5,.16],wine);
+      }
+      // No hanging sign: a discreet rose motif is set into the door surround instead.
+      const roseCrest=MeshBuilder.CreateTorus("velvet-rose-door-rose-crest",{diameter:.72,thickness:.09,tessellation:16},scene);
+      roseCrest.position.set(x,3.25,z+d/2-.52);roseCrest.rotation.x=Math.PI/2;roseCrest.material=mutedGold;
+      for(let petal=0;petal<5;petal++) {
+        const a=petal*Math.PI*2/5;
+        const petalMesh=MeshBuilder.CreateSphere("velvet-rose-door-rose-petal",{diameter:.18,segments:8},scene);
+        petalMesh.position.set(x+Math.cos(a)*.22,3.25+Math.sin(a)*.22,z+d/2-.53);
+        petalMesh.material=wineLight;
       }
       // Closed private-room doors hint at a larger establishment beyond the lounge.
       for(let side of [-1,1]) {
@@ -952,7 +1055,7 @@ export async function createRoyalCity(engine, canvas) {
   addIronInnSign("COPPER STAG",-15.5,11.0,6.1);
   addIronInnSign("LANTERN & LARK",54.5,12.5,6.4);
   addIronInnSign("FOX & FIR",78.5,12.5,6.4);
-  addIronInnSign("VELVET ROSE",97.0,-5.5,6.0);
+  // The Velvet Rose has no exterior hanging sign by design.
 
   // A compact inn quarter begins just beyond the eastern edge of the central square.
   const pubLaneMat=texturedMat(scene,"pub-quarter-road",new Color3(.39,.36,.31),"#81796c","#39352f",.96);
@@ -4528,6 +4631,10 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(91.0,-8.0,"hostess",30.9,Math.PI,false);
   makeTownsperson(88.5,-16.0,"hostess",32.1,0,false);
   makeTownsperson(94.0,-16.0,"hostess",33.3,0,false);
+  // A small, lively mix of visitors and staff: keep the crowd light for mobile performance.
+  makeTownsperson(89.0,-11.5,"merchant",34.5,Math.PI/2,false);
+  makeTownsperson(93.5,-13.0,"villager",35.7,-Math.PI/2,false);
+  makeTownsperson(88.0,-18.0,"maid",36.9,0,false);
 
   // A few clothed townspeople make the public baths feel like a shared civic space.
   makeTownsperson(-101.5,-48.5,"villager",34.1,Math.PI,false);
