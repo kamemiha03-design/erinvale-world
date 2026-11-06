@@ -1162,7 +1162,12 @@ export async function createRoyalCity(engine, canvas) {
   const plazaFlowerCream=mat(scene,"plaza-flower-cream",new Color3(.92,.82,.62),.86);
   const plazaFlowerViolet=mat(scene,"plaza-flower-violet",new Color3(.42,.29,.61),.84);
   for(let bed=0;bed<8;bed++) {
-    const a=bed*Math.PI/4,px=13+Math.cos(a)*18.1,pz=5+Math.sin(a)*18.1;
+    const a=bed*Math.PI/4;
+    // Move the two diagonal beds that sat directly on the royal coach's
+    // north-south line farther around the fountain, preserving the flower ring.
+    const radius=(bed===3||bed===5)?27.5:18.1;
+    const px=13+Math.cos(a)*radius,pz=5+Math.sin(a)*radius;
+    obstacles.push({x:px,z:pz,r:2.15});
     const planter=box(scene,"fountain-plaza-flower-bed",[px,.28,pz],[3.6,.5,2.25],fountainStone);
     planter.rotation.y=-a;
     const soil=box(scene,"fountain-plaza-flower-soil",[px,.55,pz],[3.28,.08,1.94],fountainShadow);
@@ -2510,6 +2515,10 @@ export async function createRoyalCity(engine, canvas) {
   const carriageWood=mat(scene,"royal-carriage-lacquered-walnut",new Color3(.22,.085,.035),.46,.16);
   const carriageGold=mat(scene,"royal-carriage-gilt-brass",new Color3(.76,.54,.22),.3,.72);
   const carriageCloth=mat(scene,"royal-carriage-velvet",new Color3(.20,.055,.09),.78);
+  const carriageWindow=mat(scene,"royal-carriage-smoked-glass",new Color3(.075,.12,.15),.28,.42);
+  carriageWindow.alpha=1;
+  carriageWindow.transparencyMode=PBRMaterial.PBRMATERIAL_OPAQUE;
+  carriageWindow.forceDepthWrite=true;
   function horsePart(root,name,position,scale,material,segments=18) {
     const mesh=MeshBuilder.CreateSphere(name,{diameter:1,segments},scene);
     mesh.position.set(...position);mesh.scaling.set(...scale);mesh.material=material;mesh.parent=root;mesh.isPickable=false;return mesh;
@@ -2597,6 +2606,24 @@ export async function createRoyalCity(engine, canvas) {
     box(scene,"royal-carriage-side-panel-right",[x+1.72,1.53,z+1.05],[.18,.82,2.7],carriageGold);
     box(scene,"royal-carriage-door-panel-left",[x-1.82,1.48,z+1.0],[.06,.48,1.45],carriageCloth);
     box(scene,"royal-carriage-door-panel-right",[x+1.82,1.48,z+1.0],[.06,.48,1.45],carriageCloth);
+    // Close the cabin at both ends: the coach body is a complete, solid box,
+    // not two floating side walls. The dark inset panels read as deep windows.
+    box(scene,"royal-carriage-cabin-front-wall",[x,1.62,z-.245],[3.28,.88,.18],carriageWood);
+    box(scene,"royal-carriage-cabin-rear-wall",[x,1.62,z+2.345],[3.28,.88,.18],carriageWood);
+    for(const side of [-1,1]) {
+      const windowPane=box(scene,"royal-carriage-cabin-side-window",[x+side*1.825,1.77,z+1.05],[.035,.42,1.42],carriageWindow);
+      const upperRail=box(scene,"royal-carriage-window-gilt-upper",[x+side*1.855,2.02,z+1.05],[.055,.075,1.58],carriageGold);
+      const lowerRail=box(scene,"royal-carriage-window-gilt-lower",[x+side*1.855,1.51,z+1.05],[.055,.075,1.58],carriageGold);
+      for(const zz of [z+.25,z+1.85])box(scene,"royal-carriage-window-gilt-upright",[x+side*1.855,1.77,zz],[.055,.55,.075],carriageGold);
+      box(scene,"royal-carriage-cabin-side-inset",[x+side*1.86,1.18,z+1.05],[.055,.12,2.25],carriageGold);
+    }
+    // Gilded end panels, carved corner posts and a continuous lower moulding.
+    for(const zz of [z-.36,z+2.46]) {
+      box(scene,"royal-carriage-cabin-end-inset",[x,1.58,zz],[2.45,.48,.045],carriageCloth);
+      box(scene,"royal-carriage-cabin-end-gilt-rail",[x,1.91,zz-.025],[2.72,.075,.055],carriageGold);
+      box(scene,"royal-carriage-cabin-end-gilt-base",[x,1.24,zz-.025],[2.72,.075,.055],carriageGold);
+      for(const side of [-1,1])box(scene,"royal-carriage-cabin-end-corner",[x+side*1.43,1.60,zz],[.12,.78,.10],carriageGold);
+    }
     box(scene,"royal-carriage-cabin-roof",[x,3.28,z+.95],[3.75,.28,2.95],carriageGold);
     for(const side of [-1,1]) {
       for(const zz of [z-.25,z+2.15]) {
@@ -4993,7 +5020,31 @@ export async function createRoyalCity(engine, canvas) {
       if(movingCarriage) {
         const target=movingCarriage.route[movingCarriage.waypointIndex],dx=target.x-movingCarriage.group.position.x,dz=target.z-movingCarriage.group.position.z,distance=Math.hypot(dx,dz);
         if(distance<.55)movingCarriage.waypointIndex=(movingCarriage.waypointIndex+1)%movingCarriage.route.length;
-        else {const stride=Math.min(distance,movingCarriage.speed*step);movingCarriage.group.position.x+=dx/distance*stride;movingCarriage.group.position.z+=dz/distance*stride;movingCarriage.group.rotation.y=Math.atan2(-dx,-dz);movingCarriage.horse.position.y=.015+Math.abs(Math.sin(time*8.5))*.045;movingCarriage.horse.rotation.x=Math.sin(time*8.5)*.012;movingCarriage.horse.getChildMeshes().forEach((limb,index)=>{if(limb.name==="horse-leg-muscle"||limb.name==="horse-cannon-bone")limb.rotation.x=Math.sin(time*8.5+(index%2)*Math.PI)*.16;});}
+        else {
+          const stride=Math.min(distance,movingCarriage.speed*step);
+          const nextX=movingCarriage.group.position.x+dx/distance*stride;
+          const nextZ=movingCarriage.group.position.z+dz/distance*stride;
+          // The whole carriage needs a generous clearance radius. If any
+          // registered world obstacle is in its swept path, halt before contact.
+          const carriageRadius=2.75;
+          const blockedByObject=obstacles.some(o=>Math.hypot(nextX-o.x,nextZ-o.z)<o.r+carriageRadius);
+          const blockedByBuilding=colliders.some(c=>
+            nextX>c.minX-carriageRadius&&nextX<c.maxX+carriageRadius&&
+            nextZ>c.minZ-carriageRadius&&nextZ<c.maxZ+carriageRadius&&
+            !(c.interior&&nextX>c.minX+.55&&nextX<c.maxX-.55&&nextZ>c.minZ+.55&&nextZ<c.maxZ-.55)
+          );
+          if(!blockedByObject&&!blockedByBuilding) {
+            movingCarriage.group.position.x=nextX;
+            movingCarriage.group.position.z=nextZ;
+            movingCarriage.group.rotation.y=Math.atan2(-dx,-dz);
+            movingCarriage.horse.position.y=.015+Math.abs(Math.sin(time*8.5))*.045;
+            movingCarriage.horse.rotation.x=Math.sin(time*8.5)*.012;
+            movingCarriage.horse.getChildMeshes().forEach((limb,index)=>{
+              if(limb.name==="horse-leg-muscle"||limb.name==="horse-cannon-bone")
+                limb.rotation.x=Math.sin(time*8.5+(index%2)*Math.PI)*.16;
+            });
+          }
+        }
         movingCarriage.group.position.y=carriageRoadHeight(movingCarriage.group.position.z);
       }
       people.forEach(person=>{
