@@ -453,7 +453,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       for(let j=-2;j<=2;j++) box(scene,"velvet-rose-desk-lattice",[x+j*.86,1.18,z-d*.34-.53],[.055,.92,.06],brass);
       // Four private lounge bays with deep sofas and heavy curtains.
       for(let side of [-1,1]) for(let row=0;row<2;row++) {
-        const ax=x+side*5.35, az=z-1.1-row*4.25;
+        const ax=x+(side<0?-2.35:5.35), az=z-1.1-row*4.25;
         box(scene,"velvet-rose-alcove-platform",[ax,.36,az],[5.0,.22,3.25],black);
         box(scene,"velvet-rose-settee-seat",[ax,.78,az+.25],[3.5,.58,1.25],wine);
         // The settee and its bay are solid to the first-person visitor.
@@ -490,13 +490,14 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         cylinder(scene,"velvet-rose-decanter",[bx,2.48,z-d*.28],.19,.62,j%2?wineLight:plum,12);
         cylinder(scene,"velvet-rose-decanter-neck",[bx,2.88,z-d*.28],.075,.25,brass,10);
       }
-      const pendant=MeshBuilder.CreateTorus("velvet-rose-pendant-ring",{diameter:3.5,thickness:.12,tessellation:24},scene);
-      pendant.position.set(x,h-1.0,z);pendant.material=brass;
-      cylinder(scene,"velvet-rose-pendant-chain",[x,h-.42,z],.055,1.0,black,10);
+      const pendantX=x-6.3,pendantZ=z-1.5;
+      const pendant=MeshBuilder.CreateTorus("velvet-rose-pendant-ring",{diameter:2.5,thickness:.12,tessellation:24},scene);
+      pendant.position.set(pendantX,h-1.0,pendantZ);pendant.material=brass;
+      cylinder(scene,"velvet-rose-pendant-chain",[pendantX,h-.42,pendantZ],.055,1.0,black,10);
       for(let j=0;j<8;j++) {
         const a=j*Math.PI/4;
         const bulb=MeshBuilder.CreateSphere("velvet-rose-pendant-bulb",{diameter:.24,segments:10},scene);
-        bulb.position.set(x+Math.cos(a)*1.65,h-1.0,z+Math.sin(a)*1.65);bulb.material=candleGlow;
+        bulb.position.set(pendantX+Math.cos(a)*1.15,h-1.0,pendantZ+Math.sin(a)*1.15);bulb.material=candleGlow;
       }
       // A modest lower-town character: patched plaster, practical storage and a small
       // service corner keep the house from feeling like a palace.
@@ -506,13 +507,13 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       const mutedGold=mat(scene,"velvet-rose-aged-brass",new Color3(.43,.29,.15),.48,.55);
       const dustyRose=mat(scene,"velvet-rose-dusty-rose",new Color3(.39,.13,.16),.9);
       // A small hearth and piano make the ground-floor salon feel occupied after dusk.
-      box(scene,"velvet-rose-hearth-surround",[x-5.8,.95,z+1.0],[2.55,1.9,.58],mats.trim);
-      box(scene,"velvet-rose-hearth-opening",[x-5.8,1.0,z+.67],[1.55,1.05,.07],black);
-      box(scene,"velvet-rose-hearth-mantel",[x-5.8,2.0,z+.58],[2.95,.18,.68],rosewood);
+      box(scene,"velvet-rose-hearth-surround",[x-2.5,.95,z+1.0],[2.55,1.9,.58],mats.trim);
+      box(scene,"velvet-rose-hearth-opening",[x-2.5,1.0,z+.67],[1.55,1.05,.07],black);
+      box(scene,"velvet-rose-hearth-mantel",[x-2.5,2.0,z+.58],[2.95,.18,.68],rosewood);
       const hearthEmber=mat(scene,"velvet-rose-hearth-ember",new Color3(1,.19,.035),.35);
       hearthEmber.emissiveColor=new Color3(.9,.12,.02);
       const hearthFire=MeshBuilder.CreateSphere("velvet-rose-hearth-fire",{diameter:.72,segments:10},scene);
-      hearthFire.position.set(x-5.8,1.02,z+.61);hearthFire.scaling.set(1,.72,.16);hearthFire.material=hearthEmber;
+      hearthFire.position.set(x-2.5,1.02,z+.61);hearthFire.scaling.set(1,.72,.16);hearthFire.material=hearthEmber;
       box(scene,"velvet-rose-piano-body",[x+5.7,.82,z+2.0],[2.65,.72,1.15],black);
       box(scene,"velvet-rose-piano-lid",[x+5.7,1.22,z+1.95],[2.72,.12,1.22],rosewood);
       for(let key=0;key<14;key++)
@@ -522,7 +523,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       box(scene,"velvet-rose-piano-stool",[x+5.7,.52,z+3.0],[1.05,.22,.55],wine);
       // A little everyday clutter: stacked wine crates, a handcart and a laundry basket.
       for(let row=0;row<2;row++) for(let col=0;col<2;col++) {
-        const cx=x-7.0+col*.72,cz=z+4.6+row*.68;
+        const cx=x-1.0+col*.72,cz=z+4.6+row*.68;
         box(scene,"velvet-rose-wine-crate",[cx,.48+row*.72,cz],[.66,.72,.62],rosewood);
         for(let slat=0;slat<3;slat++)
           box(scene,"velvet-rose-crate-slat",[cx-.22+slat*.22,.48+row*.72,cz-.33],[.055,.62,.035],mutedGold);
@@ -533,7 +534,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       // Service nook behind the public lounge: washbasin, shelves, pantry jars and a staff bench.
       box(scene,"velvet-rose-service-partition",[x,2.35,z-d*.43],[w-1,.16,.24],rosewood);
       box(scene,"velvet-rose-service-side-partition",[x+6.5,2.1,z-d*.24],[.18,4.0,3.1],plaster);
-      box(scene,"velvet-rose-service-worktable",[x-4.0,1.05,z-d*.35],[4.3,.18,1.25],rosewood);
+      box(scene,"velvet-rose-service-worktable",[x+2.2,1.05,z-d*.35],[4.3,.18,1.25],rosewood);
       for(let j=0;j<3;j++) {
         box(scene,"velvet-rose-service-shelf",[x-5.0+j*.2,2.8,z-d*.47],[.14,1.7,.48],rosewood);
         cylinder(scene,"velvet-rose-pantry-jar",[x-5.0+j*.2,3.15,z-d*.43],.22,.48,j%2?plum:linen,12);
@@ -562,24 +563,33 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       // A side stair begins deeper inside the lounge, away from the entrance sightline.
       for(let step=0;step<12;step++) {
         const progress=(step+1)/12;
-        const tread=box(scene,"velvet-rose-rebuilt-stair-tread",[roseStairCenterX,.20+progress*4.25,roseStairStartZ-progress*7.7],[2.25,.40,.78],step%2?rosewood:mats.woodLight);
+        const rise=4.45/12;
+        const tread=box(scene,"velvet-rose-rebuilt-stair-tread",[roseStairCenterX,(step+1)*rise-.12,roseStairStartZ-progress*7.7],[2.45,.24,.90],step%2?rosewood:mats.woodLight);
         tread.isPickable=false;
+        const nosing=box(scene,"velvet-rose-stair-brass-nosing",[roseStairCenterX,(step+1)*rise+.015,roseStairStartZ-progress*7.7+.40],[2.38,.055,.075],mutedGold);
+        nosing.isPickable=false;
+        const riser=box(scene,"velvet-rose-stair-riser",[roseStairCenterX,(step+.5)*rise,roseStairStartZ-(step+.5)*7.7/12],[2.38,rise,.12],rosewood);
+        riser.isPickable=false;
       }
       for(const side of [-1,1]) {
-        const stringer=box(scene,"velvet-rose-rebuilt-stair-stringer",[roseStairCenterX+side*1.28,2.35,z-.35],[.20,.26,8.0],rosewood);
+        const stringer=box(scene,"velvet-rose-rebuilt-stair-stringer",[roseStairCenterX+side*1.32,2.22,z-.35],[.22,.28,8.0],rosewood);
         stringer.rotation.x=-.51;
         for(let rail=0;rail<12;rail++) {
           const progress=rail/11;
-          box(scene,"velvet-rose-rebuilt-stair-post",[roseStairCenterX+side*1.22,.95+progress*4.0,roseStairStartZ-progress*7.7],[.12,.95,.12],mutedGold);
+          box(scene,"velvet-rose-rebuilt-stair-post",[roseStairCenterX+side*1.32,.28+progress*4.45,roseStairStartZ-progress*7.7],[.13,.95,.13],mutedGold);
         }
-        const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[roseStairCenterX+side*1.22,2.95,z-.35],[.16,.16,7.85],rosewood);
+        const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[roseStairCenterX+side*1.32,2.82,z-.35],[.18,.18,7.85],rosewood);
         handrail.rotation.x=-.51;
       }
       box(scene,"velvet-rose-rebuilt-stair-top-landing",[roseStairCenterX,upperY-.06,roseStairEndZ-.5],[2.8,.22,1.5],rosewood);
-      for(let rail=0;rail<7;rail++) {
-        box(scene,"velvet-rose-upper-railing-post",[roseStairCenterX-1.1+rail*.36,upperY+.55,roseStairEndZ+.45],[.09,1.0,.09],mutedGold);
+      // Keep the stair-to-gallery mouth completely open: no cross-rail blocks the landing.
+      // Guard the exposed front edge of the upper gallery instead.
+      for(let rail=0;rail<16;rail++) {
+        const gx=x-4.25+rail*.85;
+        box(scene,"velvet-rose-upper-edge-guard-post",[gx,upperY+.55,z+.45],[.11,1.05,.11],mutedGold);
       }
-      box(scene,"velvet-rose-upper-railing-top",[roseStairCenterX,upperY+1.08,roseStairEndZ+.45],[2.5,.12,.14],mutedGold);
+      box(scene,"velvet-rose-upper-edge-guard-top",[x+2.125,upperY+1.08,z+.45],[13.0,.14,.16],rosewood);
+      box(scene,"velvet-rose-upper-edge-guard-mid",[x+2.125,upperY+.42,z+.45],[13.0,.09,.12],mutedGold);
       // Two clearly readable private suites replace the cramped row of three bays.
       // Each has an unmistakable bed, bedside lamps, wardrobe, vanity and a named entrance.
       for(let room=0;room<2;room++) {
@@ -5126,7 +5136,8 @@ export async function createRoyalCity(engine, canvas) {
     if(x>82.9&&x<86.5&&z<=-10.0&&z>=-18.6)return false;
     // Fountain basin, market counters, and the remaining cliff shoulders are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
-    for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
+    // Ground-floor furniture obstacles must not become invisible walls for visitors upstairs.
+    if(!velvetRoseUpperLevel) for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
     // The old palace-garden hedge/terrace movement barrier is removed.
     // Keep the garden and public-library approach freely walkable.
     return false;
