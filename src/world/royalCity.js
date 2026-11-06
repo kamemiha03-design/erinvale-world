@@ -4510,8 +4510,16 @@ export async function createRoyalCity(engine, canvas) {
   // Staff: a guild receptionist, tavern server and welcoming adult hostesses.
   makeTownsperson(-20,-15.4,"hostess",21.2,Math.PI,false);
   makeTownsperson(-21,4.6,"hostess",22.4,Math.PI,false);
-  makeTownsperson(52,10.0,"hostess",23.6,Math.PI,false);
-  makeTownsperson(72,10.0,"hostess",24.8,Math.PI,false);
+  makeTownsperson(52,5.2,"hostess",23.6,Math.PI,false);
+  makeTownsperson(72,5.2,"hostess",24.8,Math.PI,false);
+  // Inn guests sit and chat inside the taprooms; a server works near each bar.
+  makeTownsperson(-25.2,4.0,"villager",65.1,Math.PI/2,false);
+  makeTownsperson(-17.0,3.5,"merchant",66.2,-Math.PI/2,false);
+  makeTownsperson(45.0,4.0,"villager",67.3,Math.PI,false);
+  makeTownsperson(69.0,4.2,"merchant",68.4,Math.PI,false);
+  // More adventurers gather around the guild tables and notice board.
+  makeTownsperson(-18.0,-17.0,"guard",69.5,Math.PI/2,false);
+  makeTownsperson(-29.0,-21.0,"villager",70.6,-Math.PI/2,false);
   // Adult hostess staff for the Velvet Rose, stationed throughout its lounge.
   makeTownsperson(86.0,-10.0,"hostess",26.1,Math.PI,false);
   makeTownsperson(96.0,-10.0,"hostess",27.3,Math.PI,false);
@@ -4590,9 +4598,14 @@ export async function createRoyalCity(engine, canvas) {
     makeBathGuest(34.0,.38,52.8,"scrubbed",Math.PI/2,18);
     makeBathGuest(35.28,.10,52.88,"attendant",Math.PI/2,19);
 
-    // Guild: a clerk and a guard.
+    // Guild: a clerk, a guard and one more adventurer by the notice wall.
     makeTownsperson(-23.0,-26.0,"merchant",25.2,Math.PI,false);
     makeTownsperson(-31.0,-18.0,"guard",26.4,Math.PI/2,false);
+    makeTownsperson(-16.5,-22.5,"villager",71.7,Math.PI,false);
+    // A small, carefully placed crowd inside the three taprooms.
+    makeTownsperson(-25.2,4.0,"villager",72.8,Math.PI/2,false);
+    makeTownsperson(45.0,4.0,"villager",73.9,Math.PI,false);
+    makeTownsperson(69.0,4.2,"merchant",75.0,Math.PI,false);
 
     // Two ground-floor readers sit at the study tables; one reader browses upstairs.
     makeTownsperson(-49.2,-90.55,"villager",29.1,Math.PI,false,"seated");
