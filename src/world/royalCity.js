@@ -550,29 +550,31 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       // small landing at its head so visitors step onto a solid second-floor deck.
       box(scene,"velvet-rose-upper-floor-left",[x-4.41,upperY,z-2.45],[6.825,.24,5.8],rosewood);
       box(scene,"velvet-rose-upper-floor-right",[x+4.41,upperY,z-2.45],[6.825,.24,5.8],rosewood);
-      box(scene,"velvet-rose-upper-floor-front",[x,upperY,z-.25],[w-1.15,.24,1.4],rosewood);
-      box(scene,"velvet-rose-upper-floor-back",[x,upperY,z-4.15],[w-1.15,.24,2.4],rosewood);
-      box(scene,"velvet-rose-upper-stair-landing-deck",[x,upperY,z-1.55],[2.2,.24,1.8],rosewood);
+      box(scene,"velvet-rose-upper-floor-front",[x,upperY,z+.05],[w-1.15,.24,.8],rosewood);
+      box(scene,"velvet-rose-upper-floor-back",[x,upperY,z-5.25],[w-1.15,.24,1.0],rosewood);
+      box(scene,"velvet-rose-upper-stair-landing-deck",[x,upperY,z-2.8],[3.0,.24,2.1],rosewood);
       box(scene,"velvet-rose-upper-rug",[x,upperY+.16,z-2.45],[w-2.0,.035,4.9],dustyRose);
       box(scene,"velvet-rose-upper-back-wall",[x,upperY+1.7,z-d*.46],[w-1.3,3.3,.22],plaster);
       box(scene,"velvet-rose-upper-left-wall",[x-w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
       box(scene,"velvet-rose-upper-right-wall",[x+w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
-      // A walkable, gently stepped staircase on the east side. The broad treads
-      // overlap slightly so the first-person camera never catches on a gap.
-      for(let step=0;step<9;step++) {
-        const stair=box(scene,"velvet-rose-upper-stair-step",[x,.24+step*.49,z+4.0-step*.62],[1.72,.48,.92],step%2?rosewood:mats.woodLight);
-        stair.isPickable=false;
+      // Rebuilt from scratch: one wide, straight central flight with shallow treads.
+      // The route runs from the salon front (z=-7.5) up to the gallery (z=-14.7).
+      for(let step=0;step<11;step++) {
+        const progress=(step+1)/11;
+        const tread=box(scene,"velvet-rose-rebuilt-stair-tread",[x,.20+progress*4.25,z+4.5-progress*7.2],[2.65,.40,.82],step%2?rosewood:mats.woodLight);
+        tread.isPickable=false;
       }
-      box(scene,"velvet-rose-upper-landing",[x,upperY-.04,z-1.55],[2.4,.22,2.0],rosewood);
       for(const side of [-1,1]) {
-        for(let rail=0;rail<9;rail++) {
-          const rz=z+3.85-rail*.62;
-          const ry=.72+rail*.46;
-          box(scene,"velvet-rose-stair-rail-post",[x+side*1.02,ry,rz],[.12,1.05,.12],mutedGold);
+        const stringer=box(scene,"velvet-rose-rebuilt-stair-stringer",[x+side*1.48,2.35,z+.9],[.22,.28,7.55],rosewood);
+        stringer.rotation.x=-.53;
+        for(let rail=0;rail<11;rail++) {
+          const progress=rail/10;
+          box(scene,"velvet-rose-rebuilt-stair-post",[x+side*1.58,.95+progress*4.0,z+4.25-progress*7.0],[.13,1.0,.13],mutedGold);
         }
-        const rail=box(scene,"velvet-rose-stair-handrail",[x+side*1.02,2.55,z+1.35],[.16,.16,5.45],rosewood);
-        rail.rotation.x=-.68;
+        const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[x+side*1.58,2.95,z+.9],[.18,.18,7.3],rosewood);
+        handrail.rotation.x=-.53;
       }
+      box(scene,"velvet-rose-rebuilt-stair-top-landing",[x,upperY-.06,z-2.8],[3.0,.22,2.1],rosewood);
       for(let rail=0;rail<7;rail++) {
         box(scene,"velvet-rose-upper-railing-post",[x-1.1+rail*.36,upperY+.55,z-.65],[.09,1.0,.09],mutedGold);
       }
@@ -5011,6 +5013,8 @@ export async function createRoyalCity(engine, canvas) {
         if(!inDoor)return true;
       }
     }
+    // Reserve a clear corridor for the new stair flight; furniture colliders must not block it.
+    if(x>88.7&&x<93.3&&z<=-7.2&&z>=-15.4)return false;
     // Fountain basin, market counters, and the remaining cliff shoulders are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
@@ -5255,12 +5259,12 @@ export async function createRoyalCity(engine, canvas) {
       // salon floor at z=-8 to the gallery landing at z=-13; once upstairs,
       // the camera stays on the second-floor deck until it returns to the stair.
       const roseStairX=91.0;
-      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.65&&camera.position.z<=-8.0&&camera.position.z>=-13.6;
-      const roseStairT=Scalar.Clamp((-camera.position.z-8.0)/5.6,0,1);
+      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<2.15&&camera.position.z<=-7.2&&camera.position.z>=-14.7;
+      const roseStairT=Scalar.Clamp((-camera.position.z-7.2)/7.2,0,1);
       let onVelvetRoseUpper=false;
       const onRoseUpperDeck=camera.position.x>83.7&&camera.position.x<98.2&&camera.position.z>-17.15&&camera.position.z<-11.55;
-      if(onVelvetRoseStair&&roseStairT>.88)velvetRoseUpperLevel=true;
-      else if(onVelvetRoseStair&&roseStairT<.08)velvetRoseUpperLevel=false;
+      if(onVelvetRoseStair&&roseStairT>.94)velvetRoseUpperLevel=true;
+      else if(onVelvetRoseStair&&roseStairT<.06)velvetRoseUpperLevel=false;
       if(velvetRoseUpperLevel&&onRoseUpperDeck)onVelvetRoseUpper=true;
       if(velvetRoseUpperLevel&&!onRoseUpperDeck&&!onVelvetRoseStair) {
         // Stop the visitor at the gallery edge instead of allowing a fall.
