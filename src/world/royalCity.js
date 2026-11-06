@@ -5123,7 +5123,7 @@ export async function createRoyalCity(engine, canvas) {
       }
     }
     // Reserve a clear corridor for the new stair flight; furniture colliders must not block it.
-    if(x>82.9&&x<86.5&&z<=-8.0&&z>=-16.6)return false;
+    if(x>82.9&&x<86.5&&z<=-10.0&&z>=-18.6)return false;
     // Fountain basin, market counters, and the remaining cliff shoulders are solid.
     if(Math.hypot(x-13,z-5)<8.0)return true;
     for(const o of obstacles) if(Math.hypot(x-o.x,z-o.z)<o.r+.42)return true;
