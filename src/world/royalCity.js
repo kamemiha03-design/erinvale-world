@@ -573,13 +573,13 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         riser.isPickable=false;
       }
       for(const side of [-1,1]) {
-        const stringer=box(scene,"velvet-rose-rebuilt-stair-stringer",[roseStairCenterX+side*1.32,2.22,z-.35],[.22,.28,8.0],rosewood);
+        const stringer=box(scene,"velvet-rose-rebuilt-stair-stringer",[roseStairCenterX+side*1.32,2.22,(roseStairStartZ+roseStairEndZ)/2],[.22,.28,8.0],rosewood);
         stringer.rotation.x=.524;
         for(let rail=0;rail<12;rail++) {
           const progress=rail/11;
           box(scene,"velvet-rose-rebuilt-stair-post",[roseStairCenterX+side*1.32,.525+progress*4.45,roseStairStartZ-progress*7.7],[.13,.95,.13],mutedGold);
         }
-        const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[roseStairCenterX+side*1.32,3.225,z-.35],[.18,.18,7.85],rosewood);
+        const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[roseStairCenterX+side*1.32,3.225,(roseStairStartZ+roseStairEndZ)/2],[.18,.18,7.85],rosewood);
         handrail.rotation.x=.524;
       }
       box(scene,"velvet-rose-rebuilt-stair-top-landing",[roseStairCenterX,upperY-.06,roseStairEndZ-.35],[3.0,.22,1.8],rosewood);
@@ -5066,6 +5066,8 @@ export async function createRoyalCity(engine, canvas) {
   let velvetRoseUpperLevel=false;
   const collides=(x,z)=>{
     if(Math.abs(x)>112)return true;
+    // Upstairs in The Velvet Rose: keep the walkable suite clear of leftover ground-floor furniture blockers.
+    if(velvetRoseUpperLevel&&x>83.45&&x<98.55&&z>-19.8&&z<-4.2)return false;
     // Solid library perimeter collision; keep only the east entrance open.
     const inLibraryZ=z>-97.0&&z<-71.0;
     const inLibraryX=x>-65.0&&x<-39.2;
@@ -5380,8 +5382,8 @@ export async function createRoyalCity(engine, canvas) {
       // salon floor at z=-8 to the gallery landing at z=-13; once upstairs,
       // the camera stays on the second-floor deck until it returns to the stair.
       const roseStairX=84.7;
-      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<2.75&&camera.position.z<=-10.0&&camera.position.z>=-19.0;
-      const roseStairT=Scalar.Clamp((-camera.position.z-10.0)/9.0,0,1);
+      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.55&&camera.position.z<=-10.5&&camera.position.z>=-18.2;
+      const roseStairT=Scalar.Clamp((-camera.position.z-10.5)/7.7,0,1);
       let onVelvetRoseUpper=false;
       const onRoseUpperDeck=camera.position.x>83.55&&camera.position.x<99.0&&camera.position.z>-20.0&&camera.position.z<-8.7;
       if(onVelvetRoseStair&&roseStairT>.94)velvetRoseUpperLevel=true;
