@@ -456,14 +456,18 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         const ax=x+side*5.35, az=z-1.1-row*4.25;
         box(scene,"velvet-rose-alcove-platform",[ax,.36,az],[5.0,.22,3.25],black);
         box(scene,"velvet-rose-settee-seat",[ax,.78,az+.25],[3.5,.58,1.25],wine);
+        // The settee and its bay are solid to the first-person visitor.
+        obstacles.push({x:ax,z:az+.05,r:2.05});
         box(scene,"velvet-rose-settee-back",[ax,1.35,az-.28],[3.55,1.05,.42],wineLight);
         for(let dx of [-1.35,1.35]) {
           box(scene,"velvet-rose-settee-arm",[ax+dx,1.02,az+.25],[.42,.72,1.28],wine);
           cylinder(scene,"velvet-rose-brass-foot",[ax+dx,.43,az+.25],.075,.5,brass,8);
         }
         box(scene,"velvet-rose-low-table",[ax,.68,az+1.45],[1.35,.16,.8],brass);
+        obstacles.push({x:ax,z:az+1.45,r:.92});
         box(scene,"velvet-rose-table-inset",[ax,.775,az+1.45],[1.08,.035,.58],black);
         box(scene,"velvet-rose-screen-frame",[ax+side*2.35,2.05,az-.1],[.16,3.6,2.8],brass);
+        obstacles.push({x:ax+side*2.35,z:az-.1,r:1.35});
         box(scene,"velvet-rose-screen-panel",[ax+side*2.35,2.05,az-.1],[.10,3.35,2.55],plum);
         box(scene,"velvet-rose-curtain-valance",[ax,3.65,az-1.0],[4.9,.22,.35],brass);
         for(let fold=0;fold<9;fold++)
@@ -541,7 +545,10 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       // more modest than the public salon. The staircase and railing make the second
       // storey legible from below, while the rooms carry distinct fabrics and furnishings.
       const upperY=4.45;
-      box(scene,"velvet-rose-upper-floor",[x,upperY,z-2.45],[w-1.15,.24,5.8],rosewood);
+      // Leave a real stairwell opening in the gallery floor; a single solid slab
+      // here used to cover the top of the stairs and trap the visitor below it.
+      box(scene,"velvet-rose-upper-floor-left",[x-4.41,upperY,z-2.45],[6.825,.24,5.8],rosewood);
+      box(scene,"velvet-rose-upper-floor-right",[x+4.41,upperY,z-2.45],[6.825,.24,5.8],rosewood);
       box(scene,"velvet-rose-upper-rug",[x,upperY+.16,z-2.45],[w-2.0,.035,4.9],dustyRose);
       box(scene,"velvet-rose-upper-back-wall",[x,upperY+1.7,z-d*.46],[w-1.3,3.3,.22],plaster);
       box(scene,"velvet-rose-upper-left-wall",[x-w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
@@ -549,23 +556,23 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       // A walkable, gently stepped staircase on the east side. The broad treads
       // overlap slightly so the first-person camera never catches on a gap.
       for(let step=0;step<9;step++) {
-        const stair=box(scene,"velvet-rose-upper-stair-step",[x+6.0,.24+step*.49,z+4.0-step*.62],[1.72,.48,.92],step%2?rosewood:mats.woodLight);
+        const stair=box(scene,"velvet-rose-upper-stair-step",[x,.24+step*.49,z+4.0-step*.62],[1.72,.48,.92],step%2?rosewood:mats.woodLight);
         stair.isPickable=false;
       }
-      box(scene,"velvet-rose-upper-landing",[x+5.9,upperY-.04,z-1.55],[2.4,.22,2.0],rosewood);
+      box(scene,"velvet-rose-upper-landing",[x,upperY-.04,z-1.55],[2.4,.22,2.0],rosewood);
       for(const side of [-1,1]) {
         for(let rail=0;rail<9;rail++) {
           const rz=z+3.85-rail*.62;
           const ry=.72+rail*.46;
-          box(scene,"velvet-rose-stair-rail-post",[x+6.0+side*.98,ry,rz],[.12,1.05,.12],mutedGold);
+          box(scene,"velvet-rose-stair-rail-post",[x+side*1.02,ry,rz],[.12,1.05,.12],mutedGold);
         }
-        const rail=box(scene,"velvet-rose-stair-handrail",[x+6.0+side*.98,2.55,z+1.35],[.16,.16,5.45],rosewood);
+        const rail=box(scene,"velvet-rose-stair-handrail",[x+side*1.02,2.55,z+1.35],[.16,.16,5.45],rosewood);
         rail.rotation.x=-.68;
       }
       for(let rail=0;rail<7;rail++) {
-        box(scene,"velvet-rose-upper-railing-post",[x+4.8+rail*.30,upperY+.55,z-.65],[.09,1.0,.09],mutedGold);
+        box(scene,"velvet-rose-upper-railing-post",[x-1.1+rail*.36,upperY+.55,z-.65],[.09,1.0,.09],mutedGold);
       }
-      box(scene,"velvet-rose-upper-railing-top",[x+5.7,upperY+1.08,z-.65],[2.1,.12,.14],mutedGold);
+      box(scene,"velvet-rose-upper-railing-top",[x,upperY+1.08,z-.65],[2.5,.12,.14],mutedGold);
       // Three individually dressed chambers: canopy beds, vanity mirrors, perfume and chairs.
       for(let room=0;room<3;room++) {
         const rx=x-4.8+room*4.8,rz=z-2.75;
@@ -4637,22 +4644,22 @@ export async function createRoyalCity(engine, canvas) {
   // Adult hostess staff for the Velvet Rose, stationed throughout its lounge.
   makeTownsperson(86.0,-10.0,"hostess",26.1,Math.PI,false);
   makeTownsperson(96.0,-10.0,"hostess",27.3,Math.PI,false);
-  makeTownsperson(86.0,-14.2,"hostess",28.5,Math.PI/2,false);
-  makeTownsperson(96.0,-14.2,"hostess",29.7,-Math.PI/2,false);
-  makeTownsperson(91.0,-8.0,"hostess",30.9,Math.PI,false);
-  makeTownsperson(88.5,-16.0,"hostess",32.1,0,false);
-  makeTownsperson(94.0,-16.0,"hostess",33.3,0,false);
+  makeTownsperson(86.0,-9.8,"hostess",28.5,Math.PI/2,false);
+  makeTownsperson(96.0,-9.8,"hostess",29.7,-Math.PI/2,false);
+  makeTownsperson(88.5,-10.8,"hostess",30.9,Math.PI,false);
+  makeTownsperson(85.5,-11.0,"hostess",32.1,0,false);
+  makeTownsperson(97.0,-11.0,"hostess",33.3,0,false);
   // A small, lively mix of visitors and staff: keep the crowd light for mobile performance.
-  makeTownsperson(89.0,-11.5,"merchant",34.5,Math.PI/2,false);
-  makeTownsperson(93.5,-13.0,"villager",35.7,-Math.PI/2,false);
-  makeTownsperson(88.0,-18.0,"maid",36.9,0,false);
+  makeTownsperson(86.5,-10.5,"merchant",34.5,Math.PI/2,false);
+  makeTownsperson(95.5,-10.8,"villager",35.7,-Math.PI/2,false);
+  makeTownsperson(87.0,-11.2,"maid",36.9,0,false);
   // Courtesans and visitors are placed clearly inside the Velvet Rose salon.
-  makeTownsperson(84.8,-11.0,"hostess",39.1,Math.PI/2,false);
-  makeTownsperson(91.0,-12.2,"hostess",40.2,Math.PI,false);
-  makeTownsperson(97.0,-10.8,"hostess",41.3,-Math.PI/2,false);
-  makeTownsperson(86.5,-15.2,"villager",42.4,Math.PI/2,false);
-  makeTownsperson(93.5,-16.0,"merchant",43.5,-Math.PI/2,false);
-  makeTownsperson(96.5,-14.0,"villager",44.6,Math.PI,false);
+  makeTownsperson(84.8,-8.8,"hostess",39.1,Math.PI/2,false);
+  makeTownsperson(91.0,-10.8,"hostess",40.2,Math.PI,false);
+  makeTownsperson(97.0,-9.0,"hostess",41.3,-Math.PI/2,false);
+  makeTownsperson(86.5,-11.2,"villager",42.4,Math.PI/2,false);
+  makeTownsperson(94.8,-11.0,"merchant",43.5,-Math.PI/2,false);
+  makeTownsperson(97.0,-10.6,"villager",44.6,Math.PI,false);
 
   // A few clothed townspeople make the public baths feel like a shared civic space.
   makeTownsperson(-101.5,-48.5,"villager",34.1,Math.PI,false);
@@ -5243,9 +5250,9 @@ export async function createRoyalCity(engine, canvas) {
       // Velvet Rose stair and upper-floor navigation. The stair runs from the
       // salon floor at z=-8 to the gallery landing at z=-13; once upstairs,
       // the camera stays on the second-floor deck until it returns to the stair.
-      const roseStairX=97.0;
-      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.45&&camera.position.z<=-8.0&&camera.position.z>=-13.6;
-      const roseStairT=Scalar.Clamp((-camera.position.z-8.0)/5.0,0,1);
+      const roseStairX=91.0;
+      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.65&&camera.position.z<=-8.0&&camera.position.z>=-13.6;
+      const roseStairT=Scalar.Clamp((-camera.position.z-8.0)/5.6,0,1);
       let onVelvetRoseUpper=false;
       const onRoseUpperDeck=camera.position.x>83.7&&camera.position.x<98.2&&camera.position.z>-17.15&&camera.position.z<-11.55;
       if(onVelvetRoseStair&&roseStairT>.88)velvetRoseUpperLevel=true;
