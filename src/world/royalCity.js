@@ -557,8 +557,8 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       box(scene,"velvet-rose-upper-left-wall",[x-w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
       box(scene,"velvet-rose-upper-right-wall",[x+w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
       const roseStairCenterX=x-6.3;
-      const roseStairStartZ=z+3.5;
-      const roseStairEndZ=z-4.2;
+      const roseStairStartZ=z+1.5;
+      const roseStairEndZ=z-6.2;
       // A side stair begins deeper inside the lounge, away from the entrance sightline.
       for(let step=0;step<12;step++) {
         const progress=(step+1)/12;
@@ -587,16 +587,55 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         const bedFabric=room===0?wine:plum;
         const roomRug=room===0?dustyRose:wine;
         box(scene,"velvet-rose-suite-rug",[rx,upperY+.17,rz+.1],[5.0,.045,5.0],roomRug);
-        box(scene,"velvet-rose-upper-bed-base",[rx,upperY+.48,rz],[2.75,.42,2.15],rosewood);
-        box(scene,"velvet-rose-upper-mattress",[rx,upperY+.78,rz+.08],[2.58,.30,2.0],linen);
-        box(scene,"velvet-rose-upper-coverlet",[rx,upperY+.97,rz+.38],[2.5,.13,1.22],bedFabric);
-        box(scene,"velvet-rose-upper-pillow-left",[rx-.63,upperY+1.0,rz-.58],[.88,.18,.48],linen);
-        box(scene,"velvet-rose-upper-pillow-right",[rx+.63,upperY+1.0,rz-.58],[.88,.18,.48],linen);
-        box(scene,"velvet-rose-upper-headboard",[rx,upperY+1.35,rz-1.02],[2.7,1.22,.22],bedFabric);
-        for(const dx of [-1.15,1.15]) {
-          box(scene,"velvet-rose-upper-canopy-post",[rx+dx,upperY+1.55,rz],[.14,2.45,.14],mutedGold);
-          box(scene,"velvet-rose-upper-canopy-crossbar",[rx,upperY+2.72,rz],[2.45,.13,.13],mutedGold);
-          box(scene,"velvet-rose-upper-canopy-curtain",[rx+dx*.94,upperY+1.95,rz+.18],[.13,1.75,1.55],bedFabric);
+        // Layered bed frame, stitched mattress edge, pillows and a carved headboard.
+        box(scene,"velvet-rose-upper-bed-base",[rx,upperY+.48,rz],[2.9,.42,2.3],rosewood);
+        box(scene,"velvet-rose-upper-bed-base-inlay",[rx,upperY+.70,rz],[2.72,.075,2.12],mutedGold);
+        for(const dx of [-1.22,1.22]) for(const dz of [-.92,.92]) {
+          box(scene,"velvet-rose-upper-bed-foot",[rx+dx,upperY+.34,rz+dz],[.20,.62,.20],rosewood);
+          cylinder(scene,"velvet-rose-upper-bed-foot-cap",[rx+dx,upperY+.62,rz+dz],.24,.12,brass,10);
+        }
+        box(scene,"velvet-rose-upper-mattress",[rx,upperY+.82,rz+.08],[2.62,.34,2.02],linen);
+        box(scene,"velvet-rose-upper-mattress-piping",[rx,upperY+1.0,rz+.08],[2.66,.055,2.06],wineLight);
+        box(scene,"velvet-rose-upper-coverlet",[rx,upperY+1.04,rz+.42],[2.52,.16,1.28],bedFabric);
+        box(scene,"velvet-rose-upper-coverlet-fold",[rx,upperY+1.14,rz-.12],[2.52,.10,.30],wineLight);
+        box(scene,"velvet-rose-upper-bed-runner",[rx,upperY+1.14,rz+.94],[2.45,.08,.30],roomRug);
+        box(scene,"velvet-rose-upper-pillow-left",[rx-.63,upperY+1.12,rz-.62],[.92,.22,.52],linen);
+        box(scene,"velvet-rose-upper-pillow-right",[rx+.63,upperY+1.12,rz-.62],[.92,.22,.52],linen);
+        for(const px of [-.63,.63]) {
+          box(scene,"velvet-rose-upper-pillow-piping",[rx+px,upperY+1.24,rz-.62],[.86,.035,.46],wineLight);
+          box(scene,"velvet-rose-upper-pillow-tassel",[rx+px-.40,upperY+1.14,rz-.62],[.08,.12,.08],mutedGold);
+        }
+        box(scene,"velvet-rose-upper-headboard",[rx,upperY+1.45,rz-1.10],[2.85,1.35,.24],bedFabric);
+        box(scene,"velvet-rose-upper-headboard-panel",[rx,upperY+1.48,rz-1.245],[2.35,.94,.055],rosewood);
+        box(scene,"velvet-rose-upper-headboard-inset",[rx,upperY+1.48,rz-1.28],[2.08,.70,.035],bedFabric);
+        for(const dx of [-1.0,1.0])
+          cylinder(scene,"velvet-rose-upper-headboard-rosette",[rx+dx,upperY+1.48,rz-1.33],.22,.08,brass,12);
+        // Four turned uprights, a complete canopy frame and gathered velvet drapes.
+        for(const dx of [-1.35,1.35]) for(const dz of [-1.05,1.05]) {
+          box(scene,"velvet-rose-upper-canopy-post",[rx+dx,upperY+1.78,rz+dz],[.17,2.9,.17],mutedGold);
+          cylinder(scene,"velvet-rose-upper-canopy-finial",[rx+dx,upperY+3.27,rz+dz],.24,.24,brass,12);
+          cylinder(scene,"velvet-rose-upper-canopy-post-collar",[rx+dx,upperY+2.85,rz+dz],.22,.12,brass,12);
+        }
+        box(scene,"velvet-rose-upper-canopy-rail-long-front",[rx,upperY+3.18,rz-1.05],[2.95,.16,.18],mutedGold);
+        box(scene,"velvet-rose-upper-canopy-rail-long-back",[rx,upperY+3.18,rz+1.05],[2.95,.16,.18],mutedGold);
+        box(scene,"velvet-rose-upper-canopy-rail-side-left",[rx-1.35,upperY+3.18,rz],[.18,.16,2.15],mutedGold);
+        box(scene,"velvet-rose-upper-canopy-rail-side-right",[rx+1.35,upperY+3.18,rz],[.18,.16,2.15],mutedGold);
+        box(scene,"velvet-rose-upper-canopy-cloth",[rx,upperY+3.08,rz],[2.72,.10,1.92],bedFabric);
+        box(scene,"velvet-rose-upper-canopy-inset",[rx,upperY+3.145,rz],[2.34,.035,1.54],roomRug);
+        for(const dz of [-.78,.78]) {
+          box(scene,"velvet-rose-upper-canopy-curtain-front",[rx,upperY+2.12,rz+dz],[2.55,2.0,.12],bedFabric);
+          for(let pleat=0;pleat<9;pleat++)
+            box(scene,"velvet-rose-upper-canopy-pleat-front",[rx-1.12+pleat*.28,upperY+2.12,rz+dz*.99],[.045,1.9,.15],wineLight);
+        }
+        for(const dx of [-1.25,1.25]) {
+          box(scene,"velvet-rose-upper-canopy-curtain-side",[rx+dx,upperY+2.12,rz],[.12,2.0,1.78],bedFabric);
+          for(let pleat=0;pleat<7;pleat++)
+            box(scene,"velvet-rose-upper-canopy-pleat-side",[rx+dx*.99,upperY+2.12,rz-.72+pleat*.24],[.15,1.9,.045],wineLight);
+        }
+        for(const dx of [-1.25,1.25]) for(const dz of [-.72,.72]) {
+          cylinder(scene,"velvet-rose-upper-canopy-curtain-tie",[rx+dx,upperY+1.62,rz+dz],.10,.34,brass,10);
+          const tassel=MeshBuilder.CreateSphere("velvet-rose-upper-canopy-tassel",{diameter:.16,segments:8},scene);
+          tassel.position.set(rx+dx,upperY+1.38,rz+dz);tassel.material=wineLight;
         }
         for(const dx of [-1.85,1.85]) {
           box(scene,"velvet-rose-upper-nightstand",[rx+dx,upperY+.68,rz-.35],[.72,.95,.72],rosewood);
@@ -1133,7 +1172,7 @@ export async function createRoyalCity(engine, canvas) {
     const lane=MeshBuilder.CreateGround("old-quarter-branching-lane",{width:w,height:d,subdivisions:1},scene);
     lane.position.set(x,-.035,z);lane.material=alleyStone;
   }
-  addBuilding(scene,{x:91,z:-12,w:17,d:13,h:10,name:"The Velvet Rose",sign:"THE VELVET ROSE",interior:true},{...mats},shadow,colliders,obstacles);
+  addBuilding(scene,{x:91,z:-12,w:17,d:17,h:10,name:"The Velvet Rose",sign:"THE VELVET ROSE",interior:true},{...mats},shadow,colliders,obstacles);
   addBuilding(scene,{x:66,z:-31,w:17,d:13,h:9.5,name:"The Moonlit Atelier",sign:"MOONLIT ATELIER",interior:true},{...mats},shadow,colliders,obstacles);
   // Carved balconies, stained glass, red velvet awnings and brass lanterns distinguish the night house.
   const velvet=mat(scene,"velvet-awning",new Color3(.34,.035,.095),.78);
@@ -5329,17 +5368,17 @@ export async function createRoyalCity(engine, canvas) {
       // salon floor at z=-8 to the gallery landing at z=-13; once upstairs,
       // the camera stays on the second-floor deck until it returns to the stair.
       const roseStairX=84.7;
-      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.95&&camera.position.z<=-8.5&&camera.position.z>=-16.2;
-      const roseStairT=Scalar.Clamp((-camera.position.z-8.5)/7.7,0,1);
+      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.95&&camera.position.z<=-10.5&&camera.position.z>=-18.2;
+      const roseStairT=Scalar.Clamp((-camera.position.z-10.5)/7.7,0,1);
       let onVelvetRoseUpper=false;
-      const onRoseUpperDeck=camera.position.x>83.7&&camera.position.x<98.2&&camera.position.z>-17.15&&camera.position.z<-11.55;
+      const onRoseUpperDeck=camera.position.x>83.7&&camera.position.x<98.2&&camera.position.z>-19.75&&camera.position.z<-11.55;
       if(onVelvetRoseStair&&roseStairT>.94)velvetRoseUpperLevel=true;
       else if(onVelvetRoseStair&&roseStairT<.06)velvetRoseUpperLevel=false;
       if(velvetRoseUpperLevel&&onRoseUpperDeck)onVelvetRoseUpper=true;
       if(velvetRoseUpperLevel&&!onRoseUpperDeck&&!onVelvetRoseStair) {
         // Stop the visitor at the gallery edge instead of allowing a fall.
         camera.position.x=Scalar.Clamp(camera.position.x,84.0,97.75);
-        camera.position.z=Scalar.Clamp(camera.position.z,-16.95,-11.75);
+        camera.position.z=Scalar.Clamp(camera.position.z,-19.55,-11.75);
         onVelvetRoseUpper=true;
       }
       const roseFloorY=onVelvetRoseStair?roseStairT*4.45:(onVelvetRoseUpper?4.45:0);
