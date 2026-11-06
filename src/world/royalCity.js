@@ -4376,6 +4376,9 @@ export async function createRoyalCity(engine, canvas) {
   const npcLeather=mat(scene,"npc-leather",new Color3(.19,.105,.055),.94);
   const npcMetal=mat(scene,"npc-metal",new Color3(.48,.43,.32),.58,.45);
   const npcGold=mat(scene,"npc-gold",new Color3(.68,.48,.19),.45,.55);
+  const hostessSatin=mat(scene,"velvet-rose-hostess-satin",new Color3(.31,.012,.055),.38,.32);
+  const hostessGold=mat(scene,"velvet-rose-hostess-gold",new Color3(.82,.57,.22),.3,.65);
+  const hostessPearl=mat(scene,"velvet-rose-hostess-pearl",new Color3(.92,.78,.62),.32,.5);
   const npcWhite=mat(scene,"npc-eye-white",new Color3(.88,.83,.72),.8);
   const npcDark=mat(scene,"npc-eye-dark",new Color3(.075,.045,.03),.8);
   const npcBeard=mat(scene,"npc-beard",new Color3(.20,.095,.045),.96);
@@ -4499,7 +4502,23 @@ export async function createRoyalCity(engine, canvas) {
     part("npc-hips",[0,seatedPose?.48:.86,0],[.43,.25,.28],npcLeather,"sphere");
     part("npc-tunic",[0,seatedPose?.98:1.23,0],[.58,.70,.34],outfit,"sphere");
     part("npc-tunic-hem",[0,seatedPose?.63:.91,0],[.59,.12,.35],outfit);
-    if(role==="hostess"){part("hostess-skirt",[0,.91,0],[.62,.62,.42],outfit,"sphere");part("hostess-bodice",[0,1.32,-.015],[.43,.44,.36],npcCloth[4],"sphere");part("hostess-apron",[0,1.05,-.205],[.40,.48,.035],npcCloth[5]);}
+    if(role==="hostess"){
+      part("hostess-skirt",[0,.91,0],[.62,.62,.42],hostessSatin,"sphere");
+      part("hostess-bodice",[0,1.32,-.015],[.43,.44,.36],hostessSatin,"sphere");
+      // A glamorous, fully clothed corseted evening dress with a draped neckline.
+      part("hostess-corset-waist",[0,1.16,-.205],[.40,.42,.075],hostessSatin);
+      part("hostess-neckline",[0,1.52,-.16],[.47,.12,.13],hostessGold,"sphere");
+      part("hostess-neckline-left",[-.20,1.48,-.14],[.13,.17,.12],hostessSatin,"sphere");
+      part("hostess-neckline-right",[.20,1.48,-.14],[.13,.17,.12],hostessSatin,"sphere");
+      part("hostess-gold-waistband",[0,1.01,-.225],[.57,.075,.045],hostessGold);
+      for(let lace=0;lace<4;lace++) {
+        part("hostess-corset-lacing",[0,1.37-lace*.09,-.252],[.025,.055,.018],hostessGold);
+      }
+      part("hostess-pearl-necklace",[0,1.56,-.205],[.19,.055,.035],hostessPearl,"sphere");
+      part("hostess-earring-left",[-.19,1.68,-.04],[.055,.13,.055],hostessGold,"sphere");
+      part("hostess-earring-right",[.19,1.68,-.04],[.055,.13,.055],hostessGold,"sphere");
+      part("hostess-apron",[0,1.05,-.205],[.40,.48,.035],hostessSatin);
+    }
     if(role==="maid"){part("palace-maid-long-apron",[0,1.05,-.205],[.43,.56,.045],npcWhite);part("palace-maid-collar",[0,1.55,-.17],[.34,.12,.10],npcWhite);part("palace-maid-cap",[0,2.06,-.01],[.38,.09,.32],npcWhite);part("palace-maid-hair-bun",[0,1.91,.18],[.22,.22,.22],hair,"sphere");}
     if(role==="butler"){part("palace-butler-waistcoat",[0,1.25,-.19],[.39,.48,.08],npcDark);part("palace-butler-shirt-front",[0,1.27,-.245],[.16,.42,.035],npcWhite);part("palace-butler-bowtie",[0,1.56,-.22],[.22,.10,.08],npcGold);for(let b=0;b<3;b++)part("palace-butler-button-"+b,[0,1.36-b*.12,-.29],[.045,.045,.025],npcGold,"sphere");}
     const upperShift=seatedPose?-.24:0;
@@ -4703,7 +4722,7 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(96.0,-10.0,"hostess",27.3,Math.PI,false);
   makeTownsperson(86.0,-9.8,"hostess",28.5,Math.PI/2,false);
   makeTownsperson(96.0,-9.8,"hostess",29.7,-Math.PI/2,false);
-  makeTownsperson(91.0,-8.4,"hostess",30.9,Math.PI,false,"beckoning");
+  makeTownsperson(91.2,-10.2,"hostess",31.43,Math.PI,false,"beckoning");
   makeTownsperson(85.5,-11.0,"hostess",32.1,0,false);
   makeTownsperson(97.0,-11.0,"hostess",33.3,0,false);
   // A small, lively mix of visitors and staff: keep the crowd light for mobile performance.
