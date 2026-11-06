@@ -550,8 +550,8 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       // A long opening follows the stair flight; the upper landing joins a clear gallery.
       box(scene,"velvet-rose-upper-floor-left",[x-8.05,upperY,z-2.45],[.9,.24,11.0],rosewood);
       box(scene,"velvet-rose-upper-floor-right",[x+2.0,upperY,z-2.45],[13.0,.24,11.0],rosewood);
-      box(scene,"velvet-rose-upper-floor-front",[x+0.4,upperY,z+.05],[15.0,.24,.8],rosewood);
-      box(scene,"velvet-rose-upper-floor-back",[x+0.4,upperY,z-6.45],[15.0,.24,.8],rosewood);
+      box(scene,"velvet-rose-upper-floor-front",[x+2.0,upperY,z+.05],[13.0,.24,.8],rosewood);
+      box(scene,"velvet-rose-upper-floor-back",[x+2.0,upperY,z-6.45],[13.0,.24,.8],rosewood);
       box(scene,"velvet-rose-upper-gallery-rug",[x+3.0,upperY+.16,z-3.0],[8.0,.035,5.4],dustyRose);
       box(scene,"velvet-rose-upper-back-wall",[x,upperY+1.7,z-d*.46],[w-1.3,3.3,.22],plaster);
       box(scene,"velvet-rose-upper-left-wall",[x-w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
@@ -617,8 +617,8 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
           cylinder(scene,"velvet-rose-upper-wardrobe-knob",[rx+1.97+door*.34,upperY+1.4,rz-.87],.09,.08,brass,10);
         }
         // Large brass-framed name plaque above the open suite entrance.
-        box(scene,"velvet-rose-upper-suite-signboard",[rx,upperY+2.45,z-11.25],[3.2,.82,.16],rosewood);
-        box(scene,"velvet-rose-upper-suite-sign-trim",[rx,upperY+2.45,z-11.35],[3.0,.64,.045],mutedGold);
+        box(scene,"velvet-rose-upper-suite-signboard",[rx,upperY+2.45,z+.75],[3.2,.82,.16],rosewood);
+        box(scene,"velvet-rose-upper-suite-sign-trim",[rx,upperY+2.45,z+.65],[3.0,.64,.045],mutedGold);
         const suiteTex=new DynamicTexture("velvet-rose-suite-title-"+room,{width:512,height:128},scene,false);
         const suiteCtx=suiteTex.getContext();
         suiteCtx.fillStyle="#24131a";suiteCtx.fillRect(0,0,512,128);
@@ -629,13 +629,13 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         const suiteMat=new StandardMaterial("velvet-rose-suite-title-mat-"+room,scene);
         suiteMat.diffuseTexture=suiteTex;suiteMat.emissiveColor=new Color3(.24,.13,.07);
         const suiteFace=MeshBuilder.CreatePlane("velvet-rose-suite-title-face",{width:3.0,height:.64},scene);
-        suiteFace.position.set(rx,upperY+2.45,z-11.39);suiteFace.material=suiteMat;suiteFace.isPickable=false;
+        suiteFace.position.set(rx,upperY+2.45,z+.61);suiteFace.material=suiteMat;suiteFace.isPickable=false;
       }
       // A small shared dressing gallery makes the upper floor read as a real inn suite.
-      box(scene,"velvet-rose-upper-gallery-console",[x+3.0,upperY+.78,z-10.8],[2.6,1.35,.62],rosewood);
-      box(scene,"velvet-rose-upper-gallery-console-top",[x+3.0,upperY+1.5,z-10.8],[2.85,.12,.78],mutedGold);
+      box(scene,"velvet-rose-upper-gallery-console",[x+3.0,upperY+.78,z+.8],[2.6,1.35,.62],rosewood);
+      box(scene,"velvet-rose-upper-gallery-console-top",[x+3.0,upperY+1.5,z+.8],[2.85,.12,.78],mutedGold);
       for(let vase=0;vase<3;vase++) {
-        cylinder(scene,"velvet-rose-upper-gallery-vase",[x+2.2+vase*.8,upperY+1.78,z-10.8],.24,.48,vase===1?wineLight:plum,12);
+        cylinder(scene,"velvet-rose-upper-gallery-vase",[x+2.2+vase*.8,upperY+1.78,z+.8],.24,.48,vase===1?wineLight:plum,12);
       }
       // A clearly marked landing rail and a warm pendant light identify the stair arrival.
       box(scene,"velvet-rose-upper-landing-post",[x-6.3,upperY+.55,z-15.25],[.14,1.0,.14],mutedGold);
