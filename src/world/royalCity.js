@@ -4437,8 +4437,21 @@ export async function createRoyalCity(engine, canvas) {
         part("npc-boot",[side*.115,.105,.035],[.22,.20,.37],npcLeather);
         part("npc-trouser",[side*.115,.49,0],[.205,.69,.23],npcLeather,"sphere");
         part("npc-knee",[side*.115,.69,0],[.205,.22,.23],outfit,"sphere");
-        part("npc-sleeve",[side*.34,1.23,0],[.19,.52,.20],outfit,"sphere");
-        part("npc-hand",[side*.35,.91,.015],[.13,.16,.13],skin,"sphere");
+        if(pose==="beckoning"&&role==="hostess"&&side===1) {
+          // A raised arm, softly bent wrist and curled fingers visibly beckon visitors.
+          const raisedSleeve=part("velvet-rose-welcoming-sleeve",[.43,1.43,-.015],[.19,.49,.20],outfit,"sphere");
+          raisedSleeve.rotation.z=-.72;
+          const raisedHand=part("velvet-rose-welcoming-hand",[.70,1.70,-.075],[.14,.17,.13],skin,"sphere");
+          raisedHand.rotation.z=-.38;
+          for(let finger=0;finger<3;finger++) {
+            const digit=part("velvet-rose-welcoming-finger",[.77+finger*.045,1.78-finger*.035,-.10],[.045,.13,.045],skin,"sphere");
+            digit.rotation.z=-.38-finger*.10;
+          }
+          part("velvet-rose-wrist-bangle",[.61,1.61,-.06],[.22,.055,.22],npcGold,"cylinder");
+        } else {
+          part("npc-sleeve",[side*.34,1.23,0],[.19,.52,.20],outfit,"sphere");
+          part("npc-hand",[side*.35,.91,.015],[.13,.16,.13],skin,"sphere");
+        }
       }
       if(role==="guard") {
         part("npc-shoulder-plate",[side*.34,seatedPose?1.34:1.48,0],[.29,.18,.28],npcMetal,"sphere");
@@ -4652,7 +4665,7 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(96.0,-10.0,"hostess",27.3,Math.PI,false);
   makeTownsperson(86.0,-9.8,"hostess",28.5,Math.PI/2,false);
   makeTownsperson(96.0,-9.8,"hostess",29.7,-Math.PI/2,false);
-  makeTownsperson(88.5,-10.8,"hostess",30.9,Math.PI,false);
+  makeTownsperson(91.0,-8.4,"hostess",30.9,Math.PI,false,"beckoning");
   makeTownsperson(85.5,-11.0,"hostess",32.1,0,false);
   makeTownsperson(97.0,-11.0,"hostess",33.3,0,false);
   // A small, lively mix of visitors and staff: keep the crowd light for mobile performance.
