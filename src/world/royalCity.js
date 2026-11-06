@@ -453,7 +453,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       for(let j=-2;j<=2;j++) box(scene,"velvet-rose-desk-lattice",[x+j*.86,1.18,z-d*.34-.53],[.055,.92,.06],brass);
       // Four private lounge bays with deep sofas and heavy curtains.
       for(let side of [-1,1]) for(let row=0;row<2;row++) {
-        const ax=x+(side<0?-2.35:5.35), az=z-1.1-row*4.25;
+        const ax=x+(side<0?0.3:5.35), az=z-1.1-row*4.25;
         box(scene,"velvet-rose-alcove-platform",[ax,.36,az],[5.0,.22,3.25],black);
         box(scene,"velvet-rose-settee-seat",[ax,.78,az+.25],[3.5,.58,1.25],wine);
         // The settee and its bay are solid to the first-person visitor.
@@ -564,11 +564,12 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       for(let step=0;step<12;step++) {
         const progress=(step+1)/12;
         const rise=4.45/12;
-        const tread=box(scene,"velvet-rose-rebuilt-stair-tread",[roseStairCenterX,(step+1)*rise-.12,roseStairStartZ-progress*7.7],[2.45,.24,.90],step%2?rosewood:mats.woodLight);
+        const treadZ=roseStairStartZ-progress*7.7;
+        const tread=box(scene,"velvet-rose-rebuilt-stair-tread",[roseStairCenterX,(step+1)*rise-.12,treadZ],[2.45,.24,.70],step%2?rosewood:mats.woodLight);
         tread.isPickable=false;
-        const nosing=box(scene,"velvet-rose-stair-brass-nosing",[roseStairCenterX,(step+1)*rise+.015,roseStairStartZ-progress*7.7+.40],[2.38,.055,.075],mutedGold);
+        const nosing=box(scene,"velvet-rose-stair-brass-nosing",[roseStairCenterX,(step+1)*rise+.015,treadZ+.30],[2.38,.055,.075],mutedGold);
         nosing.isPickable=false;
-        const riser=box(scene,"velvet-rose-stair-riser",[roseStairCenterX,(step+.5)*rise,roseStairStartZ-(step+.5)*7.7/12],[2.38,rise,.12],rosewood);
+        const riser=box(scene,"velvet-rose-stair-riser",[roseStairCenterX,(step+.5)*rise,treadZ+.30],[2.38,rise,.12],rosewood);
         riser.isPickable=false;
       }
       for(const side of [-1,1]) {
@@ -581,7 +582,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
         const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[roseStairCenterX+side*1.32,3.225,z-.35],[.18,.18,7.85],rosewood);
         handrail.rotation.x=.524;
       }
-      box(scene,"velvet-rose-rebuilt-stair-top-landing",[roseStairCenterX,upperY-.06,roseStairEndZ-.5],[2.8,.22,1.5],rosewood);
+      box(scene,"velvet-rose-rebuilt-stair-top-landing",[roseStairCenterX,upperY-.06,roseStairEndZ-.35],[3.0,.22,1.8],rosewood);
       // Keep the stair-to-gallery mouth completely open: no cross-rail blocks the landing.
       // Guard the exposed front edge of the upper gallery instead.
       for(let rail=0;rail<16;rail++) {
@@ -5379,17 +5380,17 @@ export async function createRoyalCity(engine, canvas) {
       // salon floor at z=-8 to the gallery landing at z=-13; once upstairs,
       // the camera stays on the second-floor deck until it returns to the stair.
       const roseStairX=84.7;
-      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.95&&camera.position.z<=-10.5&&camera.position.z>=-18.2;
-      const roseStairT=Scalar.Clamp((-camera.position.z-10.5)/7.7,0,1);
+      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<2.75&&camera.position.z<=-10.0&&camera.position.z>=-19.0;
+      const roseStairT=Scalar.Clamp((-camera.position.z-10.0)/9.0,0,1);
       let onVelvetRoseUpper=false;
-      const onRoseUpperDeck=camera.position.x>83.7&&camera.position.x<98.2&&camera.position.z>-19.75&&camera.position.z<-11.55;
+      const onRoseUpperDeck=camera.position.x>83.55&&camera.position.x<99.0&&camera.position.z>-20.0&&camera.position.z<-8.7;
       if(onVelvetRoseStair&&roseStairT>.94)velvetRoseUpperLevel=true;
       else if(onVelvetRoseStair&&roseStairT<.06)velvetRoseUpperLevel=false;
       if(velvetRoseUpperLevel&&onRoseUpperDeck)onVelvetRoseUpper=true;
       if(velvetRoseUpperLevel&&!onRoseUpperDeck&&!onVelvetRoseStair) {
         // Stop the visitor at the gallery edge instead of allowing a fall.
-        camera.position.x=Scalar.Clamp(camera.position.x,84.0,97.75);
-        camera.position.z=Scalar.Clamp(camera.position.z,-19.55,-11.75);
+        camera.position.x=Scalar.Clamp(camera.position.x,83.75,98.65);
+        camera.position.z=Scalar.Clamp(camera.position.z,-19.65,-9.0);
         onVelvetRoseUpper=true;
       }
       const roseFloorY=onVelvetRoseStair?roseStairT*4.45:(onVelvetRoseUpper?4.45:0);
