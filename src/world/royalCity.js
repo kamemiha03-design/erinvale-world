@@ -546,15 +546,26 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       box(scene,"velvet-rose-upper-back-wall",[x,upperY+1.7,z-d*.46],[w-1.3,3.3,.22],plaster);
       box(scene,"velvet-rose-upper-left-wall",[x-w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
       box(scene,"velvet-rose-upper-right-wall",[x+w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
-      // Narrow stairs rise along the east wall to a small landing.
+      // A walkable, gently stepped staircase on the east side. The broad treads
+      // overlap slightly so the first-person camera never catches on a gap.
       for(let step=0;step<9;step++) {
-        const stair=box(scene,"velvet-rose-upper-stair-step",[x+6.2,0.28+step*.48,z+4.0-step*.62],[1.35,.34,.72],step%2?rosewood:mats.woodLight);
+        const stair=box(scene,"velvet-rose-upper-stair-step",[x+6.0,.24+step*.49,z+4.0-step*.62],[1.72,.48,.92],step%2?rosewood:mats.woodLight);
+        stair.isPickable=false;
       }
-      box(scene,"velvet-rose-upper-landing",[x+6.2,upperY-.04,z-1.25],[1.65,.18,1.5],rosewood);
+      box(scene,"velvet-rose-upper-landing",[x+5.9,upperY-.04,z-1.55],[2.4,.22,2.0],rosewood);
+      for(const side of [-1,1]) {
+        for(let rail=0;rail<9;rail++) {
+          const rz=z+3.85-rail*.62;
+          const ry=.72+rail*.46;
+          box(scene,"velvet-rose-stair-rail-post",[x+6.0+side*.98,ry,rz],[.12,1.05,.12],mutedGold);
+        }
+        const rail=box(scene,"velvet-rose-stair-handrail",[x+6.0+side*.98,2.55,z+1.35],[.16,.16,5.45],rosewood);
+        rail.rotation.x=-.68;
+      }
       for(let rail=0;rail<7;rail++) {
-        box(scene,"velvet-rose-upper-railing-post",[x+5.35+rail*.29,upperY+.55,z-.65],[.09,1.0,.09],mutedGold);
+        box(scene,"velvet-rose-upper-railing-post",[x+4.8+rail*.30,upperY+.55,z-.65],[.09,1.0,.09],mutedGold);
       }
-      box(scene,"velvet-rose-upper-railing-top",[x+6.22,upperY+1.08,z-.65],[2.0,.12,.14],mutedGold);
+      box(scene,"velvet-rose-upper-railing-top",[x+5.7,upperY+1.08,z-.65],[2.1,.12,.14],mutedGold);
       // Three individually dressed chambers: canopy beds, vanity mirrors, perfume and chairs.
       for(let room=0;room<3;room++) {
         const rx=x-4.8+room*4.8,rz=z-2.75;
@@ -849,7 +860,7 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
     for(let xx=x-w/2+.85;xx<=x+w/2-.85;xx+=1.35) obstacles.push({x:xx,z:z-d/2+.12,r:.68});
     for(let xx=x-w/2+.85;xx<=x+w/2-.85;xx+=1.35) if(Math.abs(xx-x)>1.5) obstacles.push({x:xx,z:z+d/2-.12,r:.68});
   }
-  colliders.push({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2,doorX:x,doorWidth:1.9,doorZ:front,interior,passThrough:!!cfg.passThrough});
+  colliders.push({name,minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2,doorX:x,doorWidth:1.9,doorZ:front,interior,passThrough:!!cfg.passThrough});
   return null;
 }
 
@@ -4635,6 +4646,13 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(89.0,-11.5,"merchant",34.5,Math.PI/2,false);
   makeTownsperson(93.5,-13.0,"villager",35.7,-Math.PI/2,false);
   makeTownsperson(88.0,-18.0,"maid",36.9,0,false);
+  // Courtesans and visitors are placed clearly inside the Velvet Rose salon.
+  makeTownsperson(84.8,-11.0,"hostess",39.1,Math.PI/2,false);
+  makeTownsperson(91.0,-12.2,"hostess",40.2,Math.PI,false);
+  makeTownsperson(97.0,-10.8,"hostess",41.3,-Math.PI/2,false);
+  makeTownsperson(86.5,-15.2,"villager",42.4,Math.PI/2,false);
+  makeTownsperson(93.5,-16.0,"merchant",43.5,-Math.PI/2,false);
+  makeTownsperson(96.5,-14.0,"villager",44.6,Math.PI,false);
 
   // A few clothed townspeople make the public baths feel like a shared civic space.
   makeTownsperson(-101.5,-48.5,"villager",34.1,Math.PI,false);
@@ -4912,6 +4930,7 @@ export async function createRoyalCity(engine, canvas) {
   let yaw=0,pitch=0,moveSource=()=>Vector3.Zero();
   const velocity=new Vector3();
   let libraryUpperLevel=false;
+  let velvetRoseUpperLevel=false;
   const collides=(x,z)=>{
     if(Math.abs(x)>112)return true;
     // Solid library perimeter collision; keep only the east entrance open.
@@ -4961,12 +4980,23 @@ export async function createRoyalCity(engine, canvas) {
     if(Math.abs(z)>116)return true;
     for(const c of colliders) {
       if(x>c.minX-.5&&x<c.maxX+.5&&z>c.minZ-.5&&z<c.maxZ+.5) {
+        const inDoor=Math.abs(x-c.doorX)<c.doorWidth/2 && Math.abs(z-c.doorZ)<2.2;
         const insideRoom=c.interior&&x>c.minX+.55&&x<c.maxX-.55&&z>c.minZ+.55&&z<c.maxZ-.55;
         const gatePassage=c.passThrough&&Math.abs(x-c.doorX)<c.doorWidth/2;
+        if(c.name==="The Velvet Rose") {
+          // Keep the exterior shell and the interior perimeter walls solid;
+          // only the centered front doorway is an entrance/exit.
+          if(insideRoom) {
+            const againstSideWall=x<c.minX+.95||x>c.maxX-.95;
+            const againstBackWall=z<c.minZ+.9;
+            const againstFrontWall=z>c.maxZ-.9&&!inDoor;
+            if(againstSideWall||againstBackWall||againstFrontWall)return true;
+            continue;
+          }
+          if(inDoor)continue;
+          return true;
+        }
         if(insideRoom||gatePassage)continue;
-        // A doorway must be passable from either side, including the bath's
-        // newly south-facing entrance.
-        const inDoor=Math.abs(x-c.doorX)<c.doorWidth/2 && Math.abs(z-c.doorZ)<2.2;
         if(!inDoor)return true;
       }
     }
@@ -5210,6 +5240,24 @@ export async function createRoyalCity(engine, canvas) {
       const lobbyStairFloor=openHallLobbyTop+7.58*lobbyStairT;
       // Stair progression changes the camera elevation smoothly; the top landing
       // latches the visitor onto the upper gallery until they descend again.
+      // Velvet Rose stair and upper-floor navigation. The stair runs from the
+      // salon floor at z=-8 to the gallery landing at z=-13; once upstairs,
+      // the camera stays on the second-floor deck until it returns to the stair.
+      const roseStairX=97.0;
+      const onVelvetRoseStair=Math.abs(camera.position.x-roseStairX)<1.45&&camera.position.z<=-8.0&&camera.position.z>=-13.6;
+      const roseStairT=Scalar.Clamp((-camera.position.z-8.0)/5.0,0,1);
+      let onVelvetRoseUpper=false;
+      const onRoseUpperDeck=camera.position.x>83.7&&camera.position.x<98.2&&camera.position.z>-17.15&&camera.position.z<-11.55;
+      if(onVelvetRoseStair&&roseStairT>.88)velvetRoseUpperLevel=true;
+      else if(onVelvetRoseStair&&roseStairT<.08)velvetRoseUpperLevel=false;
+      if(velvetRoseUpperLevel&&onRoseUpperDeck)onVelvetRoseUpper=true;
+      if(velvetRoseUpperLevel&&!onRoseUpperDeck&&!onVelvetRoseStair) {
+        // Stop the visitor at the gallery edge instead of allowing a fall.
+        camera.position.x=Scalar.Clamp(camera.position.x,84.15,97.75);
+        camera.position.z=Scalar.Clamp(camera.position.z,-16.95,-11.75);
+        onVelvetRoseUpper=true;
+      }
+      const roseFloorY=onVelvetRoseStair?roseStairT*4.45:(onVelvetRoseUpper?4.45:0);
       const onLibraryStair=camera.position.z>-93.1&&camera.position.z<-91.6&&camera.position.x>-49.25&&camera.position.x<-42.15;
       const libraryStairT=Scalar.Clamp((-42.55-camera.position.x)/6.0,0,1);
       if(onLibraryStair) {
@@ -5221,9 +5269,9 @@ export async function createRoyalCity(engine, canvas) {
         (camera.position.x>-62.0&&camera.position.x<-60.0&&camera.position.z>-90.5&&camera.position.z<-73.6)
       );
       const libraryFloorY=onLibraryStair?1.72+libraryStairT*5.25:(onLibraryGallery?6.97:1.72);
-      camera.position.y=seatedAt?2.02:(camera.position.x>-64.5&&camera.position.x<-39.4&&camera.position.z>-97&&camera.position.z<-71?libraryFloorY:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
+      camera.position.y=seatedAt?2.02:(onVelvetRoseStair||onVelvetRoseUpper?roseFloorY+1.72:(camera.position.x>-64.5&&camera.position.x<-39.4&&camera.position.z>-97&&camera.position.z<-71?libraryFloorY:(inBathPool?1.34:(onGreatBridge?bridgeSurface(camera.position.z)+1.72:
         (onSmallBridge?smallSurface(camera.position.z)+1.72:
-        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72))))))));
+        (onRoyalStair?1.72+stairFloor:(onLobbyGrandStair?lobbyStairFloor+1.72:((onLobbyStairLanding||onLobbyUpperGallery)?openHallGalleryY+1.72:((onLanding||insideRoyalLobby)?10.34:1.72)))))))));
       camera.rotation.y=Math.PI-yaw;camera.rotation.x=pitch;
       location.textContent=getLocation(camera.position.x,camera.position.z);
       const moving=input.lengthSquared()>.025 && (Math.abs(camera.position.x-(camera._lastFootX??camera.position.x)) + Math.abs(camera.position.z-(camera._lastFootZ??camera.position.z))>.001);
