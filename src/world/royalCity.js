@@ -545,10 +545,14 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       // more modest than the public salon. The staircase and railing make the second
       // storey legible from below, while the rooms carry distinct fabrics and furnishings.
       const upperY=4.45;
-      // Leave a real stairwell opening in the gallery floor; a single solid slab
-      // here used to cover the top of the stairs and trap the visitor below it.
+      // A compact rectangular stairwell opening is cut into the gallery floor.
+      // Side strips plus front/back bands leave a clear stair aperture, with a
+      // small landing at its head so visitors step onto a solid second-floor deck.
       box(scene,"velvet-rose-upper-floor-left",[x-4.41,upperY,z-2.45],[6.825,.24,5.8],rosewood);
       box(scene,"velvet-rose-upper-floor-right",[x+4.41,upperY,z-2.45],[6.825,.24,5.8],rosewood);
+      box(scene,"velvet-rose-upper-floor-front",[x,upperY,z-.25],[w-1.15,.24,1.4],rosewood);
+      box(scene,"velvet-rose-upper-floor-back",[x,upperY,z-4.15],[w-1.15,.24,2.4],rosewood);
+      box(scene,"velvet-rose-upper-stair-landing-deck",[x,upperY,z-1.55],[2.2,.24,1.8],rosewood);
       box(scene,"velvet-rose-upper-rug",[x,upperY+.16,z-2.45],[w-2.0,.035,4.9],dustyRose);
       box(scene,"velvet-rose-upper-back-wall",[x,upperY+1.7,z-d*.46],[w-1.3,3.3,.22],plaster);
       box(scene,"velvet-rose-upper-left-wall",[x-w*.46,upperY+1.65,z-2.45],[.20,3.2,5.7],rosewood);
@@ -4655,7 +4659,7 @@ export async function createRoyalCity(engine, canvas) {
   makeTownsperson(87.0,-11.2,"maid",36.9,0,false);
   // Courtesans and visitors are placed clearly inside the Velvet Rose salon.
   makeTownsperson(84.8,-8.8,"hostess",39.1,Math.PI/2,false);
-  makeTownsperson(91.0,-10.8,"hostess",40.2,Math.PI,false);
+  makeTownsperson(92.8,-8.8,"hostess",40.2,Math.PI,false);
   makeTownsperson(97.0,-9.0,"hostess",41.3,-Math.PI/2,false);
   makeTownsperson(86.5,-11.2,"villager",42.4,Math.PI/2,false);
   makeTownsperson(94.8,-11.0,"merchant",43.5,-Math.PI/2,false);
