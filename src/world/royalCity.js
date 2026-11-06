@@ -522,6 +522,45 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       box(scene,name+"-inn-sign-interior",[x,5.2,z-d/2+.55],[3.8,1.15,.18],mats.wood);
       const plaque=MeshBuilder.CreateCylinder(name+"-stag-crest",{diameter:1.05,height:.18,tessellation:6},scene);
       plaque.position.set(x,5.3,z-d/2+.38);plaque.rotation.x=Math.PI/2;plaque.material=mats.gold;
+      // Add the lived-in details of a busy coaching inn: carved table runners,
+      // plates, bread, wall trophies, iron pot hooks and warm timber rafters.
+      const tavernOak=mat(scene,name+"-aged-oak",new Color3(.22,.125,.067),.86);
+      const tavernLeather=mat(scene,name+"-oxblood-leather",new Color3(.30,.075,.055),.92);
+      const tavernCopper=mat(scene,name+"-hammered-copper",new Color3(.58,.31,.13),.38,.7);
+      const tavernParchment=mat(scene,name+"-menu-parchment",new Color3(.83,.72,.53),.96);
+      box(scene,name+"-hearth-rug",[hx+3.7,.105,hz+3.7],[5.4,.055,3.0],tavernLeather);
+      for(let i=0;i<3;i++) {
+        const tx=x-4.5+i*3.0,tz=z+1.25;
+        box(scene,name+"-table-runner",[tx,1.095,tz],[1.52,.025,1.12],tavernLeather);
+        cylinder(scene,name+"-bread-board",[tx-.34,1.19,tz+.20],.48,.045,tavernOak,16);
+        box(scene,name+"-fresh-loaf",[tx-.34,1.32,tz+.20],[.46,.17,.24],tavernParchment);
+        cylinder(scene,name+"-stew-bowl",[tx+.38,1.20,tz-.20],.38,.12,mats.trim,16);
+        for(let side of [-1,1]) {
+          const stoolX=tx+side*1.18;
+          box(scene,name+"-stool-leather-seat",[stoolX,.76,tz],[.72,.18,.72],tavernLeather);
+          for(const dx of [-.25,.25])for(const dz of [-.25,.25])
+            box(scene,name+"-stool-leg",[stoolX+dx,.38,tz+dz],[.10,.72,.10],tavernOak);
+        }
+      }
+      // A proper menu, framed inn emblem and iron pot rack distinguish each inn.
+      box(scene,name+"-menu-frame",[x+w*.31,4.15,z+d*.34],[.18,2.35,1.65],tavernOak);
+      box(scene,name+"-menu-sheet",[x+w*.31-.11,4.15,z+d*.34],[.055,1.95,1.25],tavernParchment);
+      for(let row=0;row<5;row++)
+        box(scene,name+"-menu-ink-line",[x+w*.31-.15,3.55+row*.28,z+d*.34],[.035,.035,.82-(row%2)*.18],tavernOak);
+      for(let side of [-1,1]) {
+        const sx=x+side*(w/2-.35),sz=z+1.2;
+        box(scene,name+"-iron-wall-sconce-arm",[sx-side*.22,5.1,sz],[.52,.12,.12],tavernOak);
+        const sconce=MeshBuilder.CreateSphere(name+"-iron-wall-sconce-glow",{diameter:.30,segments:8},scene);
+        sconce.position.set(sx-side*.38,5.18,sz);sconce.material=mats.lantern;sconce.isPickable=false;
+        box(scene,name+"-timber-wall-beam",[x+side*(w/2-.55),h*.55,z],[.18,.22,d-.8],tavernOak);
+      }
+      for(let zz=z-d*.30;zz<=z+d*.30;zz+=4.2)
+        box(scene,name+"-exposed-ceiling-rafter",[x,h-.32,zz],[w-.7,.30,.38],tavernOak);
+      for(let j=0;j<3;j++) {
+        const pot=MeshBuilder.CreateCylinder(name+"-hanging-copper-pot",{diameterTop:.38,diameterBottom:.58,height:.52,tessellation:12},scene);
+        pot.position.set(x-2.8+j*1.0,5.65,z-d*.12);pot.material=tavernCopper;
+        cylinder(scene,name+"-pot-hook",[x-2.8+j*1.0,6.0,z-d*.12],.045,.55,tavernOak,8);
+      }
     } else if(name==="Adventurers Guild") {
       // A bustling, warm timber guild inspired by classic fantasy adventurer halls:
       // a broad reception counter, crowded quest wall, long communal tables and trophies.
@@ -675,6 +714,13 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
           const tusk=MeshBuilder.CreateCylinder("guild-monster-trophy-horn",{diameterTop:.025,diameterBottom:.22,height:1.15,tessellation:8},scene);
           tusk.position.set(x+side*12.82,8.8,z+4.55+horn*.85);tusk.rotation.z=horn===0?.28:-.28;tusk.material=guildParchment;
         }
+      }
+      // A campaign map, marked with brass route pins, makes the guild feel actively used.
+      box(scene,"guild-war-map-frame",[x-8,1.42,z+1.0],[3.65,.08,2.42],guildOak);
+      for(let pin=0;pin<9;pin++) {
+        const px=x-9.25+(pin%3)*1.25,pz=z+.25+Math.floor(pin/3)*.68;
+        const marker=MeshBuilder.CreateSphere("guild-map-brass-route-pin",{diameter:.13,segments:8},scene);
+        marker.position.set(px,1.50,pz);marker.material=guildCopper;marker.isPickable=false;
       }
       // Decorative timber posts and carved capitals frame the quest wall.
       for(let side of [-1,1]) {
@@ -869,6 +915,44 @@ export async function createRoyalCity(engine, canvas) {
   guildSign.position.set(-23,5.5,-12.78);guildSign.material=guildSignMat;
 
 
+
+  // Side-mounted wrought-iron inn signs project perpendicular to each street facade.
+  // The bracket, hanging chains and double-sided enamel board read clearly from either approach.
+  const innSignIron=mat(scene,"inn-wall-sign-black-iron",new Color3(.075,.085,.085),.32,.86);
+  const innSignBrass=mat(scene,"inn-wall-sign-antique-brass",new Color3(.68,.48,.22),.3,.78);
+  const addIronInnSign=(label,x,frontZ,y=6.15)=>{
+    const armZ=frontZ+.78,boardZ=frontZ+1.48;
+    box(scene,"iron-inn-sign-wall-socket",[x,y+1.0,frontZ+.12],[.48,.42,.22],innSignIron);
+    box(scene,"iron-inn-sign-projecting-arm",[x,y+1.0,frontZ+.72],[.16,.16,1.35],innSignIron);
+    for(const side of [-1,1]) {
+      const chain=MeshBuilder.CreateCylinder("iron-inn-sign-hanging-chain",{diameter:.045,height:.66,tessellation:8},scene);
+      chain.position.set(x,y+.56,boardZ+side*.88);chain.material=innSignIron;
+      const finial=MeshBuilder.CreateSphere("iron-inn-sign-chain-finial",{diameter:.13,segments:8},scene);
+      finial.position.set(x,y+.18,boardZ+side*.88);finial.material=innSignBrass;
+    }
+    box(scene,"iron-inn-sign-board-frame",[x,y,boardZ],[.24,1.45,2.35],innSignIron);
+    box(scene,"iron-inn-sign-board-inset",[x+.135,y,boardZ],[.055,1.18,2.08],innSignBrass);
+    box(scene,"iron-inn-sign-board-face",[x+.17,y,boardZ],[.035,1.08,1.98],mats.wood);
+    const texture=new DynamicTexture("iron-inn-sign-lettering-"+label.replace(/[^a-z0-9]/gi,""),{width:512,height:256},scene,false);
+    const ctx=texture.getContext();
+    ctx.fillStyle="#30251a";ctx.fillRect(0,0,512,256);
+    ctx.strokeStyle="#c9a45c";ctx.lineWidth=13;ctx.strokeRect(10,10,492,236);
+    ctx.fillStyle="#f4e2bd";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.font="bold 42px Georgia";ctx.fillText(label,256,112,455);
+    ctx.font="24px Georgia";ctx.fillText("INN  •  ALE  •  ROOMS",256,190,455);texture.update();
+    const signMat=new StandardMaterial("iron-inn-sign-lettering-mat-"+label.replace(/[^a-z0-9]/gi,""),scene);
+    signMat.diffuseTexture=texture;signMat.emissiveColor=new Color3(.12,.09,.045);signMat.backFaceCulling=false;
+    const face=MeshBuilder.CreatePlane("iron-inn-sign-readable-face",{width:1.92,height:1.02,sideOrientation:2},scene);
+    face.position.set(x+.205,y,boardZ);face.rotation.y=Math.PI/2;face.material=signMat;face.isPickable=false;
+    for(const side of [-1,1]) {
+      const scroll=MeshBuilder.CreateTorus("iron-inn-sign-forged-scroll",{diameter:.42,thickness:.055,tessellation:12},scene);
+      scroll.position.set(x,y+.95,boardZ+side*1.02);scroll.rotation.x=Math.PI/2;scroll.material=innSignIron;
+    }
+  };
+  addIronInnSign("COPPER STAG",-15.5,11.0,6.1);
+  addIronInnSign("LANTERN & LARK",54.5,12.5,6.4);
+  addIronInnSign("FOX & FIR",78.5,12.5,6.4);
+  addIronInnSign("VELVET ROSE",97.0,-5.5,6.0);
 
   // A compact inn quarter begins just beyond the eastern edge of the central square.
   const pubLaneMat=texturedMat(scene,"pub-quarter-road",new Color3(.39,.36,.31),"#81796c","#39352f",.96);
@@ -3232,6 +3316,32 @@ export async function createRoyalCity(engine, canvas) {
     for(const x of [-62.5,-41.5])
       box(scene,"public-library-rib-gilt-cap",[x,9.02,z],[.12,.28,.34],libraryGold);
   }
+  // A grand antique brass chandelier anchors the double-height reading hall.
+  // Its chain, scrolling arms and candle cups stay clear of the upper gallery.
+  const libraryIron=mat(scene,"public-library-chandelier-iron",new Color3(.105,.085,.065),.34,.82);
+  const libraryBrass=mat(scene,"public-library-chandelier-brass",new Color3(.72,.51,.23),.28,.78);
+  const libraryCandle=mat(scene,"public-library-chandelier-candle",new Color3(1,.67,.30),.28);
+  libraryCandle.emissiveColor=new Color3(.95,.38,.10);
+  cylinder(scene,"public-library-chandelier-ceiling-rose",[-52,9.12,-84],1.05,.12,libraryBrass,24);
+  cylinder(scene,"public-library-chandelier-main-chain",[-52,8.28,-84],.075,1.55,libraryIron,12);
+  const libraryChandelierRing=MeshBuilder.CreateTorus("public-library-antique-chandelier-ring",{diameter:5.2,thickness:.14,tessellation:32},scene);
+  libraryChandelierRing.position.set(-52,7.42,-84);libraryChandelierRing.material=libraryBrass;
+  const libraryChandelierInner=MeshBuilder.CreateTorus("public-library-chandelier-inner-ring",{diameter:3.45,thickness:.075,tessellation:28},scene);
+  libraryChandelierInner.position.set(-52,7.55,-84);libraryChandelierInner.material=libraryIron;
+  for(let i=0;i<8;i++) {
+    const a=i*Math.PI/4,px=-52+Math.cos(a)*2.48,pz=-84+Math.sin(a)*2.48;
+    const arm=MeshBuilder.CreateTube("public-library-chandelier-curled-arm",{
+      path:[new Vector3(-52,7.52,-84),new Vector3(-52+Math.cos(a)*1.25,7.82,-84+Math.sin(a)*1.25),new Vector3(px,7.55,pz)],radius:.075,tessellation:8
+    },scene);arm.material=libraryBrass;arm.isPickable=false;
+    cylinder(scene,"public-library-chandelier-candle-cup",[px,7.72,pz],.28,.12,libraryIron,12);
+    cylinder(scene,"public-library-chandelier-candle",[px,7.98,pz],.13,.42,libraryCandle,10);
+    const flame=MeshBuilder.CreateSphere("public-library-chandelier-flame",{diameter:.17,segments:8},scene);
+    flame.position.set(px,8.25,pz);flame.material=libraryCandle;flame.isPickable=false;
+    const drop=MeshBuilder.CreateSphere("public-library-chandelier-crystal-drop",{diameter:.16,segments:8},scene);
+    drop.position.set(-52+Math.cos(a)*1.78,7.12,-84+Math.sin(a)*1.78);drop.material=libraryBrass;drop.isPickable=false;
+  }
+  const libraryChandelierLight=new PointLight("public-library-chandelier-light",new Vector3(-52,7.5,-84),scene);
+  libraryChandelierLight.diffuse=new Color3(1,.72,.42);libraryChandelierLight.intensity=.48;libraryChandelierLight.range=16;
   // A true upper reading gallery: timber floor, carved balustrade and a second
   // tier of shelves tucked behind the stone columns, like a historic university hall.
   // The gallery deck is built around a real stairwell opening; the stair must not pass through a solid slab.
