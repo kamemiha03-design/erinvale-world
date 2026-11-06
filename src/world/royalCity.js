@@ -1,7 +1,7 @@
 import {
   UniversalCamera, Color3, Color4, DirectionalLight, HemisphericLight, PointLight,
   Mesh, MeshBuilder, PBRMaterial, Scene, ShadowGenerator, StandardMaterial, TransformNode,
-  DynamicTexture, Texture, Vector3, Animation, Scalar, ImageProcessingConfiguration,
+  DynamicTexture, Texture, Vector3, Curve3, Animation, Scalar, ImageProcessingConfiguration,
 } from "@babylonjs/core";
 import { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader.js";
@@ -2669,7 +2669,9 @@ export async function createRoyalCity(engine, canvas) {
       const group=new TransformNode("royal-carriage-moving-group",scene);group.position.set(x,0,z);group.rotation.y=Math.PI;
       for(const mesh of scene.meshes.slice(meshStart)){if(mesh.parent===horse)continue;mesh.position.x-=x;mesh.position.z-=z;mesh.parent=group;}
       horse.position.x-=x;horse.position.z-=z;horse.parent=group;
-      movingCarriage={group,horse,waypointIndex:1,speed:2.35,route:[[0,-73.5],[0,-55],[0,-47],[0,-39],[0,-25],[0,-10],[0,6],[0,21],[-12,29],[-28,27],[-37,14],[-34,-4],[-20,-18],[0,-25],[0,-39],[0,-47],[0,-55],[0,-73.5]].map(([rx,rz])=>new Vector3(rx,0,rz))};
+      const carriageControlPoints=[[0,-73.5],[0,-55],[0,-47],[0,-39],[0,-25],[0,-10],[0,6],[0,21],[-12,29],[-28,27],[-37,14],[-34,-4],[-20,-18],[0,-25],[0,-39],[0,-47],[0,-55]].map(([rx,rz])=>new Vector3(rx,0,rz));
+      const carriageCurve=Curve3.CreateCatmullRomSpline(carriageControlPoints,18,true);
+      movingCarriage={group,horse,waypointIndex:1,speed:2.35,route:carriageCurve.getPoints(360)};
       return {x,z,group,moving:true};
     }
     return {x,z,group:null,moving:false};
@@ -4502,6 +4504,11 @@ export async function createRoyalCity(engine, canvas) {
     }
     makeTownsperson(-3.2,-13.0,"villager",47.1,.2,false);
     makeTownsperson(3.0,-29.0,"villager",48.2,Math.PI-.2,false);
+    // A few extra townsfolk add life to the mobile plaza without spawning a dense crowd.
+    makeTownsperson(-12.0,8.0,"villager",61.2,Math.PI/3,false);
+    makeTownsperson(13.0,12.0,"merchant",62.3,-Math.PI/2,false);
+    makeTownsperson(-18.0,22.0,"maid",63.4,Math.PI/2,false);
+    makeTownsperson(20.0,-8.0,"guard",64.5,Math.PI,false);
   }
 
   // Coachmen hold the reins, noble passengers ride inside, and attendants help guests board.
@@ -4537,6 +4544,12 @@ export async function createRoyalCity(engine, canvas) {
   addCoachPerson(parkedRoyalCarriage,"hostess",53.2,[.48,1.45,1.12]);
   addCoachPerson(travelingRoyalCarriage,"butler",54.3,[0,1.58,-1.30]);
   addCoachPerson(travelingRoyalCarriage,"villager",55.4,[-.48,1.45,1.12]);
+  // The coach travels far beyond its spawn bounds. Keep its meshes active so the
+  // static world octree cannot cull it permanently after it leaves the starting area.
+  for(const mesh of travelingRoyalCarriage.group.getChildMeshes()) {
+    mesh.alwaysSelectAsActiveMesh=true;
+    mesh.isVisible=true;
+  }
   const coachAttendant=makeTownsperson(parkedRoyalCarriage.x+2.8,parkedRoyalCarriage.z+1.0,"butler",56.5,Math.PI/2,false);
   coachAttendant.position.y=0;
   const arrivingNoble=makeTownsperson(parkedRoyalCarriage.x-2.8,parkedRoyalCarriage.z+1.5,"hostess",57.6,-Math.PI/2,false);
@@ -5036,7 +5049,10 @@ export async function createRoyalCity(engine, canvas) {
           if(!blockedByObject&&!blockedByBuilding) {
             movingCarriage.group.position.x=nextX;
             movingCarriage.group.position.z=nextZ;
-            movingCarriage.group.rotation.y=Math.atan2(-dx,-dz);
+            // Ease the coach toward the travel heading instead of snapping at each waypoint.
+            const targetYaw=Math.atan2(-dx,-dz);
+            const yawDelta=Math.atan2(Math.sin(targetYaw-movingCarriage.group.rotation.y),Math.cos(targetYaw-movingCarriage.group.rotation.y));
+            movingCarriage.group.rotation.y+=yawDelta*(1-Math.exp(-3.2*step));
             movingCarriage.horse.position.y=.015+Math.abs(Math.sin(time*8.5))*.045;
             movingCarriage.horse.rotation.x=Math.sin(time*8.5)*.012;
             movingCarriage.horse.getChildMeshes().forEach((limb,index)=>{
