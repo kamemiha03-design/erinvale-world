@@ -573,13 +573,13 @@ function addBuilding(scene, cfg, mats, shadows, colliders, obstacles) {
       }
       for(const side of [-1,1]) {
         const stringer=box(scene,"velvet-rose-rebuilt-stair-stringer",[roseStairCenterX+side*1.32,2.22,z-.35],[.22,.28,8.0],rosewood);
-        stringer.rotation.x=-.51;
+        stringer.rotation.x=.524;
         for(let rail=0;rail<12;rail++) {
           const progress=rail/11;
-          box(scene,"velvet-rose-rebuilt-stair-post",[roseStairCenterX+side*1.32,.28+progress*4.45,roseStairStartZ-progress*7.7],[.13,.95,.13],mutedGold);
+          box(scene,"velvet-rose-rebuilt-stair-post",[roseStairCenterX+side*1.32,.525+progress*4.45,roseStairStartZ-progress*7.7],[.13,.95,.13],mutedGold);
         }
-        const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[roseStairCenterX+side*1.32,2.82,z-.35],[.18,.18,7.85],rosewood);
-        handrail.rotation.x=-.51;
+        const handrail=box(scene,"velvet-rose-rebuilt-stair-handrail",[roseStairCenterX+side*1.32,3.225,z-.35],[.18,.18,7.85],rosewood);
+        handrail.rotation.x=.524;
       }
       box(scene,"velvet-rose-rebuilt-stair-top-landing",[roseStairCenterX,upperY-.06,roseStairEndZ-.5],[2.8,.22,1.5],rosewood);
       // Keep the stair-to-gallery mouth completely open: no cross-rail blocks the landing.
