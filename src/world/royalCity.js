@@ -2623,6 +2623,21 @@ export async function createRoyalCity(engine, canvas) {
       shaft.rotation.x=.02;
     }
     for(const side of [-1,1])cylinder(scene,"royal-carriage-lamp-bracket",[x+side*1.88,2.48,z-.1],.08,.48,carriageGold,10);
+    // Carriage lacquer, brass and velvet must remain fully opaque in every
+    // rendering path, including the moving carriage's parented meshes.
+    for(const material of [carriageWood,carriageGold,carriageCloth,coat,horseMane,horseMark,horseHoof,horseLeather]) {
+      material.alpha=1;
+      material.transparencyMode=PBRMaterial.PBRMATERIAL_OPAQUE;
+      material.forceDepthWrite=true;
+    }
+    for(const mesh of scene.meshes.slice(meshStart)) {
+      if(mesh.material && !Array.isArray(mesh.material)) {
+        mesh.material.alpha=1;
+        mesh.material.transparencyMode=PBRMaterial.PBRMATERIAL_OPAQUE;
+        mesh.material.forceDepthWrite=true;
+      }
+      mesh.visibility=1;
+    }
     if(moving) {
       const group=new TransformNode("royal-carriage-moving-group",scene);group.position.set(x,0,z);group.rotation.y=Math.PI;
       for(const mesh of scene.meshes.slice(meshStart)){if(mesh.parent===horse)continue;mesh.position.x-=x;mesh.position.z-=z;mesh.parent=group;}
@@ -4465,13 +4480,30 @@ export async function createRoyalCity(engine, canvas) {
   // Coachmen hold the reins, noble passengers ride inside, and attendants help guests board.
   function addCoachPerson(coach,role,phase,localPosition,heading=0) {
     const root=makeTownsperson(coach.x,coach.z,role,phase,heading,false,"seated");
+    // The seated pose is built from the ground up; place its pelvis on the
+    // raised coachman's bench rather than lifting the whole figure too high.
+    const seatHeight=1.18;
     if(coach.group) {
       root.parent=coach.group;
-      root.position.set(localPosition[0],localPosition[1],localPosition[2]);
+      root.position.set(localPosition[0],seatHeight,localPosition[2]);
     } else {
-      root.position.set(coach.x+localPosition[0],localPosition[1],coach.z+localPosition[2]);
+      root.position.set(coach.x+localPosition[0],seatHeight,coach.z+localPosition[2]);
     }
     root.rotation.y=heading;
+    // Give the driver a clear, continuous pair of reins held in front of him.
+    for(const side of [-1,1]) {
+      const rein=MeshBuilder.CreateTube("royal-carriage-driver-rein",{
+        path:[
+          new Vector3(side*.30,.83,-.39),
+          new Vector3(side*.34,.78,-.82),
+          new Vector3(side*.29,.82,-1.35),
+          new Vector3(side*.22,.96,-2.05)
+        ],radius:.022,tessellation:7
+      },scene);
+      rein.material=horseLeather;
+      rein.parent=root;
+      rein.isPickable=false;
+    }
     return root;
   }
   addCoachPerson(parkedRoyalCarriage,"butler",52.1,[0,1.58,-1.30]);
